@@ -18,6 +18,8 @@ async function callKieApi(endpoint: string, data: any) {
     throw new Error('KIE_API_KEY not configured');
   }
 
+  console.log(`Calling KIE API: ${endpoint}`, JSON.stringify(data, null, 2));
+  
   const response = await fetch(`${KIE_API_BASE}${endpoint}`, {
     method: 'POST',
     headers: {
@@ -28,9 +30,12 @@ async function callKieApi(endpoint: string, data: any) {
   });
 
   const result = await response.json();
+  console.log(`KIE API response for ${endpoint}:`, JSON.stringify(result, null, 2));
   
   if (result.code !== 200) {
-    throw new Error(result.msg || 'API request failed');
+    const errorMsg = result.msg || result.message || result.error || 'API request failed';
+    console.error(`API Error: ${errorMsg}`, result);
+    throw new Error(errorMsg);
   }
 
   return result;
@@ -65,9 +70,12 @@ async function checkTaskStatus(taskId: string, taskType: string) {
   });
 
   const result = await response.json();
+  console.log(`Task status check for ${taskType}/${taskId}:`, JSON.stringify(result, null, 2));
   
   if (result.code !== 200) {
-    throw new Error(result.msg || 'Failed to check task status');
+    const errorMsg = result.msg || result.message || result.error || 'Failed to check task status';
+    console.error(`API Error: ${errorMsg}`, result);
+    throw new Error(errorMsg);
   }
 
   const data = result.data;
