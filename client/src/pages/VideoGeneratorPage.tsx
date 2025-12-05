@@ -135,9 +135,13 @@ export default function VideoGeneratorPage() {
       }
 
       if (data.taskId) {
-        let taskType = 'midjourney'
-        if (selectedTool === 'veo3-fast') taskType = 'veo3'
-        else if (selectedTool.startsWith('grok')) taskType = 'grok'
+        // Use taskType from response if available, otherwise fallback to mapping
+        let taskType = data.taskType || 'midjourney'
+        if (!data.taskType) {
+          if (selectedTool === 'veo3-fast') taskType = 'veo3'
+          else if (selectedTool.startsWith('grok')) taskType = 'grok'
+          else if (selectedTool === 'midjourney-video') taskType = 'midjourney-video'
+        }
         
         const finalResult = await pollTaskStatus(data.taskId, taskType)
         setResult(finalResult)

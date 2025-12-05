@@ -56,9 +56,20 @@ A web application providing AI tools powered by the KIE AI API. Users can genera
 
 ## KIE AI API Integration
 Uses the official KIE AI API endpoints:
-- `/api/v1/jobs/createTask` - For Nano Banana and Seedream
-- `/api/v1/jobs/queryTask` - Poll task status for jobs
+- `/api/v1/playground/createTask` - For Nano Banana (Google Gemini)
+- `/api/v1/playground/recordInfo` - Poll Nano Banana task status
+- `/api/v1/seedream/createTask` - For Seedream 4.5 (ByteDance)
+- `/api/v1/seedream/recordInfo` - Poll Seedream task status
+- `/api/v1/mj/txt2img` - For Midjourney text-to-image
+- `/api/v1/mj/img2video` - For Midjourney image-to-video
+- `/api/v1/mj/record-info` - Poll Midjourney task status
 - `/api/v1/veo/generate` - For Veo 3 video generation
 - `/api/v1/veo/record-info` - Poll Veo 3 task status
-- `/api/v1/mj/imagine` - For Midjourney images
-- `/api/v1/mj/record-info` - Poll Midjourney task status
+- `/api/v1/jobs/createTask` - For Grok Imagenia
+- `/api/v1/jobs/recordInfo` - Poll Grok task status
+
+## Recent Changes (Dec 2024)
+- Fixed Midjourney image generation endpoint (changed from /mj/imagine to /mj/txt2img)
+- Added proper taskType parameter for Midjourney API calls
+- Improved response parsing for all task types
+- Added handling for both successFlag and status-based responses

@@ -53,6 +53,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       endpoint = `/veo/record-info?taskId=${taskId}`;
       break;
     case 'midjourney':
+    case 'midjourney-video':
       endpoint = `/mj/record-info?taskId=${taskId}`;
       break;
     case 'playground':
@@ -120,6 +121,85 @@ async function checkTaskStatus(taskId: string, taskType: string) {
   }
 
   const data = result.data;
+
+  // Handle Midjourney status-based responses (some endpoints use status strings instead of successFlag)
+  if ((taskType === 'midjourney' || taskType === 'midjourney-video') && data.status) {
+    if (data.status === 'completed' || data.status === 'success') {
+      if (taskType === 'midjourney-video') {
+        let videos: string[] = [];
+        // Try videos array first
+        if (data.videos && Array.isArray(data.videos)) {
+          videos = data.videos.map((v: any) => v.url || v);
+        }
+        // Try resultInfoJson
+        if (videos.length === 0 && data.resultInfoJson) {
+          const resultInfo = typeof data.resultInfoJson === 'string' 
+            ? JSON.parse(data.resultInfoJson) 
+            : data.resultInfoJson;
+          if (resultInfo.resultUrls && Array.isArray(resultInfo.resultUrls)) {
+            videos = resultInfo.resultUrls.map((item: any) => item.resultUrl || item);
+          }
+        }
+        // Fallback: response.result_urls
+        if (videos.length === 0 && data.response?.result_urls) {
+          videos = data.response.result_urls;
+        }
+        // Fallback: resultUrls directly
+        if (videos.length === 0 && data.resultUrls) {
+          try {
+            const urls = typeof data.resultUrls === 'string' ? JSON.parse(data.resultUrls) : data.resultUrls;
+            videos = Array.isArray(urls) ? urls : [urls];
+          } catch (e) {
+            console.error('Failed to parse midjourney-video resultUrls:', e);
+          }
+        }
+        return {
+          status: 'completed',
+          videoUrl: videos[0],
+          videos: videos,
+        };
+      } else {
+        let images: string[] = [];
+        // Try resultInfoJson first
+        if (data.resultInfoJson) {
+          const resultInfo = typeof data.resultInfoJson === 'string' 
+            ? JSON.parse(data.resultInfoJson) 
+            : data.resultInfoJson;
+          if (resultInfo.resultUrls && Array.isArray(resultInfo.resultUrls)) {
+            images = resultInfo.resultUrls.map((item: any) => item.resultUrl || item);
+          }
+        }
+        // Fallback: response.result_urls
+        if (images.length === 0 && data.response?.result_urls) {
+          images = data.response.result_urls;
+        }
+        // Fallback: resultUrls directly
+        if (images.length === 0 && data.resultUrls) {
+          try {
+            const urls = typeof data.resultUrls === 'string' ? JSON.parse(data.resultUrls) : data.resultUrls;
+            images = Array.isArray(urls) ? urls : [urls];
+          } catch (e) {
+            console.error('Failed to parse midjourney resultUrls:', e);
+          }
+        }
+        return {
+          status: 'completed',
+          imageUrl: images[0],
+          images: images,
+        };
+      }
+    } else if (data.status === 'failed' || data.status === 'error') {
+      return {
+        status: 'failed',
+        error: data.errorMessage || data.error || 'Generation failed',
+      };
+    } else {
+      return {
+        status: 'processing',
+        progress: data.progress,
+      };
+    }
+  }
   
   if (taskType === 'grok') {
     if (data.state === 'success') {
@@ -151,9 +231,80 @@ async function checkTaskStatus(taskId: string, taskType: string) {
 
   if (data.successFlag === 1) {
     if (taskType === 'veo3') {
+      let videoUrl = null;
+      if (data.resultUrls) {
+        try {
+          const urls = typeof data.resultUrls === 'string' ? JSON.parse(data.resultUrls) : data.resultUrls;
+          videoUrl = Array.isArray(urls) ? urls[0] : urls;
+        } catch (e) {
+          console.error('Failed to parse veo3 resultUrls:', e);
+        }
+      }
       return {
         status: 'completed',
-        videoUrl: data.resultUrls ? JSON.parse(data.resultUrls)[0] : null,
+        videoUrl: videoUrl,
+      };
+    } else if (taskType === 'midjourney') {
+      // Midjourney returns resultInfoJson with resultUrls array containing objects with resultUrl
+      let images: string[] = [];
+      if (data.resultInfoJson) {
+        const resultInfo = typeof data.resultInfoJson === 'string' 
+          ? JSON.parse(data.resultInfoJson) 
+          : data.resultInfoJson;
+        if (resultInfo.resultUrls && Array.isArray(resultInfo.resultUrls)) {
+          images = resultInfo.resultUrls.map((item: any) => item.resultUrl || item);
+        }
+      }
+      // Fallback: check for direct response structure
+      if (images.length === 0 && data.response?.result_urls) {
+        images = data.response.result_urls;
+      }
+      // Fallback: check for resultUrls directly
+      if (images.length === 0 && data.resultUrls) {
+        try {
+          const urls = typeof data.resultUrls === 'string' ? JSON.parse(data.resultUrls) : data.resultUrls;
+          images = Array.isArray(urls) ? urls : [urls];
+        } catch (e) {
+          console.error('Failed to parse midjourney resultUrls:', e);
+        }
+      }
+      return {
+        status: 'completed',
+        imageUrl: images[0],
+        images: images,
+      };
+    } else if (taskType === 'midjourney-video') {
+      // Midjourney video returns video URLs
+      let videos: string[] = [];
+      if (data.resultInfoJson) {
+        const resultInfo = typeof data.resultInfoJson === 'string' 
+          ? JSON.parse(data.resultInfoJson) 
+          : data.resultInfoJson;
+        if (resultInfo.resultUrls && Array.isArray(resultInfo.resultUrls)) {
+          videos = resultInfo.resultUrls.map((item: any) => item.resultUrl || item);
+        }
+      }
+      // Fallback: check for videos array in response
+      if (videos.length === 0 && data.videos && Array.isArray(data.videos)) {
+        videos = data.videos.map((v: any) => v.url || v);
+      }
+      // Fallback: check for response.result_urls
+      if (videos.length === 0 && data.response?.result_urls) {
+        videos = data.response.result_urls;
+      }
+      // Fallback: check for resultUrls directly
+      if (videos.length === 0 && data.resultUrls) {
+        try {
+          const urls = typeof data.resultUrls === 'string' ? JSON.parse(data.resultUrls) : data.resultUrls;
+          videos = Array.isArray(urls) ? urls : [urls];
+        } catch (e) {
+          console.error('Failed to parse midjourney-video resultUrls:', e);
+        }
+      }
+      return {
+        status: 'completed',
+        videoUrl: videos[0],
+        videos: videos,
       };
     } else {
       const responseData = data.response || {};
@@ -212,9 +363,12 @@ app.post('/api/generate/seedream', async (req: Request, res: Response) => {
 app.post('/api/generate/midjourney', async (req: Request, res: Response) => {
   try {
     const { prompt, aspectRatio = '1:1' } = req.body;
-    const result = await callKieApi('/mj/imagine', {
+    const result = await callKieApi('/mj/txt2img', {
+      taskType: 'mj_txt2img',
       prompt,
-      aspect: aspectRatio,
+      aspectRatio,
+      speed: 'fast',
+      version: '7',
     });
     res.json({ taskId: result.data.taskId, taskType: 'midjourney' });
   } catch (error: any) {
@@ -240,10 +394,12 @@ app.post('/api/generate/midjourney-video', async (req: Request, res: Response) =
   try {
     const { imageUrl, prompt } = req.body;
     const result = await callKieApi('/mj/img2video', {
+      taskType: 'mj_video',
       imageUrl,
       prompt,
+      speed: 'fast',
     });
-    res.json({ taskId: result.data.taskId, taskType: 'midjourney' });
+    res.json({ taskId: result.data.taskId, taskType: 'midjourney-video' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
