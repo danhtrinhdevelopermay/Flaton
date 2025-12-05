@@ -56,10 +56,10 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       endpoint = `/mj/record-info?taskId=${taskId}`;
       break;
     case 'playground':
-      endpoint = `/playground/recordInfo?task_id=${taskId}`;
+      endpoint = `/playground/recordInfo?taskId=${taskId}`;
       break;
     case 'seedream':
-      endpoint = `/seedream/recordInfo?task_id=${taskId}`;
+      endpoint = `/seedream/recordInfo?taskId=${taskId}`;
       break;
     default:
       throw new Error('Unknown task type');
