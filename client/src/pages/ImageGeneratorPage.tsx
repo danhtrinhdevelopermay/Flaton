@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { Image, Loader2, Download, Zap, Check, RefreshCw } from 'lucide-react'
 
 const imageTools = [
-  { id: 'nano-banana', name: 'Nano Banana', credits: 4, provider: 'Google DeepMind' },
-  { id: 'seedream', name: 'Seedream 4.5', credits: 3.5, provider: 'ByteDance' },
+  { id: 'nano-banana', name: 'Nano Banana', credits: 4, provider: 'Google' },
+  { id: 'seedream', name: 'Seedream 4.5', credits: 6.5, provider: 'ByteDance' },
   { id: 'midjourney', name: 'Midjourney', credits: 8, provider: 'Midjourney' },
 ]
 
@@ -107,7 +107,7 @@ export default function ImageGeneratorPage() {
       }
 
       if (data.taskId) {
-        const taskType = selectedTool === 'midjourney' ? 'midjourney' : selectedTool === 'seedream' ? 'seedream' : 'nano-banana'
+        const taskType = data.taskType || (selectedTool === 'midjourney' ? 'midjourney' : 'gpt4o-image')
         const finalResult = await pollTaskStatus(data.taskId, taskType)
         setResult(finalResult)
       } else if (data.imageUrl || data.images) {
