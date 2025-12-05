@@ -62,7 +62,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       endpoint = `/seedream/recordInfo?taskId=${taskId}`;
       break;
     case 'grok':
-      endpoint = `/grok/record-info?taskId=${taskId}`;
+      endpoint = `/grok-imagine/record-info?taskId=${taskId}`;
       break;
     default:
       throw new Error('Unknown task type');
@@ -253,7 +253,7 @@ app.post('/api/generate/midjourney-video', async (req: Request, res: Response) =
 app.post('/api/generate/grok-i2v', async (req: Request, res: Response) => {
   try {
     const { imageUrl, prompt, mode = 'normal' } = req.body;
-    const result = await callKieApi('/grok/generate', {
+    const result = await callKieApi('/grok-imagine/generate', {
       image_urls: [imageUrl],
       prompt,
       mode,
@@ -268,7 +268,7 @@ app.post('/api/generate/grok-i2v', async (req: Request, res: Response) => {
 app.post('/api/generate/grok-t2v', async (req: Request, res: Response) => {
   try {
     const { prompt, aspectRatio = '3:2', mode = 'normal' } = req.body;
-    const result = await callKieApi('/grok/generate', {
+    const result = await callKieApi('/grok-imagine/generate', {
       prompt,
       aspect_ratio: aspectRatio,
       mode,
