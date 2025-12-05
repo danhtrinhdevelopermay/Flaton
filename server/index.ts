@@ -61,6 +61,9 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     case 'seedream':
       endpoint = `/seedream/recordInfo?taskId=${taskId}`;
       break;
+    case 'grok':
+      endpoint = `/grok/record-info?taskId=${taskId}`;
+      break;
     default:
       throw new Error('Unknown task type');
   }
@@ -118,6 +121,34 @@ async function checkTaskStatus(taskId: string, taskType: string) {
 
   const data = result.data;
   
+  if (taskType === 'grok') {
+    if (data.state === 'success') {
+      let videoUrl = null;
+      if (data.resultJson) {
+        try {
+          const resultData = JSON.parse(data.resultJson);
+          videoUrl = resultData.resultUrls?.[0] || resultData.videoUrl;
+        } catch (e) {
+          console.error('Failed to parse Grok resultJson:', e);
+        }
+      }
+      return {
+        status: 'completed',
+        videoUrl: videoUrl,
+      };
+    } else if (data.state === 'failed') {
+      return {
+        status: 'failed',
+        error: data.failMsg || 'Grok generation failed',
+      };
+    } else {
+      return {
+        status: 'processing',
+        progress: data.progress,
+      };
+    }
+  }
+
   if (data.successFlag === 1) {
     if (taskType === 'veo3') {
       return {
@@ -213,6 +244,36 @@ app.post('/api/generate/midjourney-video', async (req: Request, res: Response) =
       prompt,
     });
     res.json({ taskId: result.data.taskId, taskType: 'midjourney' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Grok Imagenia - Image to Video
+app.post('/api/generate/grok-i2v', async (req: Request, res: Response) => {
+  try {
+    const { imageUrl, prompt, mode = 'normal' } = req.body;
+    const result = await callKieApi('/grok/generate', {
+      image_urls: [imageUrl],
+      prompt,
+      mode,
+    });
+    res.json({ taskId: result.data?.taskId, taskType: 'grok' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Grok Imagenia - Text to Video
+app.post('/api/generate/grok-t2v', async (req: Request, res: Response) => {
+  try {
+    const { prompt, aspectRatio = '3:2', mode = 'normal' } = req.body;
+    const result = await callKieApi('/grok/generate', {
+      prompt,
+      aspect_ratio: aspectRatio,
+      mode,
+    });
+    res.json({ taskId: result.data?.taskId, taskType: 'grok' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

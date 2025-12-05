@@ -4,6 +4,8 @@ import { Video, Loader2, Download, Zap, Check, RefreshCw, Upload } from 'lucide-
 
 const videoTools = [
   { id: 'veo3-fast', name: 'Veo 3 Fast', credits: 60, provider: 'Google DeepMind', type: 'text' },
+  { id: 'grok-t2v', name: 'Grok Imagenia (Text)', credits: 20, provider: 'xAI', type: 'text' },
+  { id: 'grok-i2v', name: 'Grok Imagenia (Image)', credits: 20, provider: 'xAI', type: 'image' },
   { id: 'midjourney-video', name: 'Midjourney Video', credits: 40, provider: 'Midjourney', type: 'image' },
 ]
 
@@ -11,6 +13,18 @@ const aspectRatios = [
   { value: '16:9', label: '16:9 (Ngang)' },
   { value: '9:16', label: '9:16 (Dọc)' },
   { value: '1:1', label: '1:1 (Vuông)' },
+]
+
+const grokAspectRatios = [
+  { value: '3:2', label: '3:2 (Ngang)' },
+  { value: '2:3', label: '2:3 (Dọc)' },
+  { value: '1:1', label: '1:1 (Vuông)' },
+]
+
+const grokModes = [
+  { value: 'normal', label: 'Normal', desc: 'Chế độ chuẩn' },
+  { value: 'fun', label: 'Fun', desc: 'Vui nhộn, sáng tạo' },
+  { value: 'spicy', label: 'Spicy', desc: 'Nghệ thuật, táo bạo' },
 ]
 
 interface GenerationResult {
@@ -26,6 +40,8 @@ export default function VideoGeneratorPage() {
   const [prompt, setPrompt] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [aspectRatio, setAspectRatio] = useState('16:9')
+  const [grokAspectRatio, setGrokAspectRatio] = useState('3:2')
+  const [grokMode, setGrokMode] = useState('normal')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [polling, setPolling] = useState(false)
@@ -82,16 +98,27 @@ export default function VideoGeneratorPage() {
   }
 
   const handleGenerate = async () => {
-    if (selectedTool === 'veo3-fast' && !prompt.trim()) return
-    if (selectedTool === 'midjourney-video' && !imageUrl.trim()) return
+    const isTextTool = currentTool?.type === 'text'
+    const isImageTool = currentTool?.type === 'image'
+    
+    if (isTextTool && !prompt.trim()) return
+    if (isImageTool && !imageUrl.trim()) return
 
     setLoading(true)
     setResult(null)
 
     try {
-      const body = selectedTool === 'veo3-fast'
-        ? { prompt, aspectRatio }
-        : { imageUrl, prompt }
+      let body: any = {}
+      
+      if (selectedTool === 'veo3-fast') {
+        body = { prompt, aspectRatio }
+      } else if (selectedTool === 'grok-t2v') {
+        body = { prompt, aspectRatio: grokAspectRatio, mode: grokMode }
+      } else if (selectedTool === 'grok-i2v') {
+        body = { imageUrl, prompt, mode: grokMode }
+      } else if (selectedTool === 'midjourney-video') {
+        body = { imageUrl, prompt }
+      }
 
       const response = await fetch(`/api/generate/${selectedTool}`, {
         method: 'POST',
@@ -108,7 +135,10 @@ export default function VideoGeneratorPage() {
       }
 
       if (data.taskId) {
-        const taskType = selectedTool === 'veo3-fast' ? 'veo3' : 'midjourney'
+        let taskType = 'midjourney'
+        if (selectedTool === 'veo3-fast') taskType = 'veo3'
+        else if (selectedTool.startsWith('grok')) taskType = 'grok'
+        
         const finalResult = await pollTaskStatus(data.taskId, taskType)
         setResult(finalResult)
       } else if (data.videoUrl) {
@@ -211,6 +241,87 @@ export default function VideoGeneratorPage() {
             </div>
           )}
 
+          {selectedTool === 'grok-t2v' && (
+            <>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-300 mb-2">Tỷ lệ khung hình</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {grokAspectRatios.map((ratio) => (
+                    <button
+                      key={ratio.value}
+                      onClick={() => setGrokAspectRatio(ratio.value)}
+                      className={`p-3 rounded-xl border text-sm transition-all ${
+                        grokAspectRatio === ratio.value
+                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                          : 'border-slate-600 hover:border-slate-500'
+                      }`}
+                    >
+                      {ratio.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-300 mb-2">Chế độ tạo video</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {grokModes.map((mode) => (
+                    <button
+                      key={mode.value}
+                      onClick={() => setGrokMode(mode.value)}
+                      className={`p-3 rounded-xl border text-sm transition-all ${
+                        grokMode === mode.value
+                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                          : 'border-slate-600 hover:border-slate-500'
+                      }`}
+                    >
+                      <div className="font-medium">{mode.label}</div>
+                      <div className="text-xs text-slate-400 mt-1">{mode.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {selectedTool === 'grok-i2v' && (
+            <>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-300 mb-2">URL hình ảnh nguồn</label>
+                <div className="flex items-center gap-2">
+                  <Upload className="w-5 h-5 text-slate-400" />
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    className="flex-1 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <p className="text-xs text-slate-400 mt-2">Nhập URL công khai của hình ảnh bạn muốn chuyển thành video</p>
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-300 mb-2">Chế độ tạo video</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {grokModes.filter(m => m.value !== 'spicy').map((mode) => (
+                    <button
+                      key={mode.value}
+                      onClick={() => setGrokMode(mode.value)}
+                      className={`p-3 rounded-xl border text-sm transition-all ${
+                        grokMode === mode.value
+                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                          : 'border-slate-600 hover:border-slate-500'
+                      }`}
+                    >
+                      <div className="font-medium">{mode.label}</div>
+                      <div className="text-xs text-slate-400 mt-1">{mode.desc}</div>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-400 mt-2">Lưu ý: Chế độ Spicy không hỗ trợ với ảnh bên ngoài</p>
+              </div>
+            </>
+          )}
+
           {selectedTool === 'midjourney-video' && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-300 mb-2">URL hình ảnh nguồn</label>
@@ -230,13 +341,13 @@ export default function VideoGeneratorPage() {
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              {selectedTool === 'veo3-fast' ? 'Mô tả video (Prompt)' : 'Mô tả chuyển động (tùy chọn)'}
+              {currentTool?.type === 'text' ? 'Mô tả video (Prompt)' : 'Mô tả chuyển động'}
             </label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder={
-                selectedTool === 'veo3-fast'
+                currentTool?.type === 'text'
                   ? "Mô tả chi tiết video bạn muốn tạo... Ví dụ: A majestic eagle soaring through mountain peaks at sunset, cinematic lighting"
                   : "Mô tả chuyển động bạn muốn... Ví dụ: Camera slowly zooms in, gentle wind effect"
               }
@@ -246,7 +357,7 @@ export default function VideoGeneratorPage() {
 
           <button
             onClick={handleGenerate}
-            disabled={loading || (selectedTool === 'veo3-fast' ? !prompt.trim() : !imageUrl.trim())}
+            disabled={loading || (currentTool?.type === 'text' ? !prompt.trim() : !imageUrl.trim())}
             className="w-full btn-primary py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
           >
             {loading ? (
