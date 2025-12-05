@@ -268,42 +268,44 @@ export default function ImageGeneratorPage() {
             </div>
           )}
 
-          {result?.imageUrl && (
-            <div className="space-y-4">
-              <div className="relative group">
-                <img
-                  src={result.imageUrl}
-                  alt="Generated"
-                  className="w-full rounded-xl"
-                />
-                <button
-                  onClick={() => handleDownload(result.imageUrl!, `ai-image-${Date.now()}.png`)}
-                  className="absolute bottom-4 right-4 bg-black/50 hover:bg-black/70 p-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Download className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {result?.images && result.images.length > 0 && (
-            <div className="grid grid-cols-2 gap-4">
-              {result.images.map((img, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={img}
-                    alt={`Generated ${index + 1}`}
-                    className="w-full rounded-xl"
-                  />
-                  <button
-                    onClick={() => handleDownload(img, `ai-image-${Date.now()}-${index + 1}.png`)}
-                    className="absolute bottom-2 right-2 bg-black/50 hover:bg-black/70 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Download className="w-4 h-4" />
-                  </button>
+          {result?.status === 'completed' && (result.images?.length || result.imageUrl) && (
+            <>
+              {result.images && result.images.length > 1 ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {result.images.map((img, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={img}
+                        alt={`Generated ${index + 1}`}
+                        className="w-full rounded-xl"
+                      />
+                      <button
+                        onClick={() => handleDownload(img, `ai-image-${Date.now()}-${index + 1}.png`)}
+                        className="absolute bottom-2 right-2 bg-black/50 hover:bg-black/70 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="relative group">
+                    <img
+                      src={result.images?.[0] || result.imageUrl}
+                      alt="Generated"
+                      className="w-full rounded-xl"
+                    />
+                    <button
+                      onClick={() => handleDownload(result.images?.[0] || result.imageUrl!, `ai-image-${Date.now()}.png`)}
+                      className="absolute bottom-4 right-4 bg-black/50 hover:bg-black/70 p-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Download className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
