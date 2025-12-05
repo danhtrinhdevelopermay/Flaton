@@ -76,21 +76,36 @@ async function checkTaskStatus(taskId: string, taskType: string) {
   console.log(`Task status check for ${taskType}/${taskId}:`, JSON.stringify(result, null, 2));
   
   if (taskType === 'playground' || taskType === 'seedream') {
-    if (result.status === 'successful') {
+    if (result.code !== 200) {
+      const errorMsg = result.msg || result.message || 'Failed to check task status';
+      throw new Error(errorMsg);
+    }
+    
+    const data = result.data;
+    if (data.state === 'success') {
+      let images: string[] = [];
+      if (data.resultJson) {
+        try {
+          const resultData = JSON.parse(data.resultJson);
+          images = resultData.resultUrls || [];
+        } catch (e) {
+          console.error('Failed to parse resultJson:', e);
+        }
+      }
       return {
         status: 'completed',
-        imageUrl: result.result?.image_urls?.[0],
-        images: result.result?.image_urls,
+        imageUrl: images[0],
+        images: images,
       };
-    } else if (result.status === 'failed') {
+    } else if (data.state === 'failed') {
       return {
         status: 'failed',
-        error: result.error || 'Generation failed',
+        error: data.failMsg || 'Generation failed',
       };
     } else {
       return {
         status: 'processing',
-        progress: result.progress,
+        progress: data.progress,
       };
     }
   }
