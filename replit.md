@@ -70,6 +70,10 @@ Uses the official KIE AI API endpoints:
 
 ## Recent Changes (Dec 2024)
 - Fixed Midjourney image generation endpoint (changed from /mj/imagine to /mj/txt2img)
-- Added proper taskType parameter for Midjourney API calls
-- Improved response parsing for all task types
-- Added handling for both successFlag and status-based responses
+- Fixed Midjourney video generation endpoint with proper taskType parameter
+- Implemented robust multi-layer fallback parsing for all response types:
+  - Images: resultInfoJson → response.result_urls → resultUrls
+  - Videos: videos array → resultInfoJson → response.result_urls → resultUrls
+- Added comprehensive handling for both successFlag-based and status-based API responses
+- Updated frontend to dynamically use taskType from server responses for polling
+- Ensured URL extraction works across all provider response format variations
