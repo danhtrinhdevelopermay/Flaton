@@ -55,8 +55,11 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     case 'midjourney':
       endpoint = `/mj/record-info?taskId=${taskId}`;
       break;
-    case 'jobs':
-      endpoint = `/jobs/queryTask?taskId=${taskId}`;
+    case 'playground':
+      endpoint = `/playground/recordInfo?task_id=${taskId}`;
+      break;
+    case 'seedream':
+      endpoint = `/seedream/recordInfo?task_id=${taskId}`;
       break;
     default:
       throw new Error('Unknown task type');
@@ -72,6 +75,26 @@ async function checkTaskStatus(taskId: string, taskType: string) {
   const result = await response.json();
   console.log(`Task status check for ${taskType}/${taskId}:`, JSON.stringify(result, null, 2));
   
+  if (taskType === 'playground' || taskType === 'seedream') {
+    if (result.status === 'successful') {
+      return {
+        status: 'completed',
+        imageUrl: result.result?.image_urls?.[0],
+        images: result.result?.image_urls,
+      };
+    } else if (result.status === 'failed') {
+      return {
+        status: 'failed',
+        error: result.error || 'Generation failed',
+      };
+    } else {
+      return {
+        status: 'processing',
+        progress: result.progress,
+      };
+    }
+  }
+  
   if (result.code !== 200) {
     const errorMsg = result.msg || result.message || result.error || 'Failed to check task status';
     console.error(`API Error: ${errorMsg}`, result);
@@ -79,26 +102,6 @@ async function checkTaskStatus(taskId: string, taskType: string) {
   }
 
   const data = result.data;
-  
-  if (taskType === 'jobs') {
-    if (data.state === 'success' || data.state === 'completed') {
-      return {
-        status: 'completed',
-        imageUrl: data.output?.image_url || data.output?.url,
-        images: data.output?.images || (data.output?.image_url ? [data.output.image_url] : null),
-      };
-    } else if (data.state === 'failed') {
-      return {
-        status: 'failed',
-        error: data.error || 'Generation failed',
-      };
-    } else {
-      return {
-        status: 'processing',
-        progress: data.progress,
-      };
-    }
-  }
   
   if (data.successFlag === 1) {
     if (taskType === 'veo3') {
@@ -130,7 +133,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
 app.post('/api/generate/nano-banana', async (req: Request, res: Response) => {
   try {
     const { prompt, aspectRatio = '1:1' } = req.body;
-    const result = await callKieApi('/jobs/createTask', {
+    const result = await callKieApi('/playground/createTask', {
       model: 'google/nano-banana',
       input: {
         prompt,
@@ -138,7 +141,7 @@ app.post('/api/generate/nano-banana', async (req: Request, res: Response) => {
         output_format: 'png',
       },
     });
-    res.json({ taskId: result.data.taskId, taskType: 'jobs' });
+    res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'playground' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -147,15 +150,14 @@ app.post('/api/generate/nano-banana', async (req: Request, res: Response) => {
 app.post('/api/generate/seedream', async (req: Request, res: Response) => {
   try {
     const { prompt, aspectRatio = '1:1' } = req.body;
-    const result = await callKieApi('/jobs/createTask', {
-      model: 'seedream/4.5-text-to-image',
+    const result = await callKieApi('/seedream/createTask', {
+      model: 'bytedance/seedream-4.0',
       input: {
         prompt,
-        aspect_ratio: aspectRatio,
-        quality: 'basic',
+        image_size: aspectRatio,
       },
     });
-    res.json({ taskId: result.data.taskId, taskType: 'jobs' });
+    res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'seedream' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
