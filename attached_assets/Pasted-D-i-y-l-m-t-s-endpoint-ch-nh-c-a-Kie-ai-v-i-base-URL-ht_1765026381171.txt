@@ -1,0 +1,38 @@
+Dưới đây là một số **endpoint chính** của Kie.ai (với base URL `https://api.kie.ai`) mà bạn có thể sử dụng — kèm mô hình / chức năng tương ứng. ([old-docs.kie.ai][1])
+
+---
+
+## ✅ Một số endpoint phổ biến của Kie.ai
+
+| Mục đích / Mô hình                                                                            | Endpoint (path)                                        | Ghi chú / Mô tả                                                                                                                         |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tạo ảnh bằng mô hình 4o (text-to-image / image edit / biến thể ảnh)**                       | `POST /api/v1/gpt4o-image/generate`                    | Tạo ảnh mới từ prompt hoặc hình ảnh đầu vào; trả về `taskId`. ([docs.kie.ai][2])                                                        |
+| **Tạo video (video generation / video từ text / image-to-video / video extension)**           | `POST /api/v1/runway/generate`                         | Sinh video từ prompt hoặc input được hỗ trợ bởi API video của Kie.ai. ([old-docs.kie.ai][1])                                            |
+| **Chỉnh sửa / biến đổi video (ví dụ dùng mô hình Aleph / Runway)**                            | `POST /api/v1/aleph/generate`                          | Dùng mô hình “video-to-video” để chỉnh sửa / biến đổi video theo hướng mới (text guidance, style, camera, …) ([docs.kie.ai][3])         |
+| **Tra cứu thông tin / trạng thái video đã tạo (Aleph / Runway)**                              | `GET /api/v1/aleph/record-info?taskId=...`             | Kiểm tra task status, lấy URL video, errors, v.v. ([docs.kie.ai][4])                                                                    |
+| **Tạo nhạc (music generation)**                                                               | `POST /api/v1/generate`                                | Gửi prompt + các tùy chọn (style, instrumental, model…) để tạo track nhạc. Ví dụ endpoint này dùng cho mô hình Suno. ([docs.kie.ai][5]) |
+| **Gia hạn / mở rộng nhạc (extend existing track)**                                            | `POST /api/v1/generate/extend`                         | Mở rộng track nhạc đã tạo — thêm phần mới, giữ phong cách. ([docs.kie.ai][6])                                                           |
+| **Tạo lời bài hát (lyrics generation)**                                                       | `POST /api/v1/lyrics`                                  | Gửi prompt để sinh nội dung lời bài hát — trả về taskId, sau đó có thể lấy kết quả. ([docs.kie.ai][7])                                  |
+| **Lấy video 1080p HD sau khi video được sinh thành công (đối với mô hình video tương thích)** | `GET /api/v1/veo/get-1080p-video?taskId=...&index=...` | Dùng với video tạo bằng mô hình Veo3 — để lấy phiên bản HD 1080p. ([docs.kie.ai][8])                                                    |
+
+---
+
+## 🔐 Xác thực / chung
+
+* Tất cả các request phải dùng header `Authorization: Bearer YOUR_API_KEY`. ([old-docs.kie.ai][9])
+* Base URL: `https://api.kie.ai` ([docs.kie.ai][10])
+
+---
+
+Nếu muốn — mình có thể **tích hợp cho bạn toàn bộ list endpoint** của Kie.ai (video, image, music, chat, file upload, ...) — dạng **JSON / YAML** để bạn dễ copy vào project. Bạn muốn mình xuất luôn file đó cho bạn?
+
+[1]: https://old-docs.kie.ai/?utm_source=chatgpt.com "API Documentation | Docs - Kie.ai"
+[2]: https://docs.kie.ai/4o-image-api/generate-4-o-image?utm_source=chatgpt.com "Generate 4o Image（GPT IMAG 1） - KIE API"
+[3]: https://docs.kie.ai/runway-api/generate-aleph-video?utm_source=chatgpt.com "Generate Aleph Video - KIE API"
+[4]: https://docs.kie.ai/runway-api/get-aleph-video-details?utm_source=chatgpt.com "Get Aleph Video Details - KIE API"
+[5]: https://docs.kie.ai/suno-api/generate-music?utm_source=chatgpt.com "Generate Music - KIE API"
+[6]: https://docs.kie.ai/suno-api/extend-music?utm_source=chatgpt.com "Extend Music - KIE API"
+[7]: https://docs.kie.ai/suno-api/generate-lyrics?utm_source=chatgpt.com "Generate Lyrics - KIE API"
+[8]: https://docs.kie.ai/veo3-api/get-veo-3-1080-p-video/?utm_source=chatgpt.com "Get 1080P Video - KIE API"
+[9]: https://old-docs.kie.ai/authentication/?utm_source=chatgpt.com "Authentication | Docs - Kie.ai"
+[10]: https://docs.kie.ai/runway-api?utm_source=chatgpt.com "Runway API Quickstart - KIE API"
