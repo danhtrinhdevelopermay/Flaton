@@ -1,12 +1,12 @@
-# KIE AI Tools - Web App
+# Flaton - AI Tools Web App
 
 ## Overview
-A web application providing AI tools powered by the KIE AI API. Users can generate images and videos using various AI models that cost ≤80 credits.
+A web application providing AI tools powered by Flaton AI. Users can generate images, videos, and music using various AI models.
 
 ## Project Structure
 ```
 ├── server/           # Express backend
-│   └── index.ts      # API routes for KIE AI integration
+│   └── index.ts      # API routes for Flaton AI integration
 ├── client/           # React frontend (Vite)
 │   ├── src/
 │   │   ├── components/   # Reusable components
@@ -18,16 +18,23 @@ A web application providing AI tools powered by the KIE AI API. Users can genera
 └── tsconfig.json
 ```
 
-## Available AI Tools (≤80 credits)
+## Available AI Tools
 
 ### Image Generation
-- **Nano Banana** (4 credits) - Google Gemini 2.5 Flash - Fast high-quality images
-- **Seedream 4.5** (6.5 credits) - ByteDance - 4K images with cinematic style
-- **Midjourney** (8 credits) - Artistic style images with 4 variants
+- **Flaton Image V1** (4 credits) - Fast high-quality images
+- **Flaton Image V2** (6.5 credits) - 4K images with cinematic style
+- **Flaton Image Pro** (8 credits) - Artistic style images with 4 variants
 
 ### Video Generation
-- **Veo 3 Fast** (60 credits) - Google DeepMind - 8s video with audio
-- **Midjourney Video** (40 credits) - Image to 5s video
+- **Flaton Video V1** (60 credits) - Fast 720P video with audio
+- **Flaton Video V2** (100 credits) - High quality video
+- **Flaton Video X** (20 credits) - Text/Image to video
+- **Flaton Video Pro** (40 credits) - Image to 5s video
+
+### Music Generation
+- **Flaton Music V1** - Fast, stable
+- **Flaton Music V1.5** - Higher quality
+- **Flaton Music V2** - Latest
 
 ## Environment Variables
 - `KIE_API_KEY` - Required: API key from kie.ai

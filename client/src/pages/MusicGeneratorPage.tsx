@@ -4,9 +4,9 @@ import MusicPlayer from '../components/MusicPlayer'
 import { useAuth } from '../contexts/AuthContext'
 
 const sunoModels = [
-  { value: 'V4', label: 'Suno V4', desc: 'Ổn định, nhanh' },
-  { value: 'V4_5', label: 'Suno V4.5', desc: 'Chất lượng cao hơn' },
-  { value: 'V5', label: 'Suno V5', desc: 'Mới nhất' },
+  { value: 'V4', label: 'Flaton Music V1', desc: 'Ổn định, nhanh' },
+  { value: 'V4_5', label: 'Flaton Music V1.5', desc: 'Chất lượng cao hơn' },
+  { value: 'V5', label: 'Flaton Music V2', desc: 'Mới nhất' },
 ]
 
 interface GenerationResult {
@@ -213,7 +213,7 @@ export default function MusicGeneratorPage() {
         </div>
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Tạo nhạc AI</h1>
-          <p className="text-slate-400">Tạo nhạc với Suno AI</p>
+          <p className="text-slate-400">Tạo nhạc với Flaton Music</p>
         </div>
       </div>
 
@@ -494,7 +494,7 @@ export default function MusicGeneratorPage() {
                 description={
                   customMode 
                     ? `${style || 'Tùy chỉnh'} • ${instrumental ? 'Instrumental' : 'Có lời'} • ${model}` 
-                    : `Suno AI • ${model} • ${instrumental ? 'Instrumental' : 'Có lời'}`
+                    : `Flaton Music • ${model} • ${instrumental ? 'Instrumental' : 'Có lời'}`
                 }
                 onDownload={() => handleDownload(result.audioUrl!, `ai-music-${Date.now()}.mp3`)}
                 autoPlay={true}
@@ -512,7 +512,7 @@ export default function MusicGeneratorPage() {
                         description={
                           customMode 
                             ? `${style || 'Tùy chỉnh'} • ${instrumental ? 'Instrumental' : 'Có lời'} • ${model}` 
-                            : `Suno AI • ${model} • ${instrumental ? 'Instrumental' : 'Có lời'}`
+                            : `Flaton Music • ${model} • ${instrumental ? 'Instrumental' : 'Có lời'}`
                         }
                         onDownload={() => handleDownload(url, `ai-music-v${index + 2}-${Date.now()}.mp3`)}
                         autoPlay={false}

@@ -50,7 +50,7 @@ export default function Layout({ children }: LayoutProps) {
             <div className="flex items-center gap-4">
               <Link to="/" className="flex items-center gap-2">
                 <Sparkles className="w-8 h-8 text-indigo-500" />
-                <span className="text-xl font-bold gradient-text">KIE AI Tools</span>
+                <span className="text-xl font-bold gradient-text">Flaton</span>
               </Link>
               
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30">

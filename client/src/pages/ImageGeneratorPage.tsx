@@ -4,9 +4,9 @@ import { Image, Loader2, Download, Zap, Check, RefreshCw } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const imageTools = [
-  { id: 'nano-banana', name: 'Nano Banana', credits: 4, provider: 'Google' },
-  { id: 'seedream', name: 'Seedream 4.5', credits: 6.5, provider: 'ByteDance' },
-  { id: 'midjourney', name: 'Midjourney', credits: 8, provider: 'Midjourney' },
+  { id: 'nano-banana', name: 'Flaton Image V1', credits: 4, provider: 'Nhanh, tiết kiệm' },
+  { id: 'seedream', name: 'Flaton Image V2', credits: 6.5, provider: 'Chi tiết 4K' },
+  { id: 'midjourney', name: 'Flaton Image Pro', credits: 8, provider: 'Nghệ thuật, 4 biến thể' },
 ]
 
 const aspectRatios = [

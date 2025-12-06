@@ -5,11 +5,11 @@ import VideoPlayer from '../components/VideoPlayer'
 import { useAuth } from '../contexts/AuthContext'
 
 const videoTools = [
-  { id: 'veo3-fast', name: 'Veo 3 Fast', credits: 60, provider: 'Google DeepMind', type: 'text', description: 'Nhanh, 720P' },
-  { id: 'veo3', name: 'Veo 3 Quality', credits: 100, provider: 'Google DeepMind', type: 'text', description: 'Chất lượng cao, chậm hơn' },
-  { id: 'grok-t2v', name: 'Grok Imagenia (Text)', credits: 20, provider: 'xAI', type: 'text', description: 'Text to Video' },
-  { id: 'grok-i2v', name: 'Grok Imagenia (Image)', credits: 20, provider: 'xAI', type: 'image', description: 'Image to Video' },
-  { id: 'midjourney-video', name: 'Midjourney Video', credits: 40, provider: 'Midjourney', type: 'image', description: 'Image to Video' },
+  { id: 'veo3-fast', name: 'Flaton Video V1', credits: 60, provider: 'Flaton', type: 'text', description: 'Nhanh, 720P' },
+  { id: 'veo3', name: 'Flaton Video V2', credits: 100, provider: 'Flaton', type: 'text', description: 'Chất lượng cao, chậm hơn' },
+  { id: 'grok-t2v', name: 'Flaton Video X (Text)', credits: 20, provider: 'Flaton', type: 'text', description: 'Text to Video' },
+  { id: 'grok-i2v', name: 'Flaton Video X (Image)', credits: 20, provider: 'Flaton', type: 'image', description: 'Image to Video' },
+  { id: 'midjourney-video', name: 'Flaton Video Pro', credits: 40, provider: 'Flaton', type: 'image', description: 'Image to Video' },
 ]
 
 const aspectRatios = [
