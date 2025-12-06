@@ -66,7 +66,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       endpoint = `/jobs/recordInfo?taskId=${taskId}`;
       break;
     case 'suno':
-      endpoint = `/suno/record-info?taskId=${taskId}`;
+      endpoint = `/generate/record-info?taskId=${taskId}`;
       break;
     default:
       throw new Error('Unknown task type');
@@ -234,31 +234,31 @@ async function checkTaskStatus(taskId: string, taskType: string) {
 
   // Handle Suno music generation
   if (taskType === 'suno') {
-    if (data.state === 'complete' || data.state === 'success') {
+    if (data.status === 'SUCCESS' || data.status === 'FIRST_SUCCESS') {
       let audioUrls: string[] = [];
-      if (data.resultJson) {
-        try {
-          const resultData = JSON.parse(data.resultJson);
-          audioUrls = resultData.resultUrls || resultData.audioUrls || [];
-        } catch (e) {
-          console.error('Failed to parse Suno resultJson:', e);
-        }
+      if (data.response?.sunoData && Array.isArray(data.response.sunoData)) {
+        audioUrls = data.response.sunoData.map((track: any) => track.audio_url).filter(Boolean);
       }
       return {
         status: 'completed',
         audioUrl: audioUrls[0],
         audioUrls: audioUrls,
-        title: data.title,
+        title: data.response?.sunoData?.[0]?.title,
       };
-    } else if (data.state === 'failed') {
+    } else if (data.status === 'CREATE_TASK_FAILED' || data.status === 'GENERATE_AUDIO_FAILED' || data.status === 'SENSITIVE_WORD_ERROR') {
       return {
         status: 'failed',
-        error: data.failMsg || 'Music generation failed',
+        error: data.errorMessage || 'Music generation failed',
+      };
+    } else if (data.status === 'TEXT_SUCCESS' || data.status === 'PENDING') {
+      return {
+        status: 'processing',
+        progress: data.status,
       };
     } else {
       return {
         status: 'processing',
-        progress: data.state, // text, first, complete stages
+        progress: data.status || 'unknown',
       };
     }
   }
