@@ -462,7 +462,7 @@ app.post('/api/generate/grok-i2v', async (req: Request, res: Response) => {
   try {
     const { imageUrl, prompt, mode = 'normal' } = req.body;
     const result = await callKieApi('/jobs/createTask', {
-      model: 'grok-imagine',
+      model: 'grok-imagine/image-to-video',
       input: {
         image_urls: [imageUrl],
         prompt,
@@ -480,7 +480,7 @@ app.post('/api/generate/grok-t2v', async (req: Request, res: Response) => {
   try {
     const { prompt, aspectRatio = '3:2', mode = 'normal' } = req.body;
     const result = await callKieApi('/jobs/createTask', {
-      model: 'grok-imagine',
+      model: 'grok-imagine/text-to-video',
       input: {
         prompt,
         aspect_ratio: aspectRatio,
