@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User } from 'lucide-react'
-import { ReactNode, useState } from 'react'
+import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Coins } from 'lucide-react'
+import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
 interface LayoutProps {
@@ -11,6 +11,29 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
   const { user, logout, isAuthenticated } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [credits, setCredits] = useState<number | null>(null)
+  const [loadingCredits, setLoadingCredits] = useState(true)
+
+  const fetchCredits = async () => {
+    try {
+      setLoadingCredits(true)
+      const response = await fetch('/api/credits')
+      const data = await response.json()
+      if (data.code === 200 && data.data !== undefined) {
+        setCredits(typeof data.data === 'number' ? data.data : data.data.credits)
+      }
+    } catch (error) {
+      console.error('Failed to fetch credits:', error)
+    } finally {
+      setLoadingCredits(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchCredits()
+    const interval = setInterval(fetchCredits, 60000)
+    return () => clearInterval(interval)
+  }, [])
 
   const navItems = [
     { path: '/', label: 'Trang chủ', icon: Home },
@@ -24,10 +47,23 @@ export default function Layout({ children }: LayoutProps) {
       <header className="glass sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2">
-              <Sparkles className="w-8 h-8 text-indigo-500" />
-              <span className="text-xl font-bold gradient-text">KIE AI Tools</span>
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link to="/" className="flex items-center gap-2">
+                <Sparkles className="w-8 h-8 text-indigo-500" />
+                <span className="text-xl font-bold gradient-text">KIE AI Tools</span>
+              </Link>
+              
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30">
+                <Coins className="w-4 h-4 text-amber-400" />
+                {loadingCredits ? (
+                  <span className="text-amber-300 text-sm">...</span>
+                ) : credits !== null ? (
+                  <span className="text-amber-300 text-sm font-medium">{credits.toLocaleString()} credits</span>
+                ) : (
+                  <span className="text-amber-300/50 text-sm">--</span>
+                )}
+              </div>
+            </div>
 
             <nav className="hidden md:flex items-center gap-6">
               {navItems.map((item) => (
