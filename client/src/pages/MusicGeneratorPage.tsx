@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Music, Loader2, Download, Zap, RefreshCw, Mic, Piano } from 'lucide-react'
+import { Music, Loader2, Zap, RefreshCw, Mic, Piano } from 'lucide-react'
+import MusicPlayer from '../components/MusicPlayer'
 
 const sunoModels = [
   { value: 'V4', label: 'Suno V4', desc: 'Ổn định, nhanh' },
@@ -448,42 +449,35 @@ export default function MusicGeneratorPage() {
 
           {result?.audioUrl && (
             <div className="space-y-4">
-              {result.title && (
-                <h3 className="text-xl font-semibold text-green-400">{result.title}</h3>
-              )}
-              
-              <div className="bg-slate-800/50 rounded-xl p-4">
-                <audio
-                  src={result.audioUrl}
-                  controls
-                  autoPlay
-                  className="w-full"
-                />
-              </div>
-
-              <button
-                onClick={() => handleDownload(result.audioUrl!, `ai-music-${Date.now()}.mp3`)}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 rounded-xl font-medium text-green-400 transition-all"
-              >
-                <Download className="w-5 h-5" />
-                Tải xuống MP3
-              </button>
+              <MusicPlayer
+                audioUrl={result.audioUrl}
+                title={result.title || 'AI Generated Music'}
+                description={
+                  customMode 
+                    ? `${style || 'Tùy chỉnh'} • ${instrumental ? 'Instrumental' : 'Có lời'} • ${model}` 
+                    : `Suno AI • ${model} • ${instrumental ? 'Instrumental' : 'Có lời'}`
+                }
+                onDownload={() => handleDownload(result.audioUrl!, `ai-music-${Date.now()}.mp3`)}
+                autoPlay={true}
+              />
 
               {result.audioUrls && result.audioUrls.length > 1 && (
-                <div className="mt-4">
-                  <p className="text-sm text-slate-400 mb-2">Các phiên bản khác:</p>
-                  <div className="space-y-2">
+                <div className="mt-6">
+                  <p className="text-sm text-slate-400 mb-3 font-medium">Các phiên bản khác:</p>
+                  <div className="space-y-4">
                     {result.audioUrls.slice(1).map((url, index) => (
-                      <div key={index} className="bg-slate-800/30 rounded-lg p-3">
-                        <audio src={url} controls className="w-full mb-2" />
-                        <button
-                          onClick={() => handleDownload(url, `ai-music-v${index + 2}-${Date.now()}.mp3`)}
-                          className="text-sm text-green-400 hover:text-green-300 flex items-center gap-1"
-                        >
-                          <Download className="w-4 h-4" />
-                          Tải phiên bản {index + 2}
-                        </button>
-                      </div>
+                      <MusicPlayer
+                        key={index}
+                        audioUrl={url}
+                        title={`${result.title || 'AI Generated Music'} (Phiên bản ${index + 2})`}
+                        description={
+                          customMode 
+                            ? `${style || 'Tùy chỉnh'} • ${instrumental ? 'Instrumental' : 'Có lời'} • ${model}` 
+                            : `Suno AI • ${model} • ${instrumental ? 'Instrumental' : 'Có lời'}`
+                        }
+                        onDownload={() => handleDownload(url, `ai-music-v${index + 2}-${Date.now()}.mp3`)}
+                        autoPlay={false}
+                      />
                     ))}
                   </div>
                 </div>
