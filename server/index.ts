@@ -548,6 +548,7 @@ app.post('/api/generate/suno', async (req: Request, res: Response) => {
       instrumental,
       prompt: prompt || '',
       songDescription: songDescription || '',
+      callBackUrl: 'https://example.com/callback',
     };
     
     if (customMode) {
