@@ -542,12 +542,21 @@ app.post('/api/generate/suno', async (req: Request, res: Response) => {
       vocalGender
     } = req.body;
     
+    // Map prompt theo tài liệu KIE API:
+    // - customMode = false: dùng songDescription làm prompt (mô tả chung)
+    // - customMode = true: dùng prompt (lời bài hát hoặc mô tả)
+    let finalPrompt = '';
+    if (customMode) {
+      finalPrompt = prompt || '';
+    } else {
+      finalPrompt = songDescription || '';
+    }
+    
     const payload: any = {
       model,
       customMode,
       instrumental,
-      prompt: prompt || '',
-      songDescription: songDescription || '',
+      prompt: finalPrompt,
       callBackUrl: 'https://example.com/callback',
     };
     
