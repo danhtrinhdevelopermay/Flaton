@@ -18,6 +18,7 @@ interface GenerationResult {
 
 export default function MusicGeneratorPage() {
   const [prompt, setPrompt] = useState('')
+  const [songDescription, setSongDescription] = useState('')
   const [customMode, setCustomMode] = useState(false)
   const [instrumental, setInstrumental] = useState(false)
   const [model, setModel] = useState('V4')
@@ -74,7 +75,7 @@ export default function MusicGeneratorPage() {
   }
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return
+    if (!songDescription.trim() && !prompt.trim()) return
     if (customMode && (!style.trim() || !title.trim())) return
 
     setLoading(true)
@@ -83,6 +84,7 @@ export default function MusicGeneratorPage() {
     try {
       const body: any = {
         prompt,
+        songDescription,
         customMode,
         instrumental,
         model,
@@ -290,24 +292,34 @@ export default function MusicGeneratorPage() {
           )}
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              {customMode && !instrumental ? 'Lời bài hát' : 'Mô tả bài nhạc'}
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Mô tả bài nhạc</label>
             <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder={
-                customMode && !instrumental
-                  ? "Nhập lời bài hát của bạn..."
-                  : "Mô tả bài nhạc bạn muốn... Ví dụ: A happy upbeat song about summer vacation"
-              }
-              maxLength={customMode ? 5000 : 500}
-              className="w-full h-32 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-500 resize-none"
+              value={songDescription}
+              onChange={(e) => setSongDescription(e.target.value)}
+              placeholder="Mô tả chung về bài nhạc... Ví dụ: A happy upbeat song about summer vacation"
+              maxLength={500}
+              className="w-full h-24 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-500 resize-none"
             />
             <p className="text-xs text-slate-400 mt-1">
-              {prompt.length}/{customMode ? 5000 : 500} ký tự
+              {songDescription.length}/500 ký tự
             </p>
           </div>
+
+          {customMode && !instrumental && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Lời bài hát (Prompt)</label>
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Nhập lời bài hát của bạn..."
+                maxLength={5000}
+                className="w-full h-32 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-500 resize-none"
+              />
+              <p className="text-xs text-slate-400 mt-1">
+                {prompt.length}/5000 ký tự
+              </p>
+            </div>
+          )}
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-300 mb-2">Loại trừ phong cách (tùy chọn)</label>
@@ -322,7 +334,7 @@ export default function MusicGeneratorPage() {
 
           <button
             onClick={handleGenerate}
-            disabled={loading || !prompt.trim() || (customMode && (!style.trim() || !title.trim()))}
+            disabled={loading || (!songDescription.trim() && !prompt.trim()) || (customMode && (!style.trim() || !title.trim()))}
             className="w-full py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {loading ? (

@@ -532,6 +532,7 @@ app.post('/api/generate/suno', async (req: Request, res: Response) => {
   try {
     const { 
       prompt, 
+      songDescription,
       customMode = false, 
       instrumental = false, 
       model = 'V4', 
@@ -542,19 +543,22 @@ app.post('/api/generate/suno', async (req: Request, res: Response) => {
     } = req.body;
     
     const payload: any = {
-      prompt,
+      model,
       customMode,
       instrumental,
-      model,
+      prompt: prompt || '',
+      songDescription: songDescription || '',
     };
     
     if (customMode) {
-      if (style) payload.style = style;
-      if (title) payload.title = title;
+      payload.title = title || '';
+      payload.style = style || '';
       if (vocalGender) payload.vocalGender = vocalGender;
     }
     
     if (negativeTags) payload.negativeTags = negativeTags;
+    
+    console.log('Suno payload:', JSON.stringify(payload, null, 2));
     
     const result = await callKieApi('/generate', payload);
     res.json({ taskId: result.data?.taskId, taskType: 'suno' });
