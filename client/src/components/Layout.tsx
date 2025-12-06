@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, Image, Video, Home, Music } from 'lucide-react'
-import { ReactNode } from 'react'
+import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User } from 'lucide-react'
+import { ReactNode, useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 
 interface LayoutProps {
   children: ReactNode
@@ -8,6 +9,8 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
+  const { user, logout, isAuthenticated } = useAuth()
+  const [showUserMenu, setShowUserMenu] = useState(false)
 
   const navItems = [
     { path: '/', label: 'Trang chủ', icon: Home },
@@ -43,21 +46,75 @@ export default function Layout({ children }: LayoutProps) {
               ))}
             </nav>
 
-            <nav className="md:hidden flex items-center gap-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`p-2 rounded-lg transition-all ${
-                    location.pathname === item.path
-                      ? 'bg-indigo-500/20 text-indigo-400'
-                      : 'text-slate-300 hover:text-white'
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                </Link>
-              ))}
-            </nav>
+            <div className="flex items-center gap-3">
+              <nav className="md:hidden flex items-center gap-2">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`p-2 rounded-lg transition-all ${
+                      location.pathname === item.path
+                        ? 'bg-indigo-500/20 text-indigo-400'
+                        : 'text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                  </Link>
+                ))}
+              </nav>
+
+              {isAuthenticated ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-all"
+                  >
+                    <User className="w-5 h-5" />
+                    <span className="hidden md:block">{user?.email}</span>
+                  </button>
+                  
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-48 glass rounded-xl overflow-hidden shadow-xl">
+                      <Link
+                        to="/history"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-2 px-4 py-3 hover:bg-slate-700/50 transition-all"
+                      >
+                        <History className="w-4 h-4" />
+                        Lịch sử tạo
+                      </Link>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-700/50 transition-all text-red-400"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Đăng xuất
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span className="hidden md:block">Đăng nhập</span>
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white transition-all"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span className="hidden md:block">Đăng ký</span>
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>

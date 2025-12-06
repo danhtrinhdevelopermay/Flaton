@@ -65,3 +65,9 @@ externalPort = 4200
 [[ports]]
 localPort = 46527
 externalPort = 5173
+
+[userenv]
+
+[userenv.shared]
+POSTGRES_URL = "postgresql://danhtrinh:MiIkrtq70adcDWXo-6hfow@flaton-19206.j77.aws-ap-southeast-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full"
+JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production-2024"

@@ -1,14 +1,22 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+import { initDatabase } from './db';
+import pool from './db';
+import { hashPassword, verifyPassword, generateToken, authMiddleware, optionalAuthMiddleware, AuthRequest } from './auth';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 const KIE_API_BASE = 'https://api.kie.ai/api/v1';
 
@@ -619,6 +627,168 @@ app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', apiKeyConfigured: !!process.env.KIE_API_KEY });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.post('/api/auth/register', async (req: Request, res: Response) => {
+  try {
+    const { email, password, name } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    const passwordHash = await hashPassword(password);
+    const result = await pool.query(
+      'INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3) RETURNING id, email, name',
+      [email, passwordHash, name || null]
+    );
+
+    const user = result.rows[0];
+    const token = generateToken(user.id);
+
+    res.json({ 
+      success: true, 
+      token, 
+      user: { id: user.id, email: user.email, name: user.name }
+    });
+  } catch (error: any) {
+    console.error('Register error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
+
+app.post('/api/auth/login', async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const user = result.rows[0];
+    const validPassword = await verifyPassword(password, user.password_hash);
+
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const token = generateToken(user.id);
+
+    res.json({ 
+      success: true, 
+      token, 
+      user: { id: user.id, email: user.email, name: user.name }
+    });
+  } catch (error: any) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/auth/me', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    res.json({ user: req.user });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/products/image', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { imageUrl, prompt, model, aspectRatio } = req.body;
+    
+    const result = await pool.query(
+      'INSERT INTO generated_images (user_id, image_url, prompt, model, aspect_ratio) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [req.userId, imageUrl, prompt, model, aspectRatio]
+    );
+
+    res.json({ success: true, product: result.rows[0] });
+  } catch (error: any) {
+    console.error('Save image error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/products/video', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { videoUrl, prompt, imageUrl, model, aspectRatio } = req.body;
+    
+    const result = await pool.query(
+      'INSERT INTO generated_videos (user_id, video_url, prompt, image_url, model, aspect_ratio) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [req.userId, videoUrl, prompt, imageUrl, model, aspectRatio]
+    );
+
+    res.json({ success: true, product: result.rows[0] });
+  } catch (error: any) {
+    console.error('Save video error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/products/music', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { audioUrl, title, prompt, style, model } = req.body;
+    
+    const result = await pool.query(
+      'INSERT INTO generated_music (user_id, audio_url, title, prompt, style, model) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [req.userId, audioUrl, title, prompt, style, model]
+    );
+
+    res.json({ success: true, product: result.rows[0] });
+  } catch (error: any) {
+    console.error('Save music error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/products/history', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const images = await pool.query(
+      'SELECT * FROM generated_images WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+      [req.userId]
+    );
+    
+    const videos = await pool.query(
+      'SELECT * FROM generated_videos WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+      [req.userId]
+    );
+    
+    const music = await pool.query(
+      'SELECT * FROM generated_music WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+      [req.userId]
+    );
+
+    res.json({
+      images: images.rows,
+      videos: videos.rows,
+      music: music.rows
+    });
+  } catch (error: any) {
+    console.error('Get history error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+async function startServer() {
+  try {
+    await initDatabase();
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log('Database initialized successfully');
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
