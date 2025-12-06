@@ -367,7 +367,22 @@ export default function MusicGeneratorPage() {
 
           {loading && (
             <div className="flex flex-col items-center justify-center h-64">
-              <Loader2 className="w-16 h-16 text-green-400 animate-spin mb-4" />
+              <div className="custom-loader mb-6">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                  <defs>
+                    <mask id="clipping">
+                      <polygon points="0,0 100,0 100,100 0,100" fill="black"></polygon>
+                      <polygon points="25,25 75,25 50,75" fill="white"></polygon>
+                      <polygon points="50,25 75,75 25,75" fill="white"></polygon>
+                      <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+                      <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+                      <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+                      <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+                    </mask>
+                  </defs>
+                </svg>
+                <div className="loader-box"></div>
+              </div>
               <p className="text-slate-300">{polling ? 'AI đang sáng tác nhạc...' : 'Đang kết nối...'}</p>
               <p className="text-sm text-slate-400 mt-2">Quá trình này có thể mất 30-60 giây</p>
             </div>
