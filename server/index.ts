@@ -237,7 +237,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     if (data.status === 'SUCCESS' || data.status === 'FIRST_SUCCESS') {
       let audioUrls: string[] = [];
       if (data.response?.sunoData && Array.isArray(data.response.sunoData)) {
-        audioUrls = data.response.sunoData.map((track: any) => track.audio_url).filter(Boolean);
+        audioUrls = data.response.sunoData.map((track: any) => track.audioUrl || track.audio_url).filter(Boolean);
       }
       return {
         status: 'completed',
