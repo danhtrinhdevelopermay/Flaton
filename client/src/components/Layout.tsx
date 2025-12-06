@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, Image, Video, Home } from 'lucide-react'
+import { Sparkles, Image, Video, Home, Music } from 'lucide-react'
 import { ReactNode } from 'react'
 
 interface LayoutProps {
@@ -13,6 +13,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/', label: 'Trang chủ', icon: Home },
     { path: '/image-generator', label: 'Tạo hình ảnh', icon: Image },
     { path: '/video-generator', label: 'Tạo video', icon: Video },
+    { path: '/music-generator', label: 'Tạo nhạc', icon: Music },
   ]
 
   return (

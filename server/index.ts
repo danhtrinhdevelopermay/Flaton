@@ -65,6 +65,9 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     case 'grok':
       endpoint = `/jobs/recordInfo?taskId=${taskId}`;
       break;
+    case 'suno':
+      endpoint = `/music/record-info?taskId=${taskId}`;
+      break;
     default:
       throw new Error('Unknown task type');
   }
@@ -225,6 +228,37 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       return {
         status: 'processing',
         progress: data.progress,
+      };
+    }
+  }
+
+  // Handle Suno music generation
+  if (taskType === 'suno') {
+    if (data.state === 'complete' || data.state === 'success') {
+      let audioUrls: string[] = [];
+      if (data.resultJson) {
+        try {
+          const resultData = JSON.parse(data.resultJson);
+          audioUrls = resultData.resultUrls || resultData.audioUrls || [];
+        } catch (e) {
+          console.error('Failed to parse Suno resultJson:', e);
+        }
+      }
+      return {
+        status: 'completed',
+        audioUrl: audioUrls[0],
+        audioUrls: audioUrls,
+        title: data.title,
+      };
+    } else if (data.state === 'failed') {
+      return {
+        status: 'failed',
+        error: data.failMsg || 'Music generation failed',
+      };
+    } else {
+      return {
+        status: 'processing',
+        progress: data.state, // text, first, complete stages
       };
     }
   }
@@ -488,6 +522,42 @@ app.post('/api/generate/grok-t2v', async (req: Request, res: Response) => {
       },
     });
     res.json({ taskId: result.data?.taskId, taskType: 'grok' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Suno AI - Generate Music
+app.post('/api/generate/suno', async (req: Request, res: Response) => {
+  try {
+    const { 
+      prompt, 
+      customMode = false, 
+      instrumental = false, 
+      model = 'V4', 
+      style, 
+      title,
+      negativeTags,
+      vocalGender
+    } = req.body;
+    
+    const payload: any = {
+      prompt,
+      customMode,
+      instrumental,
+      model,
+    };
+    
+    if (customMode) {
+      if (style) payload.style = style;
+      if (title) payload.title = title;
+      if (vocalGender) payload.vocalGender = vocalGender;
+    }
+    
+    if (negativeTags) payload.negativeTags = negativeTags;
+    
+    const result = await callKieApi('/generate', payload);
+    res.json({ taskId: result.data?.taskId, taskType: 'suno' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
