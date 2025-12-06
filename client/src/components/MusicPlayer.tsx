@@ -70,9 +70,13 @@ export default function MusicPlayer({
       analyserRef.current.fftSize = 256
       analyserRef.current.smoothingTimeConstant = 0.8
       
-      sourceRef.current = audioContextRef.current.createMediaElementSource(audio)
-      sourceRef.current.connect(analyserRef.current)
-      analyserRef.current.connect(audioContextRef.current.destination)
+      try {
+        sourceRef.current = audioContextRef.current.createMediaElementSource(audio)
+        sourceRef.current.connect(analyserRef.current)
+        analyserRef.current.connect(audioContextRef.current.destination)
+      } catch (error) {
+        console.error('Error creating audio source:', error)
+      }
     }
 
     return () => {
@@ -131,18 +135,29 @@ export default function MusicPlayer({
 
   useEffect(() => {
     const audio = audioRef.current
-    if (!audio) return
+    const audioContext = audioContextRef.current
+    if (!audio || !audioContext) return
 
-    if (autoPlay && isPlaying) {
-      audio.play().catch(err => {
-        console.log('Auto-play prevented:', err)
-        setIsPlaying(false)
-      })
+    if (autoPlay) {
+      const tryAutoPlay = async () => {
+        try {
+          if (audioContext.state === 'suspended') {
+            await audioContext.resume()
+          }
+          await audio.play()
+          setIsPlaying(true)
+        } catch (err) {
+          console.log('Auto-play prevented:', err)
+          setIsPlaying(false)
+        }
+      }
+      tryAutoPlay()
     }
-  }, [autoPlay])
+  }, [autoPlay, audioUrl])
 
   const togglePlay = async () => {
     const audio = audioRef.current
+    const audioContext = audioContextRef.current
     if (!audio) return
 
     if (isPlaying) {
@@ -150,6 +165,9 @@ export default function MusicPlayer({
       setIsPlaying(false)
     } else {
       try {
+        if (audioContext && audioContext.state === 'suspended') {
+          await audioContext.resume()
+        }
         await audio.play()
         setIsPlaying(true)
       } catch (err) {
