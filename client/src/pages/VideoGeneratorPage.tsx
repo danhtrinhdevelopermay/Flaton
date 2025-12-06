@@ -49,6 +49,8 @@ export default function VideoGeneratorPage() {
   const [polling, setPolling] = useState(false)
   const [upgrading1080p, setUpgrading1080p] = useState(false)
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null)
+  const [progress, setProgress] = useState(0)
+  const [progressMessage, setProgressMessage] = useState('')
 
   const currentTool = videoTools.find(t => t.id === selectedTool)
 
@@ -61,6 +63,8 @@ export default function VideoGeneratorPage() {
 
   const pollTaskStatus = async (taskId: string, taskType: string) => {
     setPolling(true)
+    setProgress(5)
+    setProgressMessage('Bắt đầu tạo video...')
     const maxAttempts = 120
     let attempts = 0
 
@@ -73,7 +77,23 @@ export default function VideoGeneratorPage() {
           return { error: data.error }
         }
 
+        // Update progress based on attempts
+        const calculatedProgress = Math.min(90, 10 + (attempts * 2))
+        setProgress(calculatedProgress)
+        
+        if (attempts < 10) {
+          setProgressMessage('AI đang phân tích yêu cầu...')
+        } else if (attempts < 30) {
+          setProgressMessage('Đang render các khung hình...')
+        } else if (attempts < 60) {
+          setProgressMessage('Đang tổng hợp video...')
+        } else {
+          setProgressMessage('Sắp hoàn thành...')
+        }
+
         if (data.status === 'completed' || data.status === 'success') {
+          setProgress(100)
+          setProgressMessage('Hoàn thành!')
           return {
             status: 'completed',
             videoUrl: data.videoUrl || data.output?.videoUrl,
@@ -423,10 +443,44 @@ export default function VideoGeneratorPage() {
           )}
 
           {loading && (
-            <div className="flex flex-col items-center justify-center h-64">
-              <Loader2 className="w-16 h-16 text-purple-400 animate-spin mb-4" />
-              <p className="text-slate-300">{polling ? 'AI đang tạo video của bạn...' : 'Đang kết nối...'}</p>
-              <p className="text-sm text-slate-400 mt-2">Quá trình này có thể mất 1-3 phút</p>
+            <div className="flex flex-col items-center justify-center h-64 px-6">
+              <div className="custom-loader-video mb-6">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                  <defs>
+                    <mask id="clipping-video">
+                      <polygon points="0,0 100,0 100,100 0,100" fill="black"></polygon>
+                      <polygon points="25,25 75,25 50,75" fill="white"></polygon>
+                      <polygon points="50,25 75,75 25,75" fill="white"></polygon>
+                      <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+                      <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+                      <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+                      <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+                    </mask>
+                  </defs>
+                </svg>
+                <div className="loader-box"></div>
+              </div>
+              
+              {polling && (
+                <div className="w-full max-w-md space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-300">{progressMessage}</span>
+                    <span className="text-purple-400 font-semibold">{progress}%</span>
+                  </div>
+                  <div className="progress-bar-container-video">
+                    <div 
+                      className="progress-bar-fill-video" 
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {!polling && (
+                <p className="text-slate-300">Đang kết nối...</p>
+              )}
+              
+              <p className="text-sm text-slate-400 mt-3">Quá trình này có thể mất 1-3 phút</p>
             </div>
           )}
 
