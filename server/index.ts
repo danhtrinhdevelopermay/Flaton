@@ -66,7 +66,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       endpoint = `/jobs/recordInfo?taskId=${taskId}`;
       break;
     case 'suno':
-      endpoint = `/music/record-info?taskId=${taskId}`;
+      endpoint = `/suno/record-info?taskId=${taskId}`;
       break;
     default:
       throw new Error('Unknown task type');
