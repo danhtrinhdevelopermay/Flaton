@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Video, Loader2, Download, Zap, Check, RefreshCw, Upload } from 'lucide-react'
+import { Video, Loader2, Download, Zap, Check, RefreshCw, Upload, Sparkles } from 'lucide-react'
 
 const videoTools = [
-  { id: 'veo3-fast', name: 'Veo 3 Fast', credits: 60, provider: 'Google DeepMind', type: 'text' },
-  { id: 'grok-t2v', name: 'Grok Imagenia (Text)', credits: 20, provider: 'xAI', type: 'text' },
-  { id: 'grok-i2v', name: 'Grok Imagenia (Image)', credits: 20, provider: 'xAI', type: 'image' },
-  { id: 'midjourney-video', name: 'Midjourney Video', credits: 40, provider: 'Midjourney', type: 'image' },
+  { id: 'veo3-fast', name: 'Veo 3 Fast', credits: 60, provider: 'Google DeepMind', type: 'text', description: 'Nhanh, 720P' },
+  { id: 'veo3', name: 'Veo 3 Quality', credits: 100, provider: 'Google DeepMind', type: 'text', description: 'Chất lượng cao, chậm hơn' },
+  { id: 'grok-t2v', name: 'Grok Imagenia (Text)', credits: 20, provider: 'xAI', type: 'text', description: 'Text to Video' },
+  { id: 'grok-i2v', name: 'Grok Imagenia (Image)', credits: 20, provider: 'xAI', type: 'image', description: 'Image to Video' },
+  { id: 'midjourney-video', name: 'Midjourney Video', credits: 40, provider: 'Midjourney', type: 'image', description: 'Image to Video' },
 ]
 
 const aspectRatios = [
@@ -32,6 +33,7 @@ interface GenerationResult {
   status?: string
   videoUrl?: string
   error?: string
+  canUpgrade1080p?: boolean
 }
 
 export default function VideoGeneratorPage() {
@@ -45,6 +47,8 @@ export default function VideoGeneratorPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [polling, setPolling] = useState(false)
+  const [upgrading1080p, setUpgrading1080p] = useState(false)
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null)
 
   const currentTool = videoTools.find(t => t.id === selectedTool)
 
@@ -110,7 +114,7 @@ export default function VideoGeneratorPage() {
     try {
       let body: any = {}
       
-      if (selectedTool === 'veo3-fast') {
+      if (selectedTool === 'veo3-fast' || selectedTool === 'veo3') {
         body = { prompt, aspectRatio }
       } else if (selectedTool === 'grok-t2v') {
         body = { prompt, aspectRatio: grokAspectRatio, mode: grokMode }
@@ -138,12 +142,19 @@ export default function VideoGeneratorPage() {
         // Use taskType from response if available, otherwise fallback to mapping
         let taskType = data.taskType || 'midjourney'
         if (!data.taskType) {
-          if (selectedTool === 'veo3-fast') taskType = 'veo3'
+          if (selectedTool === 'veo3-fast' || selectedTool === 'veo3') taskType = 'veo3'
           else if (selectedTool.startsWith('grok')) taskType = 'grok'
           else if (selectedTool === 'midjourney-video') taskType = 'midjourney-video'
         }
         
+        setCurrentTaskId(data.taskId)
         const finalResult = await pollTaskStatus(data.taskId, taskType)
+        
+        // Enable 1080p upgrade for Veo 3 videos
+        if ((selectedTool === 'veo3-fast' || selectedTool === 'veo3') && finalResult.videoUrl) {
+          finalResult.canUpgrade1080p = true
+        }
+        
         setResult(finalResult)
       } else if (data.videoUrl) {
         setResult({
@@ -175,6 +186,25 @@ export default function VideoGeneratorPage() {
     } catch (err) {
       window.open(url, '_blank')
     }
+  }
+
+  const handleUpgrade1080p = async () => {
+    if (!currentTaskId) return
+    
+    setUpgrading1080p(true)
+    try {
+      const response = await fetch(`/api/veo3/1080p/${currentTaskId}?index=0`)
+      const data = await response.json()
+      
+      if (data.success && data.videoUrl) {
+        setResult(prev => prev ? { ...prev, videoUrl: data.videoUrl, canUpgrade1080p: false } : prev)
+      } else {
+        alert(data.message || 'Video 1080P is not ready yet. Please try again in a few minutes.')
+      }
+    } catch (err: any) {
+      alert('Failed to get 1080P video: ' + err.message)
+    }
+    setUpgrading1080p(false)
   }
 
   return (
@@ -224,7 +254,7 @@ export default function VideoGeneratorPage() {
             </div>
           </div>
 
-          {selectedTool === 'veo3-fast' && (
+          {(selectedTool === 'veo3-fast' || selectedTool === 'veo3') && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-300 mb-2">Tỷ lệ khung hình</label>
               <div className="grid grid-cols-3 gap-2">
@@ -431,6 +461,26 @@ export default function VideoGeneratorPage() {
                   <Download className="w-5 h-5" />
                 </button>
               </div>
+              
+              {result.canUpgrade1080p && (
+                <button
+                  onClick={handleUpgrade1080p}
+                  disabled={upgrading1080p}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-xl font-medium text-white transition-all disabled:opacity-50"
+                >
+                  {upgrading1080p ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Loading 1080P...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Get 1080P HD Video
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           )}
         </div>

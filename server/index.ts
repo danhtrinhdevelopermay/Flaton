@@ -390,6 +390,58 @@ app.post('/api/generate/veo3-fast', async (req: Request, res: Response) => {
   }
 });
 
+// Veo 3 Quality - Higher quality but slower
+app.post('/api/generate/veo3', async (req: Request, res: Response) => {
+  try {
+    const { prompt, aspectRatio = '16:9' } = req.body;
+    const result = await callKieApi('/veo/generate', {
+      prompt,
+      model: 'veo3',
+      aspectRatio,
+    });
+    res.json({ taskId: result.data.taskId, taskType: 'veo3' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get 1080P video for Veo3
+app.get('/api/veo3/1080p/:taskId', async (req: Request, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const index = parseInt(req.query.index as string) || 0;
+    const apiKey = process.env.KIE_API_KEY;
+    if (!apiKey) {
+      throw new Error('KIE_API_KEY not configured');
+    }
+
+    const response = await fetch(`${KIE_API_BASE}/veo/get-1080p-video?taskId=${taskId}&index=${index}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+    });
+
+    const result = await response.json();
+    console.log(`1080P video request for ${taskId}:`, JSON.stringify(result, null, 2));
+    
+    if (result.code === 200) {
+      res.json({ 
+        success: true, 
+        videoUrl: result.data,
+        message: 'Video 1080P ready'
+      });
+    } else {
+      res.json({ 
+        success: false, 
+        message: result.msg || 'Video 1080P not ready yet, please try again later'
+      });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/generate/midjourney-video', async (req: Request, res: Response) => {
   try {
     const { imageUrl, prompt } = req.body;
