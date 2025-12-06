@@ -29,9 +29,26 @@ export default function MusicGeneratorPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [polling, setPolling] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [progressMessage, setProgressMessage] = useState('')
+
+  const getProgressInfo = (statusProgress: string) => {
+    switch (statusProgress) {
+      case 'PENDING':
+        return { percent: 15, message: 'Đang khởi tạo yêu cầu...' }
+      case 'TEXT_SUCCESS':
+        return { percent: 45, message: 'Đã tạo xong lời bài hát...' }
+      case 'FIRST_SUCCESS':
+        return { percent: 75, message: 'Bài nhạc đầu tiên đã sẵn sàng...' }
+      default:
+        return { percent: 10, message: 'Đang xử lý...' }
+    }
+  }
 
   const pollTaskStatus = async (taskId: string, taskType: string) => {
     setPolling(true)
+    setProgress(5)
+    setProgressMessage('Bắt đầu tạo nhạc...')
     const maxAttempts = 120
     let attempts = 0
 
@@ -44,7 +61,15 @@ export default function MusicGeneratorPage() {
           return { error: data.error }
         }
 
+        if (data.progress) {
+          const progressInfo = getProgressInfo(data.progress)
+          setProgress(progressInfo.percent)
+          setProgressMessage(progressInfo.message)
+        }
+
         if (data.status === 'completed' || data.status === 'success') {
+          setProgress(100)
+          setProgressMessage('Hoàn thành!')
           return {
             status: 'completed',
             audioUrl: data.audioUrl,
@@ -366,7 +391,7 @@ export default function MusicGeneratorPage() {
           )}
 
           {loading && (
-            <div className="flex flex-col items-center justify-center h-64">
+            <div className="flex flex-col items-center justify-center h-64 px-6">
               <div className="custom-loader mb-6">
                 <svg width="100" height="100" viewBox="0 0 100 100">
                   <defs>
@@ -383,8 +408,27 @@ export default function MusicGeneratorPage() {
                 </svg>
                 <div className="loader-box"></div>
               </div>
-              <p className="text-slate-300">{polling ? 'AI đang sáng tác nhạc...' : 'Đang kết nối...'}</p>
-              <p className="text-sm text-slate-400 mt-2">Quá trình này có thể mất 30-60 giây</p>
+              
+              {polling && (
+                <div className="w-full max-w-md space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-300">{progressMessage}</span>
+                    <span className="text-green-400 font-semibold">{progress}%</span>
+                  </div>
+                  <div className="progress-bar-container">
+                    <div 
+                      className="progress-bar-fill" 
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {!polling && (
+                <p className="text-slate-300">Đang kết nối...</p>
+              )}
+              
+              <p className="text-sm text-slate-400 mt-3">Quá trình này có thể mất 30-60 giây</p>
             </div>
           )}
 
