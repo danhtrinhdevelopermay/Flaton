@@ -266,7 +266,13 @@ async function checkTaskStatus(taskId: string, taskType: string) {
   if (data.successFlag === 1) {
     if (taskType === 'veo3') {
       let videoUrl = null;
-      if (data.resultUrls) {
+      
+      // Check data.response.resultUrls first (this is where Veo3 actually returns the URL)
+      if (data.response?.resultUrls && Array.isArray(data.response.resultUrls)) {
+        videoUrl = data.response.resultUrls[0];
+      }
+      // Fallback: check data.resultUrls
+      else if (data.resultUrls) {
         try {
           const urls = typeof data.resultUrls === 'string' ? JSON.parse(data.resultUrls) : data.resultUrls;
           videoUrl = Array.isArray(urls) ? urls[0] : urls;
@@ -274,6 +280,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
           console.error('Failed to parse veo3 resultUrls:', e);
         }
       }
+      
       return {
         status: 'completed',
         videoUrl: videoUrl,
