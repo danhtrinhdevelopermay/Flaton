@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Video, Loader2, Zap, Check, RefreshCw, Upload, Sparkles } from 'lucide-react'
 import VideoPlayer from '../components/VideoPlayer'
+import { useAuth } from '../contexts/AuthContext'
 
 const videoTools = [
   { id: 'veo3-fast', name: 'Veo 3 Fast', credits: 60, provider: 'Google DeepMind', type: 'text', description: 'Nhanh, 720P' },
@@ -39,6 +40,7 @@ interface GenerationResult {
 
 export default function VideoGeneratorPage() {
   const [searchParams] = useSearchParams()
+  const { token, isAuthenticated } = useAuth()
   const [selectedTool, setSelectedTool] = useState(searchParams.get('tool') || 'veo3-fast')
   const [prompt, setPrompt] = useState('')
   const [imageUrl, setImageUrl] = useState('')
@@ -61,6 +63,29 @@ export default function VideoGeneratorPage() {
       setSelectedTool(toolParam)
     }
   }, [searchParams])
+
+  const saveVideoToHistory = async (videoUrl: string, generationPrompt: string, generationImageUrl: string, generationModel: string, generationAspectRatio: string, isImageTool: boolean) => {
+    if (!isAuthenticated || !token) return
+
+    try {
+      await fetch('/api/products/video', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          videoUrl,
+          prompt: generationPrompt,
+          imageUrl: isImageTool ? generationImageUrl : undefined,
+          model: generationModel,
+          aspectRatio: generationAspectRatio
+        })
+      })
+    } catch (err) {
+      console.error('Failed to save video to history:', err)
+    }
+  }
 
   const pollTaskStatus = async (taskId: string, taskType: string) => {
     setPolling(true)
@@ -132,17 +157,24 @@ export default function VideoGeneratorPage() {
     setLoading(true)
     setResult(null)
 
+    const currentPrompt = prompt
+    const currentImageUrl = imageUrl
+    const currentModel = selectedTool
+    const currentVideoAspectRatio = selectedTool === 'grok-t2v' ? grokAspectRatio : 
+                                     (selectedTool === 'grok-i2v' || selectedTool === 'midjourney-video') ? '1:1' : 
+                                     aspectRatio
+
     try {
       let body: any = {}
       
       if (selectedTool === 'veo3-fast' || selectedTool === 'veo3') {
-        body = { prompt, aspectRatio }
+        body = { prompt: currentPrompt, aspectRatio }
       } else if (selectedTool === 'grok-t2v') {
-        body = { prompt, aspectRatio: grokAspectRatio, mode: grokMode }
+        body = { prompt: currentPrompt, aspectRatio: grokAspectRatio, mode: grokMode }
       } else if (selectedTool === 'grok-i2v') {
-        body = { imageUrl, prompt, mode: grokMode }
+        body = { imageUrl: currentImageUrl, prompt: currentPrompt, mode: grokMode }
       } else if (selectedTool === 'midjourney-video') {
-        body = { imageUrl, prompt }
+        body = { imageUrl: currentImageUrl, prompt: currentPrompt }
       }
 
       const response = await fetch(`/api/generate/${selectedTool}`, {
@@ -177,11 +209,17 @@ export default function VideoGeneratorPage() {
         }
         
         setResult(finalResult)
+        
+        if (finalResult.status === 'completed' && finalResult.videoUrl) {
+          await saveVideoToHistory(finalResult.videoUrl, currentPrompt, currentImageUrl, currentModel, currentVideoAspectRatio, isImageTool)
+        }
       } else if (data.videoUrl) {
-        setResult({
+        const videoResult = {
           status: 'completed',
           videoUrl: data.videoUrl,
-        })
+        }
+        setResult(videoResult)
+        await saveVideoToHistory(data.videoUrl, currentPrompt, currentImageUrl, currentModel, currentVideoAspectRatio, isImageTool)
       } else {
         setResult({ status: 'pending', taskId: data.taskId || 'unknown' })
       }

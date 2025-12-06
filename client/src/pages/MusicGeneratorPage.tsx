@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Music, Loader2, Zap, RefreshCw, Mic, Piano } from 'lucide-react'
 import MusicPlayer from '../components/MusicPlayer'
+import { useAuth } from '../contexts/AuthContext'
 
 const sunoModels = [
   { value: 'V4', label: 'Suno V4', desc: 'Ổn định, nhanh' },
@@ -18,6 +19,7 @@ interface GenerationResult {
 }
 
 export default function MusicGeneratorPage() {
+  const { token, isAuthenticated } = useAuth()
   const [prompt, setPrompt] = useState('')
   const [songDescription, setSongDescription] = useState('')
   const [customMode, setCustomMode] = useState(false)
@@ -32,6 +34,29 @@ export default function MusicGeneratorPage() {
   const [polling, setPolling] = useState(false)
   const [progress, setProgress] = useState(0)
   const [progressMessage, setProgressMessage] = useState('')
+
+  const saveMusicToHistory = async (audioUrl: string, musicTitle: string, generationPrompt: string, generationStyle: string | undefined, generationModel: string) => {
+    if (!isAuthenticated || !token) return
+
+    try {
+      await fetch('/api/products/music', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          audioUrl,
+          title: musicTitle,
+          prompt: generationPrompt,
+          style: generationStyle,
+          model: generationModel
+        })
+      })
+    } catch (err) {
+      console.error('Failed to save music to history:', err)
+    }
+  }
 
   const getProgressInfo = (statusProgress: string) => {
     switch (statusProgress) {
@@ -107,18 +132,25 @@ export default function MusicGeneratorPage() {
     setLoading(true)
     setResult(null)
 
+    const currentPrompt = prompt
+    const currentSongDescription = songDescription
+    const currentCustomMode = customMode
+    const currentStyle = style
+    const currentTitle = title
+    const currentModel = model
+
     try {
       const body: any = {
-        prompt,
-        songDescription,
-        customMode,
+        prompt: currentPrompt,
+        songDescription: currentSongDescription,
+        customMode: currentCustomMode,
         instrumental,
-        model,
+        model: currentModel,
       }
 
-      if (customMode) {
-        body.style = style
-        body.title = title
+      if (currentCustomMode) {
+        body.style = currentStyle
+        body.title = currentTitle
         if (vocalGender) body.vocalGender = vocalGender
       }
 
@@ -141,6 +173,13 @@ export default function MusicGeneratorPage() {
       if (data.taskId) {
         const finalResult = await pollTaskStatus(data.taskId, 'suno')
         setResult(finalResult)
+        
+        if (finalResult.status === 'completed' && finalResult.audioUrl) {
+          const savedTitle = finalResult.title || currentTitle || 'Untitled'
+          const savedPrompt = currentCustomMode ? currentPrompt : currentSongDescription
+          const savedStyle = currentCustomMode ? currentStyle : undefined
+          await saveMusicToHistory(finalResult.audioUrl, savedTitle, savedPrompt, savedStyle, currentModel)
+        }
       }
     } catch (err: any) {
       setResult({ error: err.message })

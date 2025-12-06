@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Image, Loader2, Download, Zap, Check, RefreshCw } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 const imageTools = [
   { id: 'nano-banana', name: 'Nano Banana', credits: 4, provider: 'Google' },
@@ -26,6 +27,7 @@ interface GenerationResult {
 
 export default function ImageGeneratorPage() {
   const [searchParams] = useSearchParams()
+  const { token, isAuthenticated } = useAuth()
   const [selectedTool, setSelectedTool] = useState(searchParams.get('tool') || 'nano-banana')
   const [prompt, setPrompt] = useState('')
   const [aspectRatio, setAspectRatio] = useState('1:1')
@@ -41,6 +43,28 @@ export default function ImageGeneratorPage() {
       setSelectedTool(toolParam)
     }
   }, [searchParams])
+
+  const saveImageToHistory = async (imageUrl: string, generationPrompt: string, generationModel: string, generationAspectRatio: string) => {
+    if (!isAuthenticated || !token) return
+
+    try {
+      await fetch('/api/products/image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          imageUrl,
+          prompt: generationPrompt,
+          model: generationModel,
+          aspectRatio: generationAspectRatio
+        })
+      })
+    } catch (err) {
+      console.error('Failed to save image to history:', err)
+    }
+  }
 
   const pollTaskStatus = async (taskId: string, taskType: string) => {
     setPolling(true)
@@ -91,11 +115,15 @@ export default function ImageGeneratorPage() {
     setLoading(true)
     setResult(null)
 
+    const currentPrompt = prompt
+    const currentModel = selectedTool
+    const currentAspectRatio = aspectRatio
+
     try {
       const response = await fetch(`/api/generate/${selectedTool}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, aspectRatio }),
+        body: JSON.stringify({ prompt: currentPrompt, aspectRatio: currentAspectRatio }),
       })
 
       const data = await response.json()
@@ -110,12 +138,25 @@ export default function ImageGeneratorPage() {
         const taskType = data.taskType || (selectedTool === 'midjourney' ? 'midjourney' : 'gpt4o-image')
         const finalResult = await pollTaskStatus(data.taskId, taskType)
         setResult(finalResult)
+        
+        if (finalResult.status === 'completed') {
+          const imageToSave = finalResult.images?.[0] || finalResult.imageUrl
+          if (imageToSave) {
+            await saveImageToHistory(imageToSave, currentPrompt, currentModel, currentAspectRatio)
+          }
+        }
       } else if (data.imageUrl || data.images) {
-        setResult({
+        const imageResult = {
           status: 'completed',
           imageUrl: data.imageUrl,
           images: data.images,
-        })
+        }
+        setResult(imageResult)
+        
+        const imageToSave = data.images?.[0] || data.imageUrl
+        if (imageToSave) {
+          await saveImageToHistory(imageToSave, currentPrompt, currentModel, currentAspectRatio)
+        }
       } else {
         setResult({ status: 'pending', taskId: data.taskId || 'unknown' })
       }
