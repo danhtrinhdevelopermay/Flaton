@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Video, Loader2, Download, Zap, Check, RefreshCw, Upload, Sparkles } from 'lucide-react'
+import { Video, Loader2, Zap, Check, RefreshCw, Upload, Sparkles } from 'lucide-react'
+import VideoPlayer from '../components/VideoPlayer'
 
 const videoTools = [
   { id: 'veo3-fast', name: 'Veo 3 Fast', credits: 60, provider: 'Google DeepMind', type: 'text', description: 'Nhanh, 720P' },
@@ -500,21 +501,13 @@ export default function VideoGeneratorPage() {
 
           {result?.videoUrl && (
             <div className="space-y-4">
-              <div className="relative group">
-                <video
-                  src={result.videoUrl}
-                  controls
-                  autoPlay
-                  loop
-                  className="w-full rounded-xl"
-                />
-                <button
-                  onClick={() => handleDownload(result.videoUrl!, `ai-video-${Date.now()}.mp4`)}
-                  className="absolute bottom-4 right-4 bg-black/50 hover:bg-black/70 p-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Download className="w-5 h-5" />
-                </button>
-              </div>
+              <VideoPlayer
+                videoUrl={result.videoUrl}
+                title={`AI Generated Video - ${currentTool?.name}`}
+                description={`${currentTool?.provider} • ${currentTool?.description}`}
+                onDownload={() => handleDownload(result.videoUrl!, `ai-video-${Date.now()}.mp4`)}
+                autoPlay={true}
+              />
               
               {result.canUpgrade1080p && (
                 <button
