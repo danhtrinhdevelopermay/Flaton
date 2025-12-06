@@ -261,7 +261,7 @@ export default function ImageGeneratorPage() {
           <button
             onClick={handleGenerate}
             disabled={loading || !prompt.trim()}
-            className="w-full btn-primary py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
+            className="w-full bubble-btn btn-primary py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

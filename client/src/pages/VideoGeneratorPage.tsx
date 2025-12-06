@@ -451,7 +451,7 @@ export default function VideoGeneratorPage() {
           <button
             onClick={handleGenerate}
             disabled={loading || (currentTool?.type === 'text' ? !prompt.trim() : !imageUrl.trim())}
-            className="w-full btn-primary py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
+            className="w-full bubble-btn btn-primary py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

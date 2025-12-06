@@ -71,7 +71,7 @@ export default function HomePage() {
         <div className="flex flex-wrap justify-center gap-4">
           <Link
             to="/image-generator"
-            className="btn-primary px-6 py-3 rounded-xl font-semibold text-white flex items-center gap-2"
+            className="bubble-btn btn-primary px-6 py-3 rounded-xl font-semibold text-white flex items-center gap-2"
           >
             <Image className="w-5 h-5" />
             Tạo hình ảnh
@@ -79,7 +79,7 @@ export default function HomePage() {
           </Link>
           <Link
             to="/video-generator"
-            className="glass px-6 py-3 rounded-xl font-semibold text-white flex items-center gap-2 hover:bg-slate-700/50 transition-all"
+            className="bubble-btn glass px-6 py-3 rounded-xl font-semibold text-white flex items-center gap-2 hover:bg-slate-700/50 transition-all"
           >
             <Video className="w-5 h-5" />
             Tạo video
