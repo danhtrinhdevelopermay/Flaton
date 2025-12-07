@@ -8,6 +8,33 @@ interface LayoutProps {
   children: ReactNode
 }
 
+function LiquidGlassSVG() {
+  return (
+    <svg width="0" height="0" style={{ position: 'absolute' }}>
+      <defs>
+        <filter id="liquid-glass-filter" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="blur" />
+          <feColorMatrix
+            in="blur"
+            type="matrix"
+            values="1 0 0 0 0
+                    0 1 0 0 0
+                    0 0 1 0 0
+                    0 0 0 18 -7"
+            result="goo"
+          />
+          <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+        </filter>
+        <linearGradient id="liquid-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
+          <stop offset="50%" stopColor="rgba(255,255,255,0.1)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0.2)" />
+        </linearGradient>
+      </defs>
+    </svg>
+  )
+}
+
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
   const { user, logout, isAuthenticated } = useAuth()
@@ -28,9 +55,14 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen">
-      <header className="glass fixed top-[7px] left-[7px] right-[7px] z-50 rounded-full shadow-2xl shadow-indigo-500/20">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
-          <div className="flex items-center justify-between h-14">
+      <LiquidGlassSVG />
+      <header className="liquid-glass-nav fixed top-[7px] left-[7px] right-[7px] z-50 rounded-full">
+        <div className="liquid-glass-glow rounded-full" />
+        <div className="liquid-glass-inner rounded-full">
+          <div className="liquid-glass-highlight" />
+          <div className="liquid-glass-edge rounded-full" />
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+            <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-4">
               <Link to="/" className="flex items-center gap-2">
                 <Sparkles className="w-8 h-8 text-indigo-500" />
@@ -100,6 +132,7 @@ export default function Layout({ children }: LayoutProps) {
               )}
             </div>
           </div>
+        </div>
         </div>
       </header>
 
