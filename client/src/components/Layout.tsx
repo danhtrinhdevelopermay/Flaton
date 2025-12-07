@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Coins } from 'lucide-react'
+import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Coins, Menu, X } from 'lucide-react'
 import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { PageTransition } from './animations'
@@ -12,6 +12,7 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
   const { user, logout, isAuthenticated } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showNavModal, setShowNavModal] = useState(false)
   const [credits, setCredits] = useState<number | null>(null)
   const [loadingCredits, setLoadingCredits] = useState(true)
 
@@ -35,6 +36,10 @@ export default function Layout({ children }: LayoutProps) {
     const interval = setInterval(fetchCredits, 60000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    setShowNavModal(false)
+  }, [location.pathname])
 
   const navItems = [
     { path: '/', label: 'Trang chủ', icon: Home },
@@ -66,45 +71,20 @@ export default function Layout({ children }: LayoutProps) {
               </div>
             </div>
 
-            <nav className="hidden md:flex items-center gap-6">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                    location.pathname === item.path
-                      ? 'bg-indigo-500/20 text-indigo-400'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
-                  }`}
-                >
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <button
+              onClick={() => setShowNavModal(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 transition-all"
+            >
+              <Menu className="w-5 h-5" />
+              <span className="hidden sm:block">Menu</span>
+            </button>
 
             <div className="flex items-center gap-3">
-              <nav className="md:hidden flex items-center gap-2">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`p-2 rounded-lg transition-all ${
-                      location.pathname === item.path
-                        ? 'bg-indigo-500/20 text-indigo-400'
-                        : 'text-slate-300 hover:text-white'
-                    }`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                  </Link>
-                ))}
-              </nav>
-
               {isAuthenticated ? (
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-all"
+                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-700/50 hover:bg-slate-700 transition-all"
                   >
                     <User className="w-5 h-5" />
                     <span className="hidden md:block">{user?.email}</span>
@@ -137,14 +117,14 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="flex items-center gap-2">
                   <Link
                     to="/login"
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all"
+                    className="flex items-center gap-2 px-3 py-2 rounded-full text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all"
                   >
                     <LogIn className="w-4 h-4" />
                     <span className="hidden md:block">Đăng nhập</span>
                   </Link>
                   <Link
                     to="/register"
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white transition-all"
+                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white transition-all"
                   >
                     <UserPlus className="w-4 h-4" />
                     <span className="hidden md:block">Đăng ký</span>
@@ -156,7 +136,44 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {showNavModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowNavModal(false)}
+          />
+          <div className="relative glass rounded-3xl p-6 w-[90%] max-w-md shadow-2xl shadow-indigo-500/20 animate-in fade-in zoom-in duration-200">
+            <button
+              onClick={() => setShowNavModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-700/50 transition-all text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <h2 className="text-xl font-bold gradient-text mb-6 text-center">Menu</h2>
+            
+            <nav className="flex flex-col gap-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setShowNavModal(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    location.pathname === item.path
+                      ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <PageTransition>
           {children}
         </PageTransition>
