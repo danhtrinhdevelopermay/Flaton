@@ -137,39 +137,32 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       {showNavModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowNavModal(false)}
-          />
-          <div className="relative glass rounded-3xl p-6 w-[90%] max-w-md shadow-2xl shadow-indigo-500/20 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[60] bg-white flex flex-col">
+          <div className="flex justify-end p-4">
             <button
               onClick={() => setShowNavModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-700/50 transition-all text-slate-400 hover:text-white"
+              className="p-2 text-gray-500 hover:text-gray-800 transition-all"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
-            
-            <h2 className="text-xl font-bold gradient-text mb-6 text-center">Menu</h2>
-            
-            <nav className="flex flex-col gap-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setShowNavModal(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    location.pathname === item.path
-                      ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
-              ))}
-            </nav>
           </div>
+          
+          <nav className="flex flex-col px-6 pt-4">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setShowNavModal(false)}
+                className={`py-3 text-2xl font-medium transition-all ${
+                  location.pathname === item.path
+                    ? 'text-indigo-600'
+                    : 'text-gray-900 hover:text-indigo-600'
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
       )}
 
