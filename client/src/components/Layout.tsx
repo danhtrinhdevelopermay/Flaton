@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Coins, Menu, X } from 'lucide-react'
+import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity } from 'lucide-react'
 import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { PageTransition } from './animations'
@@ -13,29 +13,6 @@ export default function Layout({ children }: LayoutProps) {
   const { user, logout, isAuthenticated } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNavModal, setShowNavModal] = useState(false)
-  const [credits, setCredits] = useState<number | null>(null)
-  const [loadingCredits, setLoadingCredits] = useState(true)
-
-  const fetchCredits = async () => {
-    try {
-      setLoadingCredits(true)
-      const response = await fetch('/api/credits')
-      const data = await response.json()
-      if (data.code === 200 && data.data !== undefined) {
-        setCredits(typeof data.data === 'number' ? data.data : data.data.credits)
-      }
-    } catch (error) {
-      console.error('Failed to fetch credits:', error)
-    } finally {
-      setLoadingCredits(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchCredits()
-    const interval = setInterval(fetchCredits, 60000)
-    return () => clearInterval(interval)
-  }, [])
 
   useEffect(() => {
     setShowNavModal(false)
@@ -46,6 +23,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/image-generator', label: 'Tạo hình ảnh', icon: Image },
     { path: '/video-generator', label: 'Tạo video', icon: Video },
     { path: '/music-generator', label: 'Tạo nhạc', icon: Music },
+    { path: '/status', label: 'Trạng thái dịch vụ', icon: Activity },
   ]
 
   return (
@@ -58,17 +36,6 @@ export default function Layout({ children }: LayoutProps) {
                 <Sparkles className="w-8 h-8 text-indigo-500" />
                 <span className="text-xl font-bold gradient-text">Flaton</span>
               </Link>
-              
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30">
-                <Coins className="w-4 h-4 text-amber-400" />
-                {loadingCredits ? (
-                  <span className="text-amber-300 text-sm">...</span>
-                ) : credits !== null ? (
-                  <span className="text-amber-300 text-sm font-medium">{credits.toLocaleString()} credits</span>
-                ) : (
-                  <span className="text-amber-300/50 text-sm">--</span>
-                )}
-              </div>
             </div>
 
             <button
