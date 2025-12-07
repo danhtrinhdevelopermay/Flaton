@@ -17,8 +17,23 @@ export async function initDatabase() {
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         name VARCHAR(255),
+        credits DECIMAL(10, 2) DEFAULT 50,
+        last_checkin DATE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    // Add credits and last_checkin columns if they don't exist (for existing databases)
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'credits') THEN
+          ALTER TABLE users ADD COLUMN credits DECIMAL(10, 2) DEFAULT 50;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'last_checkin') THEN
+          ALTER TABLE users ADD COLUMN last_checkin DATE;
+        END IF;
+      END $$;
     `);
 
     // Create generated_images table

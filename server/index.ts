@@ -392,8 +392,105 @@ async function checkTaskStatus(taskId: string, taskType: string) {
   }
 }
 
+const MODEL_CREDITS: Record<string, number> = {
+  'nano-banana': 4,
+  'seedream': 6.5,
+  'midjourney': 8,
+  'veo3-fast': 60,
+  'veo3': 100,
+  'midjourney-video': 40,
+  'grok-i2v': 20,
+  'grok-t2v': 20,
+  'suno': 10,
+};
+
+const MAX_CREDITS = 70;
+const DAILY_CHECKIN_CREDITS = 60;
+const DEFAULT_CREDITS = 50;
+
+async function getUserCredits(userId: number): Promise<number> {
+  const result = await pool.query('SELECT credits FROM users WHERE id = $1', [userId]);
+  return parseFloat(result.rows[0]?.credits || 0);
+}
+
+async function deductCredits(userId: number, amount: number): Promise<boolean> {
+  const currentCredits = await getUserCredits(userId);
+  if (currentCredits < amount) {
+    return false;
+  }
+  await pool.query('UPDATE users SET credits = credits - $1 WHERE id = $2', [amount, userId]);
+  return true;
+}
+
+async function addCredits(userId: number, amount: number): Promise<number> {
+  const currentCredits = await getUserCredits(userId);
+  const newCredits = Math.min(currentCredits + amount, MAX_CREDITS);
+  await pool.query('UPDATE users SET credits = $1 WHERE id = $2', [newCredits, userId]);
+  return newCredits;
+}
+
+app.get('/api/user/credits', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await pool.query(
+      'SELECT credits, last_checkin FROM users WHERE id = $1',
+      [req.userId]
+    );
+    const user = result.rows[0];
+    const today = new Date().toISOString().split('T')[0];
+    const canCheckin = !user.last_checkin || user.last_checkin.toISOString().split('T')[0] !== today;
+    
+    res.json({
+      credits: parseFloat(user.credits || 0),
+      canCheckin,
+      maxCredits: MAX_CREDITS,
+      dailyCredits: DAILY_CHECKIN_CREDITS,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/user/checkin', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await pool.query(
+      'SELECT credits, last_checkin FROM users WHERE id = $1',
+      [req.userId]
+    );
+    const user = result.rows[0];
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (user.last_checkin && user.last_checkin.toISOString().split('T')[0] === today) {
+      return res.status(400).json({ error: 'Bạn đã điểm danh hôm nay rồi!' });
+    }
+    
+    const currentCredits = parseFloat(user.credits || 0);
+    const newCredits = Math.min(currentCredits + DAILY_CHECKIN_CREDITS, MAX_CREDITS);
+    const creditsAdded = newCredits - currentCredits;
+    
+    await pool.query(
+      'UPDATE users SET credits = $1, last_checkin = CURRENT_DATE WHERE id = $2',
+      [newCredits, req.userId]
+    );
+    
+    res.json({
+      success: true,
+      credits: newCredits,
+      creditsAdded,
+      message: `Điểm danh thành công! +${creditsAdded} credits`,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/generate/nano-banana', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    const modelCredits = MODEL_CREDITS['nano-banana'];
+    const hasCredits = await deductCredits(req.userId!, modelCredits);
+    if (!hasCredits) {
+      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
+    }
+    
     const { prompt, aspectRatio = '1:1' } = req.body;
     const result = await callKieApi('/playground/createTask', {
       model: 'google/nano-banana',
@@ -411,6 +508,12 @@ app.post('/api/generate/nano-banana', authMiddleware, async (req: AuthRequest, r
 
 app.post('/api/generate/seedream', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    const modelCredits = MODEL_CREDITS['seedream'];
+    const hasCredits = await deductCredits(req.userId!, modelCredits);
+    if (!hasCredits) {
+      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
+    }
+    
     const { prompt, aspectRatio = '1:1' } = req.body;
     const result = await callKieApi('/seedream/createTask', {
       model: 'bytedance/seedream-4.0',
@@ -427,6 +530,12 @@ app.post('/api/generate/seedream', authMiddleware, async (req: AuthRequest, res:
 
 app.post('/api/generate/midjourney', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    const modelCredits = MODEL_CREDITS['midjourney'];
+    const hasCredits = await deductCredits(req.userId!, modelCredits);
+    if (!hasCredits) {
+      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
+    }
+    
     const { prompt, aspectRatio = '1:1' } = req.body;
     const result = await callKieApi('/mj/txt2img', {
       taskType: 'mj_txt2img',
@@ -443,6 +552,12 @@ app.post('/api/generate/midjourney', authMiddleware, async (req: AuthRequest, re
 
 app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    const modelCredits = MODEL_CREDITS['veo3-fast'];
+    const hasCredits = await deductCredits(req.userId!, modelCredits);
+    if (!hasCredits) {
+      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
+    }
+    
     const { prompt, aspectRatio = '16:9' } = req.body;
     const result = await callKieApi('/veo/generate', {
       prompt,
@@ -458,6 +573,12 @@ app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res
 // Veo 3 Quality - Higher quality but slower
 app.post('/api/generate/veo3', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    const modelCredits = MODEL_CREDITS['veo3'];
+    const hasCredits = await deductCredits(req.userId!, modelCredits);
+    if (!hasCredits) {
+      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
+    }
+    
     const { prompt, aspectRatio = '16:9' } = req.body;
     const result = await callKieApi('/veo/generate', {
       prompt,
@@ -506,6 +627,12 @@ app.get('/api/veo3/1080p/:taskId', authMiddleware, async (req: AuthRequest, res:
 
 app.post('/api/generate/midjourney-video', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    const modelCredits = MODEL_CREDITS['midjourney-video'];
+    const hasCredits = await deductCredits(req.userId!, modelCredits);
+    if (!hasCredits) {
+      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
+    }
+    
     const { imageUrl, prompt } = req.body;
     const result = await callKieApi('/mj/img2video', {
       taskType: 'mj_video',
@@ -522,6 +649,12 @@ app.post('/api/generate/midjourney-video', authMiddleware, async (req: AuthReque
 // Grok Imagenia - Image to Video
 app.post('/api/generate/grok-i2v', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    const modelCredits = MODEL_CREDITS['grok-i2v'];
+    const hasCredits = await deductCredits(req.userId!, modelCredits);
+    if (!hasCredits) {
+      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
+    }
+    
     const { imageUrl, prompt, mode = 'normal' } = req.body;
     const result = await callKieApi('/jobs/createTask', {
       model: 'grok-imagine/image-to-video',
@@ -540,6 +673,12 @@ app.post('/api/generate/grok-i2v', authMiddleware, async (req: AuthRequest, res:
 // Grok Imagenia - Text to Video
 app.post('/api/generate/grok-t2v', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    const modelCredits = MODEL_CREDITS['grok-t2v'];
+    const hasCredits = await deductCredits(req.userId!, modelCredits);
+    if (!hasCredits) {
+      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
+    }
+    
     const { prompt, aspectRatio = '3:2', mode = 'normal' } = req.body;
     const result = await callKieApi('/jobs/createTask', {
       model: 'grok-imagine/text-to-video',
@@ -558,6 +697,12 @@ app.post('/api/generate/grok-t2v', authMiddleware, async (req: AuthRequest, res:
 // Suno AI - Generate Music
 app.post('/api/generate/suno', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    const modelCredits = MODEL_CREDITS['suno'];
+    const hasCredits = await deductCredits(req.userId!, modelCredits);
+    if (!hasCredits) {
+      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
+    }
+    
     const { 
       prompt, 
       songDescription,
