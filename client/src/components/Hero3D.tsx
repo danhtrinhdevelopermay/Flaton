@@ -1,13 +1,25 @@
 import { Canvas, useFrame, useLoader } from '@react-three/fiber'
 import { Float, useProgress } from '@react-three/drei'
-import { useRef, useEffect, useState, Suspense, useMemo } from 'react'
+import { useRef, useEffect, useState, Suspense, useMemo, useCallback } from 'react'
 import * as THREE from 'three'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 
-function CustomModel({ scrollProgress, onLoaded }: { scrollProgress: number; onLoaded: () => void }) {
+function Model3D({ 
+  objPath, 
+  texturePath, 
+  scrollProgress, 
+  opacity,
+  onLoaded 
+}: { 
+  objPath: string
+  texturePath: string
+  scrollProgress: number
+  opacity: number
+  onLoaded?: () => void 
+}) {
   const groupRef = useRef<THREE.Group>(null)
-  const obj = useLoader(OBJLoader, '/models/output.obj')
-  const texture = useLoader(THREE.TextureLoader, '/models/textured_mesh.jpg')
+  const obj = useLoader(OBJLoader, objPath)
+  const texture = useLoader(THREE.TextureLoader, texturePath)
   
   const clonedObj = useMemo(() => {
     const clone = obj.clone()
@@ -17,6 +29,8 @@ function CustomModel({ scrollProgress, onLoaded }: { scrollProgress: number; onL
           map: texture,
           metalness: 0.3,
           roughness: 0.5,
+          transparent: true,
+          opacity: opacity,
         })
       }
     })
@@ -31,13 +45,24 @@ function CustomModel({ scrollProgress, onLoaded }: { scrollProgress: number; onL
     clone.position.sub(center.multiplyScalar(scale))
     
     return clone
-  }, [obj, texture])
+  }, [obj, texture, opacity])
 
   useEffect(() => {
-    if (clonedObj) {
+    if (clonedObj && onLoaded) {
       onLoaded()
     }
   }, [clonedObj, onLoaded])
+
+  useEffect(() => {
+    if (clonedObj) {
+      clonedObj.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+          child.material.opacity = opacity
+          child.material.needsUpdate = true
+        }
+      })
+    }
+  }, [clonedObj, opacity])
 
   useFrame(({ clock }) => {
     if (groupRef.current) {
@@ -55,6 +80,54 @@ function CustomModel({ scrollProgress, onLoaded }: { scrollProgress: number; onL
         <primitive object={clonedObj} />
       </Float>
     </group>
+  )
+}
+
+function DualModelScene({ 
+  scrollProgress, 
+  onModel1Loaded, 
+  onModel2Loaded 
+}: { 
+  scrollProgress: number
+  onModel1Loaded: () => void
+  onModel2Loaded: () => void
+}) {
+  const transitionPoint = 0.5
+  const transitionRange = 0.15
+  
+  const model1Opacity = useMemo(() => {
+    if (scrollProgress < transitionPoint - transitionRange) return 1
+    if (scrollProgress > transitionPoint + transitionRange) return 0
+    return 1 - (scrollProgress - (transitionPoint - transitionRange)) / (transitionRange * 2)
+  }, [scrollProgress])
+  
+  const model2Opacity = useMemo(() => {
+    if (scrollProgress < transitionPoint - transitionRange) return 0
+    if (scrollProgress > transitionPoint + transitionRange) return 1
+    return (scrollProgress - (transitionPoint - transitionRange)) / (transitionRange * 2)
+  }, [scrollProgress])
+
+  return (
+    <>
+      {model1Opacity > 0 && (
+        <Model3D
+          objPath="/models/output.obj"
+          texturePath="/models/textured_mesh.jpg"
+          scrollProgress={scrollProgress}
+          opacity={model1Opacity}
+          onLoaded={onModel1Loaded}
+        />
+      )}
+      {model2Opacity > 0 && (
+        <Model3D
+          objPath="/models/model2/output.obj"
+          texturePath="/models/model2/textured_mesh.jpg"
+          scrollProgress={scrollProgress}
+          opacity={model2Opacity}
+          onLoaded={onModel2Loaded}
+        />
+      )}
+    </>
   )
 }
 
@@ -115,7 +188,15 @@ function LoadingFallback() {
   )
 }
 
-function Scene({ scrollProgress, onLoaded }: { scrollProgress: number; onLoaded: () => void }) {
+function Scene({ 
+  scrollProgress, 
+  onModel1Loaded, 
+  onModel2Loaded 
+}: { 
+  scrollProgress: number
+  onModel1Loaded: () => void
+  onModel2Loaded: () => void
+}) {
   return (
     <>
       <ambientLight intensity={0.5} />
@@ -125,7 +206,11 @@ function Scene({ scrollProgress, onLoaded }: { scrollProgress: number; onLoaded:
       <pointLight position={[5, -5, -5]} intensity={0.4} color="#ec4899" />
       
       <Suspense fallback={<LoadingFallback />}>
-        <CustomModel scrollProgress={scrollProgress} onLoaded={onLoaded} />
+        <DualModelScene 
+          scrollProgress={scrollProgress} 
+          onModel1Loaded={onModel1Loaded}
+          onModel2Loaded={onModel2Loaded}
+        />
       </Suspense>
       
       <ParticleField scrollProgress={scrollProgress} />
@@ -197,12 +282,39 @@ function SplashScreen({ progress, isHiding }: { progress: number; isHiding: bool
   )
 }
 
+function ScrollIndicator({ scrollProgress }: { scrollProgress: number }) {
+  const currentSection = scrollProgress < 0.5 ? 1 : 2
+  
+  return (
+    <div className="fixed right-6 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-3">
+      <div 
+        className={`w-3 h-3 rounded-full transition-all duration-300 ${
+          currentSection === 1 
+            ? 'bg-indigo-500 scale-125' 
+            : 'bg-slate-600 hover:bg-slate-500'
+        }`}
+      />
+      <div className="w-px h-8 bg-slate-700" />
+      <div 
+        className={`w-3 h-3 rounded-full transition-all duration-300 ${
+          currentSection === 2 
+            ? 'bg-purple-500 scale-125' 
+            : 'bg-slate-600 hover:bg-slate-500'
+        }`}
+      />
+    </div>
+  )
+}
+
 export default function Hero3D() {
   const [scrollProgress, setScrollProgress] = useState(0)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [model1Loaded, setModel1Loaded] = useState(false)
+  const [model2Loaded, setModel2Loaded] = useState(false)
   const [isHiding, setIsHiding] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const allLoaded = model1Loaded && model2Loaded
 
   useEffect(() => {
     const handleScroll = () => {
@@ -219,29 +331,39 @@ export default function Hero3D() {
   useEffect(() => {
     const interval = setInterval(() => {
       setLoadProgress(prev => {
-        if (prev >= 90 && !isLoaded) return prev
+        if (prev >= 90 && !allLoaded) return prev
         if (prev >= 100) {
           clearInterval(interval)
           return 100
         }
-        return prev + Math.random() * 15
+        return prev + Math.random() * 10
       })
     }, 200)
     
     return () => clearInterval(interval)
-  }, [isLoaded])
+  }, [allLoaded])
 
-  const handleModelLoaded = () => {
-    setLoadProgress(100)
-    setTimeout(() => {
-      setIsLoaded(true)
-      setIsHiding(true)
-    }, 500)
-  }
+  useEffect(() => {
+    if (allLoaded) {
+      setLoadProgress(100)
+      setTimeout(() => {
+        setIsHiding(true)
+      }, 500)
+    }
+  }, [allLoaded])
+
+  const handleModel1Loaded = useCallback(() => {
+    setModel1Loaded(true)
+  }, [])
+
+  const handleModel2Loaded = useCallback(() => {
+    setModel2Loaded(true)
+  }, [])
 
   return (
     <>
       <SplashScreen progress={Math.min(loadProgress, 100)} isHiding={isHiding} />
+      <ScrollIndicator scrollProgress={scrollProgress} />
       
       <div ref={containerRef} className="fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950" />
@@ -251,7 +373,11 @@ export default function Hero3D() {
           style={{ background: 'transparent' }}
         >
           <Suspense fallback={null}>
-            <Scene scrollProgress={scrollProgress} onLoaded={handleModelLoaded} />
+            <Scene 
+              scrollProgress={scrollProgress} 
+              onModel1Loaded={handleModel1Loaded}
+              onModel2Loaded={handleModel2Loaded}
+            />
           </Suspense>
         </Canvas>
       </div>
