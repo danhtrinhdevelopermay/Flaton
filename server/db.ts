@@ -62,6 +62,43 @@ export async function initDatabase() {
       )
     `);
 
+    // Create api_keys table for managing multiple KIE API keys
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id SERIAL PRIMARY KEY,
+        api_key TEXT NOT NULL,
+        name VARCHAR(255),
+        credits DECIMAL(10, 2) DEFAULT 0,
+        is_active BOOLEAN DEFAULT true,
+        is_current BOOLEAN DEFAULT false,
+        last_checked TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create admin_settings table for admin password
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS admin_settings (
+        id SERIAL PRIMARY KEY,
+        setting_key VARCHAR(255) UNIQUE NOT NULL,
+        setting_value TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create admin_alerts table for low credit alerts
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS admin_alerts (
+        id SERIAL PRIMARY KEY,
+        alert_type VARCHAR(50) NOT NULL,
+        message TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     console.log('Database tables created successfully');
   } catch (error) {
     console.error('Error initializing database:', error);

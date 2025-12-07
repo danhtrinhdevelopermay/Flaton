@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import HistoryPage from './pages/HistoryPage'
 import StatusPage from './pages/StatusPage'
+import AdminPage from './pages/AdminPage'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/status" element={<StatusPage />} />
+          <Route path="/flaton-admin-secret" element={<AdminPage />} />
         </Routes>
       </Layout>
     </AuthProvider>

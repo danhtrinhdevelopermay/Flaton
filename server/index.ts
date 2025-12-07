@@ -6,6 +6,10 @@ import os from 'os';
 import { initDatabase } from './db';
 import pool from './db';
 import { hashPassword, verifyPassword, generateToken, authMiddleware, optionalAuthMiddleware, AuthRequest } from './auth';
+import * as apiKeyManager from './apiKeyManager';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
 
 dotenv.config();
 
@@ -21,11 +25,20 @@ app.use(cookieParser());
 
 const KIE_API_BASE = 'https://api.kie.ai/api/v1';
 
-async function callKieApi(endpoint: string, data: any) {
-  const apiKey = process.env.KIE_API_KEY;
-  if (!apiKey) {
-    throw new Error('KIE_API_KEY not configured');
+async function getActiveApiKey(): Promise<string> {
+  const dbKey = await apiKeyManager.getCurrentApiKey();
+  if (dbKey) {
+    return dbKey;
   }
+  const envKey = process.env.KIE_API_KEY;
+  if (!envKey) {
+    throw new Error('No API key available. Please add API keys in admin panel.');
+  }
+  return envKey;
+}
+
+async function callKieApi(endpoint: string, data: any) {
+  const apiKey = await getActiveApiKey();
 
   console.log(`Calling KIE API: ${endpoint}`, JSON.stringify(data, null, 2));
   
@@ -51,10 +64,7 @@ async function callKieApi(endpoint: string, data: any) {
 }
 
 async function checkTaskStatus(taskId: string, taskType: string) {
-  const apiKey = process.env.KIE_API_KEY;
-  if (!apiKey) {
-    throw new Error('KIE_API_KEY not configured');
-  }
+  const apiKey = await getActiveApiKey();
 
   let endpoint = '';
   switch (taskType) {
@@ -460,10 +470,7 @@ app.get('/api/veo3/1080p/:taskId', authMiddleware, async (req: AuthRequest, res:
   try {
     const { taskId } = req.params;
     const index = parseInt(req.query.index as string) || 0;
-    const apiKey = process.env.KIE_API_KEY;
-    if (!apiKey) {
-      throw new Error('KIE_API_KEY not configured');
-    }
+    const apiKey = await getActiveApiKey();
 
     const response = await fetch(`${KIE_API_BASE}/veo/get-1080p-video?taskId=${taskId}&index=${index}`, {
       method: 'GET',
@@ -605,10 +612,7 @@ app.get('/api/task/:taskType/:taskId', authMiddleware, async (req: AuthRequest, 
 
 app.get('/api/credits', async (req: Request, res: Response) => {
   try {
-    const apiKey = process.env.KIE_API_KEY;
-    if (!apiKey) {
-      throw new Error('KIE_API_KEY not configured');
-    }
+    const apiKey = await getActiveApiKey();
 
     const response = await fetch(`${KIE_API_BASE}/chat/credit`, {
       method: 'GET',
@@ -624,8 +628,184 @@ app.get('/api/credits', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/api/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', apiKeyConfigured: !!process.env.KIE_API_KEY });
+app.get('/api/health', async (_req: Request, res: Response) => {
+  try {
+    const apiKey = await apiKeyManager.getCurrentApiKey();
+    res.json({ status: 'ok', apiKeyConfigured: !!(apiKey || process.env.KIE_API_KEY) });
+  } catch {
+    res.json({ status: 'ok', apiKeyConfigured: !!process.env.KIE_API_KEY });
+  }
+});
+
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'flaton-admin-2024';
+
+function generateAdminToken(): string {
+  return jwt.sign({ isAdmin: true, timestamp: Date.now() }, JWT_SECRET, { expiresIn: '24h' });
+}
+
+function verifyAdminToken(token: string): boolean {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    return decoded.isAdmin === true;
+  } catch {
+    return false;
+  }
+}
+
+async function adminAuthMiddleware(req: Request, res: Response, next: any) {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token || !verifyAdminToken(token)) {
+    return res.status(401).json({ error: 'Admin authentication required' });
+  }
+  next();
+}
+
+app.post('/api/admin/login', async (req: Request, res: Response) => {
+  try {
+    const { password } = req.body;
+    const isValid = await apiKeyManager.verifyAdminPassword(password);
+    
+    if (isValid) {
+      const token = generateAdminToken();
+      res.json({ success: true, token });
+    } else {
+      res.status(401).json({ error: 'Invalid password' });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/change-password', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    const isValid = await apiKeyManager.verifyAdminPassword(currentPassword);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+    
+    await apiKeyManager.setAdminPassword(newPassword);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/api-keys', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const keys = await apiKeyManager.getAllApiKeys();
+    const maskedKeys = keys.map(key => ({
+      ...key,
+      api_key: key.api_key.length > 12 
+        ? key.api_key.substring(0, 8) + '...' + key.api_key.substring(key.api_key.length - 4)
+        : '****'
+    }));
+    res.json(maskedKeys);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/api-keys', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { apiKey, name } = req.body;
+    if (!apiKey) {
+      return res.status(400).json({ error: 'API key is required' });
+    }
+    const newKey = await apiKeyManager.addApiKey(apiKey, name || '');
+    res.json({
+      ...newKey,
+      api_key: newKey.api_key.length > 12 
+        ? newKey.api_key.substring(0, 8) + '...' + newKey.api_key.substring(newKey.api_key.length - 4)
+        : '****'
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/admin/api-keys/:id', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await apiKeyManager.removeApiKey(parseInt(id));
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/api-keys/:id/refresh', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const credits = await apiKeyManager.refreshApiKey(parseInt(id));
+    res.json({ success: true, credits });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/api-keys/:id/set-current', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await apiKeyManager.setCurrentApiKey(parseInt(id));
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/status', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const status = await apiKeyManager.getSystemStatus();
+    res.json(status);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/alerts', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const alerts = await apiKeyManager.getAdminAlerts();
+    res.json(alerts);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/alerts/:id/read', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await apiKeyManager.markAlertAsRead(parseInt(id));
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/check-switch', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const result = await apiKeyManager.checkAndSwitchApiKeyIfNeeded();
+    res.json({ success: true, hasActiveKey: !!result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/refresh-all', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    await apiKeyManager.updateAllApiKeyCredits();
+    const keys = await apiKeyManager.getAllApiKeys();
+    const maskedKeys = keys.map(key => ({
+      ...key,
+      api_key: key.api_key.length > 12 
+        ? key.api_key.substring(0, 8) + '...' + key.api_key.substring(key.api_key.length - 4)
+        : '****'
+    }));
+    res.json({ success: true, keys: maskedKeys });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.post('/api/auth/register', async (req: Request, res: Response) => {
