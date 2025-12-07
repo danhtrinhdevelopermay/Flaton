@@ -1,0 +1,50 @@
+2025-12-07T09:44:16.196791715Z 
+2025-12-07T09:44:24.503857748Z [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+2025-12-07T09:44:24.693691798Z /opt/render/project/src/node_modules/path-to-regexp/src/index.ts:225
+2025-12-07T09:44:24.693733961Z       throw new PathError(`Missing parameter name at index ${index}`, str);
+2025-12-07T09:44:24.693740411Z             ^
+2025-12-07T09:44:24.693744841Z 
+2025-12-07T09:44:24.693748622Z 
+2025-12-07T09:44:24.693753272Z PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+2025-12-07T09:44:24.693763913Z     at name (/opt/render/project/src/node_modules/path-to-regexp/src/index.ts:225:13)
+2025-12-07T09:44:24.693768253Z     at parse (/opt/render/project/src/node_modules/path-to-regexp/src/index.ts:242:62)
+2025-12-07T09:44:24.693774954Z     at pathToRegexp (/opt/render/project/src/node_modules/path-to-regexp/src/index.ts:480:54)
+2025-12-07T09:44:24.693779264Z     at Object.match (/opt/render/project/src/node_modules/path-to-regexp/src/index.ts:438:28)
+2025-12-07T09:44:24.693783294Z     at matcher (/opt/render/project/src/node_modules/router/lib/layer.js:86:23)
+2025-12-07T09:44:24.693787455Z     at new Layer (/opt/render/project/src/node_modules/router/lib/layer.js:93:62)
+2025-12-07T09:44:24.693791425Z     at Function.route (/opt/render/project/src/node_modules/router/index.js:428:17)
+2025-12-07T09:44:24.693795355Z     at Function.route (/opt/render/project/src/node_modules/express/lib/application.js:257:22)
+2025-12-07T09:44:24.693799285Z     at app.<computed> [as get] (/opt/render/project/src/node_modules/express/lib/application.js:478:22)
+2025-12-07T09:44:24.693803356Z     at <anonymous> (/opt/render/project/src/server/index.ts:1039:7) {
+2025-12-07T09:44:24.693807796Z   originalPath: '*'
+2025-12-07T09:44:24.693811726Z }
+2025-12-07T09:44:24.693815437Z 
+2025-12-07T09:44:24.693819157Z Node.js v20.19.6
+2025-12-07T09:44:28.60237643Z ==> Exited with status 1
+2025-12-07T09:44:28.771922602Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+2025-12-07T09:44:33.638850821Z ==> Running 'npm start'
+2025-12-07T09:44:35.030589581Z 
+2025-12-07T09:44:35.030610693Z > workspace@1.0.0 start
+2025-12-07T09:44:35.030613373Z > NODE_ENV=production tsx server/index.ts
+2025-12-07T09:44:35.030616263Z 
+2025-12-07T09:44:42.530560298Z [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2025-12-07T09:44:42.928972499Z /opt/render/project/src/node_modules/path-to-regexp/src/index.ts:225
+2025-12-07T09:44:42.928990811Z       throw new PathError(`Missing parameter name at index ${index}`, str);
+2025-12-07T09:44:42.928994161Z             ^
+2025-12-07T09:44:42.928996711Z 
+2025-12-07T09:44:42.928999091Z 
+2025-12-07T09:44:42.929002552Z PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+2025-12-07T09:44:42.929019043Z     at name (/opt/render/project/src/node_modules/path-to-regexp/src/index.ts:225:13)
+2025-12-07T09:44:42.929022103Z     at parse (/opt/render/project/src/node_modules/path-to-regexp/src/index.ts:242:62)
+2025-12-07T09:44:42.929024463Z     at pathToRegexp (/opt/render/project/src/node_modules/path-to-regexp/src/index.ts:480:54)
+2025-12-07T09:44:42.929027043Z     at Object.match (/opt/render/project/src/node_modules/path-to-regexp/src/index.ts:438:28)
+2025-12-07T09:44:42.929029853Z     at matcher (/opt/render/project/src/node_modules/router/lib/layer.js:86:23)
+2025-12-07T09:44:42.929032603Z     at new Layer (/opt/render/project/src/node_modules/router/lib/layer.js:93:62)
+2025-12-07T09:44:42.929035324Z     at Function.route (/opt/render/project/src/node_modules/router/index.js:428:17)
+2025-12-07T09:44:42.929037844Z     at Function.route (/opt/render/project/src/node_modules/express/lib/application.js:257:22)
+2025-12-07T09:44:42.929043074Z     at app.<computed> [as get] (/opt/render/project/src/node_modules/express/lib/application.js:478:22)
+2025-12-07T09:44:42.929045735Z     at <anonymous> (/opt/render/project/src/server/index.ts:1039:7) {
+2025-12-07T09:44:42.929048645Z   originalPath: '*'
+2025-12-07T09:44:42.929051025Z }
+2025-12-07T09:44:42.929053345Z 
+2025-12-07T09:44:42.929055935Z Node.js v20.19.6

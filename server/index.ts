@@ -1036,9 +1036,11 @@ app.get('/api/system-stats', async (req: Request, res: Response) => {
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/dist')));
   
-  app.get('*', (req, res) => {
+  app.use((req, res, next) => {
     if (!req.path.startsWith('/api')) {
       res.sendFile(path.resolve(__dirname, '../client/dist', 'index.html'));
+    } else {
+      next();
     }
   });
 }
