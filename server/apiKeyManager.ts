@@ -26,8 +26,17 @@ export async function checkCreditForKey(apiKey: string): Promise<number> {
       },
     });
     const result = await response.json();
-    if (result.code === 200 && result.data) {
-      return result.data.credit || result.data.credits || 0;
+    console.log('Credit check response:', JSON.stringify(result));
+    if (result.code === 200 && result.data !== undefined) {
+      // data is directly the credit number, not an object
+      if (typeof result.data === 'number') {
+        return result.data;
+      }
+      // fallback for object format (in case API changes)
+      if (typeof result.data === 'object') {
+        return result.data.credit || result.data.credits || 0;
+      }
+      return 0;
     }
     return 0;
   } catch (error) {
