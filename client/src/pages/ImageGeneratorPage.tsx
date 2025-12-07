@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
-import { Image, Loader2, Download, Zap, Check, RefreshCw, LogIn } from 'lucide-react'
+import { Image, Loader2, Download, Zap, Check, RefreshCw, LogIn, Rocket, Sparkles, Palette } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const imageTools = [
-  { id: 'nano-banana', name: 'Flaton Image V1', credits: 4, provider: 'Nhanh, tiết kiệm' },
-  { id: 'seedream', name: 'Flaton Image V2', credits: 6.5, provider: 'Chi tiết 4K' },
-  { id: 'midjourney', name: 'Flaton Image Pro', credits: 8, provider: 'Nghệ thuật, 4 biến thể' },
+  { id: 'nano-banana', name: 'Flaton Image V1', credits: 4, provider: 'Nhanh, tiết kiệm', icon: Rocket, color: 'text-blue-400' },
+  { id: 'seedream', name: 'Flaton Image V2', credits: 6.5, provider: 'Chi tiết 4K', icon: Sparkles, color: 'text-purple-400' },
+  { id: 'midjourney', name: 'Flaton Image Pro', credits: 8, provider: 'Nghệ thuật, 4 biến thể', icon: Palette, color: 'text-pink-400' },
 ]
 
 const aspectRatios = [
@@ -216,29 +216,37 @@ export default function ImageGeneratorPage() {
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-300 mb-2">Chọn mô hình AI</label>
             <div className="grid grid-cols-1 gap-3">
-              {imageTools.map((tool) => (
-                <button
-                  key={tool.id}
-                  onClick={() => setSelectedTool(tool.id)}
-                  className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
-                    selectedTool === tool.id
-                      ? 'border-indigo-500 bg-indigo-500/10'
-                      : 'border-slate-600 hover:border-slate-500'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    {selectedTool === tool.id && <Check className="w-5 h-5 text-indigo-400" />}
-                    <div className="text-left">
-                      <div className="font-medium">{tool.name}</div>
-                      <div className="text-sm text-slate-400">{tool.provider}</div>
+              {imageTools.map((tool) => {
+                const IconComponent = tool.icon;
+                return (
+                  <button
+                    key={tool.id}
+                    onClick={() => setSelectedTool(tool.id)}
+                    className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+                      selectedTool === tool.id
+                        ? 'border-indigo-500 bg-indigo-500/10'
+                        : 'border-slate-600 hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center ${tool.color}`}>
+                        <IconComponent className="w-5 h-5" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium flex items-center gap-2">
+                          {tool.name}
+                          {selectedTool === tool.id && <Check className="w-4 h-4 text-indigo-400" />}
+                        </div>
+                        <div className="text-sm text-slate-400">{tool.provider}</div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-yellow-400">
-                    <Zap className="w-4 h-4" />
-                    <span className="font-semibold">{tool.credits}</span>
-                  </div>
-                </button>
-              ))}
+                    <div className="flex items-center gap-1 text-yellow-400">
+                      <Zap className="w-4 h-4" />
+                      <span className="font-semibold">{tool.credits}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

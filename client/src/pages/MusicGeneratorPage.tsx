@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Music, Loader2, Zap, RefreshCw, Mic, Piano, LogIn } from 'lucide-react'
+import { Music, Loader2, Zap, RefreshCw, Mic, Piano, LogIn, Rocket, Sparkles, Crown } from 'lucide-react'
 import MusicPlayer from '../components/MusicPlayer'
 import { useAuth } from '../contexts/AuthContext'
 
 const sunoModels = [
-  { value: 'V4', label: 'Flaton Music V1', desc: 'Ổn định, nhanh' },
-  { value: 'V4_5', label: 'Flaton Music V1.5', desc: 'Chất lượng cao hơn' },
-  { value: 'V5', label: 'Flaton Music V2', desc: 'Mới nhất' },
+  { value: 'V4', label: 'Flaton Music V1', desc: 'Ổn định, nhanh', icon: Rocket, color: 'text-blue-400' },
+  { value: 'V4_5', label: 'Flaton Music V1.5', desc: 'Chất lượng cao hơn', icon: Sparkles, color: 'text-purple-400' },
+  { value: 'V5', label: 'Flaton Music V2', desc: 'Mới nhất', icon: Crown, color: 'text-yellow-400' },
 ]
 
 interface GenerationResult {
@@ -238,20 +238,26 @@ export default function MusicGeneratorPage() {
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-300 mb-2">Chọn phiên bản</label>
             <div className="grid grid-cols-3 gap-2">
-              {sunoModels.map((m) => (
-                <button
-                  key={m.value}
-                  onClick={() => setModel(m.value)}
-                  className={`p-3 rounded-xl border text-sm transition-all ${
-                    model === m.value
-                      ? 'border-green-500 bg-green-500/10 text-green-400'
-                      : 'border-slate-600 hover:border-slate-500'
-                  }`}
-                >
-                  <div className="font-medium">{m.label}</div>
-                  <div className="text-xs text-slate-400 mt-1">{m.desc}</div>
-                </button>
-              ))}
+              {sunoModels.map((m) => {
+                const IconComponent = m.icon;
+                return (
+                  <button
+                    key={m.value}
+                    onClick={() => setModel(m.value)}
+                    className={`p-3 rounded-xl border text-sm transition-all ${
+                      model === m.value
+                        ? 'border-green-500 bg-green-500/10 text-green-400'
+                        : 'border-slate-600 hover:border-slate-500'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 mx-auto mb-2 rounded-lg bg-slate-700/50 flex items-center justify-center ${m.color}`}>
+                      <IconComponent className="w-4 h-4" />
+                    </div>
+                    <div className="font-medium">{m.label}</div>
+                    <div className="text-xs text-slate-400 mt-1">{m.desc}</div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

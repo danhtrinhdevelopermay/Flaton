@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
-import { Video, Loader2, Zap, Check, RefreshCw, Upload, Sparkles, LogIn } from 'lucide-react'
+import { Video, Loader2, Zap, Check, RefreshCw, Upload, Sparkles, LogIn, Rocket, Film, Clapperboard, ImagePlay, Crown } from 'lucide-react'
 import VideoPlayer from '../components/VideoPlayer'
 import { useAuth } from '../contexts/AuthContext'
 
 const videoTools = [
-  { id: 'veo3-fast', name: 'Flaton Video V1', credits: 60, provider: 'Flaton', type: 'text', description: 'Nhanh, 720P' },
-  { id: 'veo3', name: 'Flaton Video V2', credits: 100, provider: 'Flaton', type: 'text', description: 'Chất lượng cao, chậm hơn' },
-  { id: 'grok-t2v', name: 'Flaton Video X (Text)', credits: 20, provider: 'Flaton', type: 'text', description: 'Text to Video' },
-  { id: 'grok-i2v', name: 'Flaton Video X (Image)', credits: 20, provider: 'Flaton', type: 'image', description: 'Image to Video' },
-  { id: 'midjourney-video', name: 'Flaton Video Pro', credits: 40, provider: 'Flaton', type: 'image', description: 'Image to Video' },
+  { id: 'veo3-fast', name: 'Flaton Video V1', credits: 60, provider: 'Flaton', type: 'text', description: 'Nhanh, 720P', icon: Rocket, color: 'text-blue-400' },
+  { id: 'veo3', name: 'Flaton Video V2', credits: 100, provider: 'Flaton', type: 'text', description: 'Chất lượng cao, chậm hơn', icon: Film, color: 'text-purple-400' },
+  { id: 'grok-t2v', name: 'Flaton Video X (Text)', credits: 20, provider: 'Flaton', type: 'text', description: 'Text to Video', icon: Clapperboard, color: 'text-green-400' },
+  { id: 'grok-i2v', name: 'Flaton Video X (Image)', credits: 20, provider: 'Flaton', type: 'image', description: 'Image to Video', icon: ImagePlay, color: 'text-orange-400' },
+  { id: 'midjourney-video', name: 'Flaton Video Pro', credits: 40, provider: 'Flaton', type: 'image', description: 'Image to Video', icon: Crown, color: 'text-yellow-400' },
 ]
 
 const aspectRatios = [
@@ -307,31 +307,39 @@ export default function VideoGeneratorPage() {
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-300 mb-2">Chọn mô hình AI</label>
             <div className="grid grid-cols-1 gap-3">
-              {videoTools.map((tool) => (
-                <button
-                  key={tool.id}
-                  onClick={() => setSelectedTool(tool.id)}
-                  className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
-                    selectedTool === tool.id
-                      ? 'border-indigo-500 bg-indigo-500/10'
-                      : 'border-slate-600 hover:border-slate-500'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    {selectedTool === tool.id && <Check className="w-5 h-5 text-indigo-400" />}
-                    <div className="text-left">
-                      <div className="font-medium">{tool.name}</div>
-                      <div className="text-sm text-slate-400">
-                        {tool.provider} • {tool.type === 'text' ? 'Text to Video' : 'Image to Video'}
+              {videoTools.map((tool) => {
+                const IconComponent = tool.icon;
+                return (
+                  <button
+                    key={tool.id}
+                    onClick={() => setSelectedTool(tool.id)}
+                    className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+                      selectedTool === tool.id
+                        ? 'border-indigo-500 bg-indigo-500/10'
+                        : 'border-slate-600 hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center ${tool.color}`}>
+                        <IconComponent className="w-5 h-5" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium flex items-center gap-2">
+                          {tool.name}
+                          {selectedTool === tool.id && <Check className="w-4 h-4 text-indigo-400" />}
+                        </div>
+                        <div className="text-sm text-slate-400">
+                          {tool.description} • {tool.type === 'text' ? 'Text to Video' : 'Image to Video'}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-yellow-400">
-                    <Zap className="w-4 h-4" />
-                    <span className="font-semibold">{tool.credits}</span>
-                  </div>
-                </button>
-              ))}
+                    <div className="flex items-center gap-1 text-yellow-400">
+                      <Zap className="w-4 h-4" />
+                      <span className="font-semibold">{tool.credits}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
