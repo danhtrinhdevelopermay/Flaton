@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Activity, Coins, Server, Zap, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react'
+import { Activity, Coins, Server, Zap, Clock, CheckCircle, AlertCircle, XCircle, Cpu, HardDrive, Wifi } from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
 
 interface ServiceStatus {
   name: string
@@ -7,9 +8,28 @@ interface ServiceStatus {
   latency?: number
 }
 
+interface SystemStats {
+  cpu: {
+    usage: number
+    cores: number
+    model: string
+  }
+  memory: {
+    total: number
+    used: number
+    free: number
+    usage: number
+  }
+  latency: number
+  uptime: number
+  cpuHistory: { time: string; cpu: number }[]
+  latencyHistory: { time: string; latency: number }[]
+}
+
 export default function StatusPage() {
   const [credits, setCredits] = useState<number | null>(null)
   const [loadingCredits, setLoadingCredits] = useState(true)
+  const [systemStats, setSystemStats] = useState<SystemStats | null>(null)
   const [services, setServices] = useState<ServiceStatus[]>([
     { name: 'API Server', status: 'operational', latency: 0 },
     { name: 'Image Generation', status: 'operational', latency: 0 },
@@ -48,10 +68,31 @@ export default function StatusPage() {
     }
   }
 
+  const fetchSystemStats = async () => {
+    try {
+      const response = await fetch('/api/system-stats')
+      const data = await response.json()
+      setSystemStats(data)
+      
+      setServices(prev => prev.map(s => 
+        s.name === 'API Server' 
+          ? { ...s, status: 'operational' as const, latency: data.latency }
+          : s
+      ))
+    } catch (error) {
+      console.error('Failed to fetch system stats:', error)
+    }
+  }
+
   useEffect(() => {
     fetchCredits()
-    const interval = setInterval(fetchCredits, 30000)
-    return () => clearInterval(interval)
+    fetchSystemStats()
+    const creditsInterval = setInterval(fetchCredits, 60000)
+    const statsInterval = setInterval(fetchSystemStats, 5000)
+    return () => {
+      clearInterval(creditsInterval)
+      clearInterval(statsInterval)
+    }
   }, [])
 
   const getStatusIcon = (status: string) => {
@@ -93,10 +134,17 @@ export default function StatusPage() {
     }
   }
 
+  const formatUptime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+    return `${hours}h ${minutes}m ${secs}s`
+  }
+
   const allOperational = services.every(s => s.status === 'operational')
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8">
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20">
           <Activity className="w-5 h-5 text-indigo-400" />
@@ -124,6 +172,116 @@ export default function StatusPage() {
             <p className="text-slate-400 text-sm mt-1">
               Cập nhật lần cuối: {lastUpdated.toLocaleTimeString('vi-VN')}
             </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="glass rounded-xl p-4 border border-slate-700/50">
+          <div className="flex items-center gap-3 mb-2">
+            <Cpu className="w-5 h-5 text-blue-400" />
+            <span className="text-slate-400 text-sm">CPU</span>
+          </div>
+          <p className="text-2xl font-bold text-blue-400">
+            {systemStats?.cpu.usage.toFixed(1) || '--'}%
+          </p>
+          <p className="text-xs text-slate-500 mt-1">{systemStats?.cpu.cores || '--'} cores</p>
+        </div>
+
+        <div className="glass rounded-xl p-4 border border-slate-700/50">
+          <div className="flex items-center gap-3 mb-2">
+            <HardDrive className="w-5 h-5 text-purple-400" />
+            <span className="text-slate-400 text-sm">RAM</span>
+          </div>
+          <p className="text-2xl font-bold text-purple-400">
+            {systemStats?.memory.usage.toFixed(1) || '--'}%
+          </p>
+          <p className="text-xs text-slate-500 mt-1">
+            {systemStats?.memory.used.toFixed(1) || '--'} / {systemStats?.memory.total.toFixed(1) || '--'} GB
+          </p>
+        </div>
+
+        <div className="glass rounded-xl p-4 border border-slate-700/50">
+          <div className="flex items-center gap-3 mb-2">
+            <Wifi className="w-5 h-5 text-green-400" />
+            <span className="text-slate-400 text-sm">Độ trễ</span>
+          </div>
+          <p className="text-2xl font-bold text-green-400">
+            {systemStats?.latency || '--'}ms
+          </p>
+          <p className="text-xs text-slate-500 mt-1">API Response</p>
+        </div>
+
+        <div className="glass rounded-xl p-4 border border-slate-700/50">
+          <div className="flex items-center gap-3 mb-2">
+            <Clock className="w-5 h-5 text-amber-400" />
+            <span className="text-slate-400 text-sm">Uptime</span>
+          </div>
+          <p className="text-2xl font-bold text-amber-400">
+            {systemStats ? formatUptime(systemStats.uptime) : '--'}
+          </p>
+          <p className="text-xs text-slate-500 mt-1">Server running</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="glass rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Cpu className="w-5 h-5 text-blue-400" />
+            <h3 className="text-lg font-bold">CPU Usage</h3>
+          </div>
+          <div className="h-64 w-full" style={{ minWidth: 300, minHeight: 200 }}>
+            {systemStats?.cpuHistory && systemStats.cpuHistory.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={300}>
+                <AreaChart data={systemStats.cpuHistory}>
+                  <defs>
+                    <linearGradient id="cpuGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                  <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
+                  <YAxis stroke="#64748b" fontSize={12} domain={[0, 100]} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                    labelStyle={{ color: '#94a3b8' }}
+                  />
+                  <Area type="monotone" dataKey="cpu" stroke="#3b82f6" fill="url(#cpuGradient)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-500">
+                Đang thu thập dữ liệu...
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="glass rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Wifi className="w-5 h-5 text-green-400" />
+            <h3 className="text-lg font-bold">Độ trễ kết nối (ms)</h3>
+          </div>
+          <div className="h-64 w-full" style={{ minWidth: 300, minHeight: 200 }}>
+            {systemStats?.latencyHistory && systemStats.latencyHistory.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={300}>
+                <LineChart data={systemStats.latencyHistory}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                  <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
+                  <YAxis stroke="#64748b" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                    labelStyle={{ color: '#94a3b8' }}
+                  />
+                  <Line type="monotone" dataKey="latency" stroke="#22c55e" strokeWidth={2} dot={{ fill: '#22c55e', r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-500">
+                Đang thu thập dữ liệu...
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -184,7 +342,7 @@ export default function StatusPage() {
       </div>
 
       <div className="text-center text-slate-500 text-sm">
-        <p>Trang này tự động cập nhật mỗi 30 giây</p>
+        <p>CPU & Latency cập nhật mỗi 5 giây | Credits cập nhật mỗi 60 giây</p>
       </div>
     </div>
   )

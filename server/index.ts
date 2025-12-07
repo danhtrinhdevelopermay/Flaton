@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import os from 'os';
 import { initDatabase } from './db';
 import pool from './db';
 import { hashPassword, verifyPassword, generateToken, authMiddleware, optionalAuthMiddleware, AuthRequest } from './auth';
@@ -774,6 +775,75 @@ app.get('/api/products/history', authMiddleware, async (req: AuthRequest, res: R
     });
   } catch (error: any) {
     console.error('Get history error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+let cpuHistory: { time: string; cpu: number }[] = [];
+let latencyHistory: { time: string; latency: number }[] = [];
+const serverStartTime = Date.now();
+
+function getCpuUsage(): Promise<number> {
+  return new Promise((resolve) => {
+    const cpus = os.cpus();
+    let totalIdle = 0;
+    let totalTick = 0;
+    
+    for (const cpu of cpus) {
+      for (const type in cpu.times) {
+        totalTick += cpu.times[type as keyof typeof cpu.times];
+      }
+      totalIdle += cpu.times.idle;
+    }
+    
+    const idle = totalIdle / cpus.length;
+    const total = totalTick / cpus.length;
+    const usage = 100 - (idle / total * 100);
+    resolve(Math.round(usage * 100) / 100);
+  });
+}
+
+app.get('/api/system-stats', async (req: Request, res: Response) => {
+  try {
+    const startTime = Date.now();
+    
+    const cpuUsage = await getCpuUsage();
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const memUsage = Math.round((usedMem / totalMem) * 100 * 100) / 100;
+    
+    const latency = Date.now() - startTime;
+    const uptime = Math.floor((Date.now() - serverStartTime) / 1000);
+    
+    const now = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    
+    cpuHistory.push({ time: now, cpu: cpuUsage });
+    if (cpuHistory.length > 20) cpuHistory.shift();
+    
+    latencyHistory.push({ time: now, latency });
+    if (latencyHistory.length > 20) latencyHistory.shift();
+    
+    res.json({
+      cpu: {
+        usage: cpuUsage,
+        cores: os.cpus().length,
+        model: os.cpus()[0]?.model || 'Unknown'
+      },
+      memory: {
+        total: Math.round(totalMem / 1024 / 1024 / 1024 * 100) / 100,
+        used: Math.round(usedMem / 1024 / 1024 / 1024 * 100) / 100,
+        free: Math.round(freeMem / 1024 / 1024 / 1024 * 100) / 100,
+        usage: memUsage
+      },
+      latency,
+      uptime,
+      cpuHistory,
+      latencyHistory,
+      timestamp: Date.now()
+    });
+  } catch (error: any) {
+    console.error('System stats error:', error);
     res.status(500).json({ error: error.message });
   }
 });
