@@ -164,7 +164,7 @@ export default function Layout({ children }: LayoutProps) {
 
       <footer className="glass mt-auto py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-400">
-          <p>Powered by <a href="https://kie.ai" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">KIE AI</a></p>
+          <p>Powered by <a href="https://facebook.com/danhtrinh.official" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">Danh Trình</a></p>
         </div>
       </footer>
     </div>
