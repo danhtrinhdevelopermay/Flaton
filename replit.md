@@ -56,6 +56,25 @@ A web application providing AI tools powered by Flaton AI. Users can generate im
 - Backend runs on port 3001 (Express)
 - API calls are proxied from frontend to backend
 
+## Deployment to Render
+
+### Quick Start
+1. Push code to GitHub
+2. Create new Web Service on Render
+3. Connect GitHub repository
+4. Configure:
+   - **Build Command:** `npm install && npm run build`
+   - **Start Command:** `npm start`
+5. Add Environment Variables:
+   - `NODE_ENV` = `production`
+   - `PORT` = `3001`
+   - `POSTGRES_URL` = Your PostgreSQL connection string
+   - `JWT_SECRET` = Your secret key
+   - `KIE_API_KEY` = Your KIE API key
+
+### Using render.yaml (Blueprint)
+Alternatively, use the included `render.yaml` file for automatic configuration.
+
 ## Tech Stack
 - Frontend: React 19, React Router, Tailwind CSS v4, Lucide Icons
 - Backend: Express 5, TypeScript

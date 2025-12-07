@@ -3,11 +3,16 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import os from 'os';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { initDatabase } from './db';
 import pool from './db';
 import { hashPassword, verifyPassword, generateToken, authMiddleware, optionalAuthMiddleware, AuthRequest } from './auth';
 import * as apiKeyManager from './apiKeyManager';
 import jwt from 'jsonwebtoken';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
 
@@ -1028,11 +1033,22 @@ app.get('/api/system-stats', async (req: Request, res: Response) => {
   }
 });
 
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+  
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.resolve(__dirname, '../client/dist', 'index.html'));
+    }
+  });
+}
+
 async function startServer() {
   try {
     await initDatabase();
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log('Database initialized successfully');
     });
   } catch (error) {
