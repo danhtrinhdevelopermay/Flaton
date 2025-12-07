@@ -35,6 +35,8 @@ export default function ImageGeneratorPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [polling, setPolling] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [progressMessage, setProgressMessage] = useState('')
 
   const currentTool = imageTools.find(t => t.id === selectedTool)
 
@@ -69,6 +71,8 @@ export default function ImageGeneratorPage() {
 
   const pollTaskStatus = async (taskId: string, taskType: string) => {
     setPolling(true)
+    setProgress(0)
+    setProgressMessage('Đang khởi tạo...')
     const maxAttempts = 60
     let attempts = 0
 
@@ -86,6 +90,8 @@ export default function ImageGeneratorPage() {
         }
 
         if (data.status === 'completed' || data.status === 'success') {
+          setProgress(100)
+          setProgressMessage('Hoàn thành!')
           return {
             status: 'completed',
             imageUrl: data.imageUrl || data.output?.imageUrl,
@@ -100,6 +106,18 @@ export default function ImageGeneratorPage() {
         attempts++
         if (attempts >= maxAttempts) {
           return { error: 'Timeout - please try again' }
+        }
+
+        const progressPercent = Math.min(95, Math.floor((attempts / 20) * 100))
+        setProgress(progressPercent)
+        if (progressPercent < 30) {
+          setProgressMessage('Đang phân tích prompt...')
+        } else if (progressPercent < 60) {
+          setProgressMessage('AI đang tạo hình ảnh...')
+        } else if (progressPercent < 90) {
+          setProgressMessage('Đang hoàn thiện chi tiết...')
+        } else {
+          setProgressMessage('Sắp xong...')
         }
 
         await new Promise(resolve => setTimeout(resolve, 3000))
@@ -309,10 +327,44 @@ export default function ImageGeneratorPage() {
           )}
 
           {loading && (
-            <div className="flex flex-col items-center justify-center h-64">
-              <Loader2 className="w-16 h-16 text-indigo-400 animate-spin mb-4" />
-              <p className="text-slate-300">{polling ? 'AI đang tạo hình ảnh của bạn...' : 'Đang kết nối...'}</p>
-              <p className="text-sm text-slate-400 mt-2">Quá trình này có thể mất 30-60 giây</p>
+            <div className="flex flex-col items-center justify-center h-64 px-6">
+              <div className="custom-loader-image mb-6">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                  <defs>
+                    <mask id="clipping-image">
+                      <polygon points="0,0 100,0 100,100 0,100" fill="black"></polygon>
+                      <polygon points="25,25 75,25 50,75" fill="white"></polygon>
+                      <polygon points="50,25 75,75 25,75" fill="white"></polygon>
+                      <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+                      <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+                      <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+                      <polygon points="35,35 65,35 50,65" fill="white"></polygon>
+                    </mask>
+                  </defs>
+                </svg>
+                <div className="loader-box-image"></div>
+              </div>
+              
+              {polling && (
+                <div className="w-full max-w-md space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-300">{progressMessage}</span>
+                    <span className="text-cyan-400 font-semibold">{progress}%</span>
+                  </div>
+                  <div className="progress-bar-container-image">
+                    <div 
+                      className="progress-bar-fill-image" 
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {!polling && (
+                <p className="text-slate-300">Đang kết nối...</p>
+              )}
+              
+              <p className="text-sm text-slate-400 mt-3">Quá trình này có thể mất 30-60 giây</p>
             </div>
           )}
 
