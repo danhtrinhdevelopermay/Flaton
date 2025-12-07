@@ -7,7 +7,8 @@ interface AnimatedButtonProps {
   onClick?: () => void
   disabled?: boolean
   type?: 'button' | 'submit'
-  variant?: 'primary' | 'secondary' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'glass'
+  size?: 'sm' | 'md' | 'lg'
 }
 
 export default function AnimatedButton({ 
@@ -16,7 +17,8 @@ export default function AnimatedButton({
   onClick, 
   disabled = false,
   type = 'button',
-  variant = 'primary'
+  variant = 'primary',
+  size = 'md'
 }: AnimatedButtonProps) {
   const [ripples, setRipples] = useState<{ x: number; y: number; id: number }[]>([])
 
@@ -40,6 +42,13 @@ export default function AnimatedButton({
     primary: 'bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600',
     secondary: 'bg-gradient-to-r from-slate-600 to-slate-700 border border-slate-500',
     ghost: 'bg-transparent border border-slate-600 hover:bg-slate-800/50',
+    glass: 'bg-slate-800/50 backdrop-blur-sm border border-slate-600 hover:bg-slate-700/50',
+  }
+
+  const sizes = {
+    sm: 'px-4 py-2 text-sm rounded-lg',
+    md: 'px-5 py-2.5 text-base rounded-xl',
+    lg: 'px-6 py-3 text-lg rounded-xl font-semibold',
   }
 
   return (
@@ -47,7 +56,7 @@ export default function AnimatedButton({
       type={type}
       onClick={handleClick}
       disabled={disabled}
-      className={`relative overflow-hidden ${variants[variant]} ${className}`}
+      className={`relative overflow-hidden ${variants[variant]} ${sizes[size]} ${className}`}
       whileHover={{ 
         scale: disabled ? 1 : 1.02,
         boxShadow: disabled ? 'none' : '0 20px 40px rgba(99, 102, 241, 0.3)',

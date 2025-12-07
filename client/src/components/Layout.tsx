@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Coins } from 'lucide-react'
 import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { PageTransition } from './animations'
 
 interface LayoutProps {
   children: ReactNode
@@ -156,7 +157,9 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
+        <PageTransition>
+          {children}
+        </PageTransition>
       </main>
 
       <footer className="glass mt-auto py-6">
