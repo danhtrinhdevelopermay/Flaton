@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://flaton-ai.onrender.com/sitemap.xml
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Disallow: /api/
+Disallow: /flaton-admin-secret
