@@ -24,7 +24,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/status" element={<StatusPage />} />
-          <Route path="/flaton-admin-secret" element={<AdminPage />} />
+          <Route path="/flaton-admin" element={<AdminPage />} />
         </Routes>
       </Layout>
     </AuthProvider>
