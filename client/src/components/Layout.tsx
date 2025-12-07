@@ -33,7 +33,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-4">
               <Link to="/" className="flex items-center gap-2">
-                <Sparkles className="w-8 h-8 text-indigo-500" />
+                <img src="/logo.png" alt="Flaton" className="w-8 h-8" />
                 <span className="text-xl font-bold gradient-text">Flaton</span>
               </Link>
             </div>
