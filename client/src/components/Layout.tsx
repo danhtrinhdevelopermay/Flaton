@@ -136,35 +136,44 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      {showNavModal && (
-        <div className="fixed inset-0 z-[60] bg-white flex flex-col">
-          <div className="flex justify-end p-4">
-            <button
-              onClick={() => setShowNavModal(false)}
-              className="p-2 text-gray-500 hover:text-gray-800 transition-all"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-          
-          <nav className="flex flex-col px-6 pt-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setShowNavModal(false)}
-                className={`py-3 text-2xl font-medium transition-all ${
-                  location.pathname === item.path
-                    ? 'text-indigo-600'
-                    : 'text-gray-900 hover:text-indigo-600'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+      <div 
+        className={`fixed inset-0 z-[60] bg-white flex flex-col transition-all duration-300 ease-out ${
+          showNavModal 
+            ? 'opacity-100 translate-y-0 pointer-events-auto' 
+            : 'opacity-0 -translate-y-full pointer-events-none'
+        }`}
+      >
+        <div className="flex justify-end p-4">
+          <button
+            onClick={() => setShowNavModal(false)}
+            className="p-2 text-gray-500 hover:text-gray-800 transition-all"
+          >
+            <X className="w-6 h-6" />
+          </button>
         </div>
-      )}
+        
+        <nav className="flex flex-col px-6 pt-4">
+          {navItems.map((item, index) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setShowNavModal(false)}
+              className={`py-3 text-2xl font-medium transition-all duration-300 ${
+                location.pathname === item.path
+                  ? 'text-indigo-600'
+                  : 'text-gray-900 hover:text-indigo-600'
+              }`}
+              style={{
+                transitionDelay: showNavModal ? `${index * 50}ms` : '0ms',
+                opacity: showNavModal ? 1 : 0,
+                transform: showNavModal ? 'translateY(0)' : 'translateY(-10px)'
+              }}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <PageTransition>
