@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Video, Loader2, Zap, Check, RefreshCw, Upload, Sparkles } from 'lucide-react'
+import { useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { Video, Loader2, Zap, Check, RefreshCw, Upload, Sparkles, LogIn } from 'lucide-react'
 import VideoPlayer from '../components/VideoPlayer'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -40,7 +40,8 @@ interface GenerationResult {
 
 export default function VideoGeneratorPage() {
   const [searchParams] = useSearchParams()
-  const { token, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const { token, isAuthenticated, loading: authLoading } = useAuth()
   const [selectedTool, setSelectedTool] = useState(searchParams.get('tool') || 'veo3-fast')
   const [prompt, setPrompt] = useState('')
   const [imageUrl, setImageUrl] = useState('')
@@ -96,7 +97,11 @@ export default function VideoGeneratorPage() {
 
     const poll = async (): Promise<GenerationResult> => {
       try {
-        const response = await fetch(`/api/task/${taskType}/${taskId}`)
+        const response = await fetch(`/api/task/${taskType}/${taskId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
         const data = await response.json()
 
         if (data.error) {
@@ -153,6 +158,11 @@ export default function VideoGeneratorPage() {
     
     if (isTextTool && !prompt.trim()) return
     if (isImageTool && !imageUrl.trim()) return
+    
+    if (!isAuthenticated || !token) {
+      navigate('/login')
+      return
+    }
 
     setLoading(true)
     setResult(null)
@@ -179,7 +189,10 @@ export default function VideoGeneratorPage() {
 
       const response = await fetch(`/api/generate/${selectedTool}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(body),
       })
 
@@ -250,9 +263,18 @@ export default function VideoGeneratorPage() {
   const handleUpgrade1080p = async () => {
     if (!currentTaskId) return
     
+    if (!isAuthenticated || !token) {
+      navigate('/login')
+      return
+    }
+    
     setUpgrading1080p(true)
     try {
-      const response = await fetch(`/api/veo3/1080p/${currentTaskId}?index=0`)
+      const response = await fetch(`/api/veo3/1080p/${currentTaskId}?index=0`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       const data = await response.json()
       
       if (data.success && data.videoUrl) {

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Music, Loader2, Zap, RefreshCw, Mic, Piano } from 'lucide-react'
+import { useNavigate, Link } from 'react-router-dom'
+import { Music, Loader2, Zap, RefreshCw, Mic, Piano, LogIn } from 'lucide-react'
 import MusicPlayer from '../components/MusicPlayer'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -19,7 +20,8 @@ interface GenerationResult {
 }
 
 export default function MusicGeneratorPage() {
-  const { token, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const { token, isAuthenticated, loading: authLoading } = useAuth()
   const [prompt, setPrompt] = useState('')
   const [songDescription, setSongDescription] = useState('')
   const [customMode, setCustomMode] = useState(false)
@@ -80,7 +82,11 @@ export default function MusicGeneratorPage() {
 
     const poll = async (): Promise<GenerationResult> => {
       try {
-        const response = await fetch(`/api/task/${taskType}/${taskId}`)
+        const response = await fetch(`/api/task/${taskType}/${taskId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
         const data = await response.json()
 
         if (data.error) {
@@ -128,6 +134,11 @@ export default function MusicGeneratorPage() {
   const handleGenerate = async () => {
     if (!songDescription.trim() && !prompt.trim()) return
     if (customMode && (!style.trim() || !title.trim())) return
+    
+    if (!isAuthenticated || !token) {
+      navigate('/login')
+      return
+    }
 
     setLoading(true)
     setResult(null)
@@ -158,7 +169,10 @@ export default function MusicGeneratorPage() {
 
       const response = await fetch('/api/generate/suno', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(body),
       })
 

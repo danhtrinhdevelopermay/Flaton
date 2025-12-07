@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Image, Loader2, Download, Zap, Check, RefreshCw } from 'lucide-react'
+import { useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { Image, Loader2, Download, Zap, Check, RefreshCw, LogIn } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const imageTools = [
@@ -27,7 +27,8 @@ interface GenerationResult {
 
 export default function ImageGeneratorPage() {
   const [searchParams] = useSearchParams()
-  const { token, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const { token, isAuthenticated, loading: authLoading } = useAuth()
   const [selectedTool, setSelectedTool] = useState(searchParams.get('tool') || 'nano-banana')
   const [prompt, setPrompt] = useState('')
   const [aspectRatio, setAspectRatio] = useState('1:1')
@@ -73,7 +74,11 @@ export default function ImageGeneratorPage() {
 
     const poll = async (): Promise<GenerationResult> => {
       try {
-        const response = await fetch(`/api/task/${taskType}/${taskId}`)
+        const response = await fetch(`/api/task/${taskType}/${taskId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
         const data = await response.json()
 
         if (data.error) {
@@ -111,6 +116,11 @@ export default function ImageGeneratorPage() {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return
+    
+    if (!isAuthenticated || !token) {
+      navigate('/login')
+      return
+    }
 
     setLoading(true)
     setResult(null)
@@ -122,7 +132,10 @@ export default function ImageGeneratorPage() {
     try {
       const response = await fetch(`/api/generate/${selectedTool}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ prompt: currentPrompt, aspectRatio: currentAspectRatio }),
       })
 

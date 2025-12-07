@@ -376,7 +376,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
   }
 }
 
-app.post('/api/generate/nano-banana', async (req: Request, res: Response) => {
+app.post('/api/generate/nano-banana', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { prompt, aspectRatio = '1:1' } = req.body;
     const result = await callKieApi('/playground/createTask', {
@@ -393,7 +393,7 @@ app.post('/api/generate/nano-banana', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/generate/seedream', async (req: Request, res: Response) => {
+app.post('/api/generate/seedream', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { prompt, aspectRatio = '1:1' } = req.body;
     const result = await callKieApi('/seedream/createTask', {
@@ -409,7 +409,7 @@ app.post('/api/generate/seedream', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/generate/midjourney', async (req: Request, res: Response) => {
+app.post('/api/generate/midjourney', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { prompt, aspectRatio = '1:1' } = req.body;
     const result = await callKieApi('/mj/txt2img', {
@@ -425,7 +425,7 @@ app.post('/api/generate/midjourney', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/generate/veo3-fast', async (req: Request, res: Response) => {
+app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { prompt, aspectRatio = '16:9' } = req.body;
     const result = await callKieApi('/veo/generate', {
@@ -440,7 +440,7 @@ app.post('/api/generate/veo3-fast', async (req: Request, res: Response) => {
 });
 
 // Veo 3 Quality - Higher quality but slower
-app.post('/api/generate/veo3', async (req: Request, res: Response) => {
+app.post('/api/generate/veo3', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { prompt, aspectRatio = '16:9' } = req.body;
     const result = await callKieApi('/veo/generate', {
@@ -455,7 +455,7 @@ app.post('/api/generate/veo3', async (req: Request, res: Response) => {
 });
 
 // Get 1080P video for Veo3
-app.get('/api/veo3/1080p/:taskId', async (req: Request, res: Response) => {
+app.get('/api/veo3/1080p/:taskId', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { taskId } = req.params;
     const index = parseInt(req.query.index as string) || 0;
@@ -491,7 +491,7 @@ app.get('/api/veo3/1080p/:taskId', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/generate/midjourney-video', async (req: Request, res: Response) => {
+app.post('/api/generate/midjourney-video', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { imageUrl, prompt } = req.body;
     const result = await callKieApi('/mj/img2video', {
@@ -507,7 +507,7 @@ app.post('/api/generate/midjourney-video', async (req: Request, res: Response) =
 });
 
 // Grok Imagenia - Image to Video
-app.post('/api/generate/grok-i2v', async (req: Request, res: Response) => {
+app.post('/api/generate/grok-i2v', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { imageUrl, prompt, mode = 'normal' } = req.body;
     const result = await callKieApi('/jobs/createTask', {
@@ -525,7 +525,7 @@ app.post('/api/generate/grok-i2v', async (req: Request, res: Response) => {
 });
 
 // Grok Imagenia - Text to Video
-app.post('/api/generate/grok-t2v', async (req: Request, res: Response) => {
+app.post('/api/generate/grok-t2v', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { prompt, aspectRatio = '3:2', mode = 'normal' } = req.body;
     const result = await callKieApi('/jobs/createTask', {
@@ -543,7 +543,7 @@ app.post('/api/generate/grok-t2v', async (req: Request, res: Response) => {
 });
 
 // Suno AI - Generate Music
-app.post('/api/generate/suno', async (req: Request, res: Response) => {
+app.post('/api/generate/suno', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { 
       prompt, 
@@ -592,7 +592,7 @@ app.post('/api/generate/suno', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/api/task/:taskType/:taskId', async (req: Request, res: Response) => {
+app.get('/api/task/:taskType/:taskId', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { taskType, taskId } = req.params;
     const result = await checkTaskStatus(taskId, taskType);
