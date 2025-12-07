@@ -213,7 +213,7 @@ export default function MusicPlayer({
 
   return (
     <div className="music-player-container">
-      <audio ref={audioRef} src={audioUrl} />
+      <audio ref={audioRef} src={audioUrl} crossOrigin="anonymous" preload="auto" />
       
       <div className="music-player-main">
         <div className="music-player-cover-section">
