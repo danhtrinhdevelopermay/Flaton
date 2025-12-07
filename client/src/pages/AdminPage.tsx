@@ -159,17 +159,25 @@ export default function AdminPage() {
     if (!confirm('Bạn có chắc muốn xóa API key này?')) return;
     
     try {
+      console.log('Deleting API key with id:', id);
       const res = await fetch(`/api/admin/api-keys/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${adminToken}` }
       });
 
+      console.log('Delete response status:', res.status);
+      
       if (res.ok) {
         setSuccess('Đã xóa API key');
         loadData();
         setTimeout(() => setSuccess(''), 3000);
+      } else {
+        const data = await res.json();
+        console.error('Delete error:', data);
+        setError(data.error || 'Không thể xóa API key');
       }
     } catch (err: any) {
+      console.error('Delete exception:', err);
       setError(err.message);
     }
   };
