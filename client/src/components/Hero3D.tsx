@@ -1,10 +1,10 @@
 import { Canvas, useFrame, useLoader } from '@react-three/fiber'
-import { Float, Environment, OrbitControls } from '@react-three/drei'
+import { Float, useProgress } from '@react-three/drei'
 import { useRef, useEffect, useState, Suspense, useMemo } from 'react'
 import * as THREE from 'three'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 
-function CustomModel({ scrollProgress }: { scrollProgress: number }) {
+function CustomModel({ scrollProgress, onLoaded }: { scrollProgress: number; onLoaded: () => void }) {
   const groupRef = useRef<THREE.Group>(null)
   const obj = useLoader(OBJLoader, '/models/output.obj')
   const texture = useLoader(THREE.TextureLoader, '/models/textured_mesh.jpg')
@@ -32,6 +32,12 @@ function CustomModel({ scrollProgress }: { scrollProgress: number }) {
     
     return clone
   }, [obj, texture])
+
+  useEffect(() => {
+    if (clonedObj) {
+      onLoaded()
+    }
+  }, [clonedObj, onLoaded])
 
   useFrame(({ clock }) => {
     if (groupRef.current) {
@@ -109,7 +115,7 @@ function LoadingFallback() {
   )
 }
 
-function Scene({ scrollProgress }: { scrollProgress: number }) {
+function Scene({ scrollProgress, onLoaded }: { scrollProgress: number; onLoaded: () => void }) {
   return (
     <>
       <ambientLight intensity={0.5} />
@@ -119,7 +125,7 @@ function Scene({ scrollProgress }: { scrollProgress: number }) {
       <pointLight position={[5, -5, -5]} intensity={0.4} color="#ec4899" />
       
       <Suspense fallback={<LoadingFallback />}>
-        <CustomModel scrollProgress={scrollProgress} />
+        <CustomModel scrollProgress={scrollProgress} onLoaded={onLoaded} />
       </Suspense>
       
       <ParticleField scrollProgress={scrollProgress} />
@@ -127,8 +133,75 @@ function Scene({ scrollProgress }: { scrollProgress: number }) {
   )
 }
 
+function SplashScreen({ progress, isHiding }: { progress: number; isHiding: boolean }) {
+  return (
+    <div 
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 transition-opacity duration-700 ${
+        isHiding ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}
+    >
+      <div className="relative mb-8">
+        <div className="w-20 h-20 relative">
+          <div className="absolute inset-0 rounded-full border-4 border-slate-800" />
+          <div 
+            className="absolute inset-0 rounded-full border-4 border-transparent border-t-indigo-500 border-r-purple-500 animate-spin"
+            style={{ animationDuration: '1s' }}
+          />
+          <div className="absolute inset-2 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center">
+            <svg className="w-8 h-8 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
+          </div>
+        </div>
+        
+        <div className="absolute -inset-4 rounded-full bg-indigo-500/10 animate-ping" style={{ animationDuration: '2s' }} />
+      </div>
+      
+      <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent mb-4">
+        Flaton AI
+      </h2>
+      
+      <div className="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden mb-2">
+        <div 
+          className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      
+      <p className="text-slate-500 text-sm">
+        {progress < 100 ? 'Đang tải tài nguyên...' : 'Hoàn tất!'}
+      </p>
+      
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-1">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="w-2 h-2 rounded-full bg-indigo-500/50"
+            style={{
+              animation: 'bounce 1.4s infinite ease-in-out',
+              animationDelay: `${i * 0.16}s`,
+            }}
+          />
+        ))}
+      </div>
+      
+      <style>{`
+        @keyframes bounce {
+          0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+          40% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
 export default function Hero3D() {
   const [scrollProgress, setScrollProgress] = useState(0)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [isHiding, setIsHiding] = useState(false)
+  const [loadProgress, setLoadProgress] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -143,18 +216,45 @@ export default function Hero3D() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLoadProgress(prev => {
+        if (prev >= 90 && !isLoaded) return prev
+        if (prev >= 100) {
+          clearInterval(interval)
+          return 100
+        }
+        return prev + Math.random() * 15
+      })
+    }, 200)
+    
+    return () => clearInterval(interval)
+  }, [isLoaded])
+
+  const handleModelLoaded = () => {
+    setLoadProgress(100)
+    setTimeout(() => {
+      setIsLoaded(true)
+      setIsHiding(true)
+    }, 500)
+  }
+
   return (
-    <div ref={containerRef} className="fixed inset-0 -z-10">
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950" />
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 50 }}
-        gl={{ antialias: true, alpha: true }}
-        style={{ background: 'transparent' }}
-      >
-        <Suspense fallback={null}>
-          <Scene scrollProgress={scrollProgress} />
-        </Suspense>
-      </Canvas>
-    </div>
+    <>
+      <SplashScreen progress={Math.min(loadProgress, 100)} isHiding={isHiding} />
+      
+      <div ref={containerRef} className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950" />
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 50 }}
+          gl={{ antialias: true, alpha: true }}
+          style={{ background: 'transparent' }}
+        >
+          <Suspense fallback={null}>
+            <Scene scrollProgress={scrollProgress} onLoaded={handleModelLoaded} />
+          </Suspense>
+        </Canvas>
+      </div>
+    </>
   )
 }
