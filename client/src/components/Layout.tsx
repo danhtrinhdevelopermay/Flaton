@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity } from 'lucide-react'
+import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift } from 'lucide-react'
 import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { PageTransition } from './animations'
@@ -13,10 +13,51 @@ export default function Layout({ children }: LayoutProps) {
   const { user, logout, isAuthenticated } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNavModal, setShowNavModal] = useState(false)
+  const [credits, setCredits] = useState<number | null>(null)
+  const [canCheckin, setCanCheckin] = useState(false)
+  const [checkinLoading, setCheckinLoading] = useState(false)
 
   useEffect(() => {
     setShowNavModal(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetch('/api/user/credits', { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.credits !== undefined) {
+            setCredits(data.credits)
+            setCanCheckin(data.canCheckin)
+          }
+        })
+        .catch(err => console.error('Failed to fetch credits:', err))
+    } else {
+      setCredits(null)
+      setCanCheckin(false)
+      setCheckinLoading(false)
+    }
+  }, [isAuthenticated])
+
+  const handleCheckin = async () => {
+    if (checkinLoading) return
+    setCheckinLoading(true)
+    try {
+      const res = await fetch('/api/user/checkin', { method: 'POST', credentials: 'include' })
+      const data = await res.json()
+      if (data.success) {
+        setCredits(data.credits)
+        setCanCheckin(false)
+        alert(data.message)
+      } else {
+        alert(data.error || 'Điểm danh thất bại')
+      }
+    } catch (err) {
+      alert('Lỗi kết nối server')
+    } finally {
+      setCheckinLoading(false)
+    }
+  }
 
   const navItems = [
     { path: '/', label: 'Trang chủ', icon: Home },
@@ -39,6 +80,24 @@ export default function Layout({ children }: LayoutProps) {
             </div>
 
             <div className="flex items-center gap-3">
+              {isAuthenticated && credits !== null && (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-400">
+                    <Coins className="w-4 h-4" />
+                    <span className="font-medium">{credits.toFixed(1)}</span>
+                  </div>
+                  {canCheckin && (
+                    <button
+                      onClick={handleCheckin}
+                      disabled={checkinLoading}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-500/20 hover:bg-green-500/30 text-green-400 transition-all disabled:opacity-50"
+                    >
+                      <Gift className="w-4 h-4" />
+                      <span className="hidden sm:block">{checkinLoading ? '...' : 'Điểm danh'}</span>
+                    </button>
+                  )}
+                </div>
+              )}
               {isAuthenticated ? (
                 <div className="relative">
                   <button
