@@ -137,7 +137,7 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       <div 
-        className={`fixed inset-0 z-[60] bg-white flex flex-col transition-all duration-300 ease-out ${
+        className={`fixed inset-0 z-[60] bg-white flex flex-col transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
           showNavModal 
             ? 'opacity-100 translate-y-0 pointer-events-auto' 
             : 'opacity-0 -translate-y-full pointer-events-none'
@@ -146,7 +146,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="flex justify-end p-4">
           <button
             onClick={() => setShowNavModal(false)}
-            className="p-2 text-gray-500 hover:text-gray-800 transition-all"
+            className="p-2 text-gray-500 hover:text-gray-800 transition-all duration-300"
           >
             <X className="w-6 h-6" />
           </button>
@@ -158,15 +158,15 @@ export default function Layout({ children }: LayoutProps) {
               key={item.path}
               to={item.path}
               onClick={() => setShowNavModal(false)}
-              className={`py-3 text-2xl font-medium transition-all duration-300 ${
+              className={`py-3 text-2xl font-medium transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                 location.pathname === item.path
                   ? 'text-indigo-600'
                   : 'text-gray-900 hover:text-indigo-600'
               }`}
               style={{
-                transitionDelay: showNavModal ? `${index * 50}ms` : '0ms',
+                transitionDelay: showNavModal ? `${150 + index * 80}ms` : '0ms',
                 opacity: showNavModal ? 1 : 0,
-                transform: showNavModal ? 'translateY(0)' : 'translateY(-10px)'
+                transform: showNavModal ? 'translateY(0)' : 'translateY(-20px)'
               }}
             >
               {item.label}
