@@ -329,26 +329,36 @@ export default function Hero3D() {
   }, [])
 
   useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!isHiding) {
+        setLoadProgress(100)
+        setIsHiding(true)
+      }
+    }, 5000)
+    
+    return () => clearTimeout(timeout)
+  }, [isHiding])
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setLoadProgress(prev => {
-        if (prev >= 90 && !allLoaded) return prev
         if (prev >= 100) {
           clearInterval(interval)
           return 100
         }
-        return prev + Math.random() * 10
+        return prev + Math.random() * 15
       })
-    }, 200)
+    }, 150)
     
     return () => clearInterval(interval)
-  }, [allLoaded])
+  }, [])
 
   useEffect(() => {
     if (allLoaded) {
       setLoadProgress(100)
       setTimeout(() => {
         setIsHiding(true)
-      }, 500)
+      }, 300)
     }
   }, [allLoaded])
 
