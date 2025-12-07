@@ -24,17 +24,21 @@ export async function initDatabase() {
     `);
 
     // Add credits and last_checkin columns if they don't exist (for existing databases)
-    await client.query(`
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'credits') THEN
-          ALTER TABLE users ADD COLUMN credits DECIMAL(10, 2) DEFAULT 50;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'last_checkin') THEN
-          ALTER TABLE users ADD COLUMN last_checkin DATE;
-        END IF;
-      END $$;
+    const creditsColumnCheck = await client.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'users' AND column_name = 'credits'
     `);
+    if (creditsColumnCheck.rows.length === 0) {
+      await client.query(`ALTER TABLE users ADD COLUMN credits DECIMAL(10, 2) DEFAULT 50`);
+    }
+
+    const lastCheckinColumnCheck = await client.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'users' AND column_name = 'last_checkin'
+    `);
+    if (lastCheckinColumnCheck.rows.length === 0) {
+      await client.query(`ALTER TABLE users ADD COLUMN last_checkin DATE`);
+    }
 
     // Create generated_images table
     await client.query(`
