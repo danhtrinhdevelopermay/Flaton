@@ -1043,6 +1043,28 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+function startKeepAlive() {
+  const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
+  if (!RENDER_URL) {
+    console.log('Keep-alive disabled: RENDER_EXTERNAL_URL not set');
+    return;
+  }
+  
+  const INTERVAL = 14 * 60 * 1000;
+  
+  async function ping() {
+    try {
+      const response = await fetch(`${RENDER_URL}/api/health`);
+      console.log(`[Keep-Alive] Ping at ${new Date().toISOString()}: Status ${response.status}`);
+    } catch (error: any) {
+      console.error(`[Keep-Alive] Ping failed at ${new Date().toISOString()}:`, error.message);
+    }
+  }
+  
+  setInterval(ping, INTERVAL);
+  console.log(`[Keep-Alive] Started - pinging ${RENDER_URL} every ${INTERVAL / 1000}s`);
+}
+
 async function startServer() {
   try {
     await initDatabase();
@@ -1050,6 +1072,10 @@ async function startServer() {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log('Database initialized successfully');
+      
+      if (process.env.NODE_ENV === 'production') {
+        startKeepAlive();
+      }
     });
   } catch (error) {
     console.error('Failed to start server:', error);

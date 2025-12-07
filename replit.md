@@ -71,6 +71,11 @@ A web application providing AI tools powered by Flaton AI. Users can generate im
    - `POSTGRES_URL` = Your PostgreSQL connection string
    - `JWT_SECRET` = Your secret key
    - `KIE_API_KEY` = Your KIE API key
+   - `RENDER_EXTERNAL_URL` = URL của app (vd: https://your-app.onrender.com)
+
+### Anti-Spindown Feature
+Server tự động ping chính nó mỗi 14 phút để ngăn Render tắt instance do không hoạt động.
+Chỉ cần set `RENDER_EXTERNAL_URL` để kích hoạt tính năng này.
 
 ### Using render.yaml (Blueprint)
 Alternatively, use the included `render.yaml` file for automatic configuration.

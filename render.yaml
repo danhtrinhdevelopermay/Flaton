@@ -9,6 +9,11 @@ services:
         value: production
       - key: PORT
         value: 3001
+      - key: RENDER_EXTERNAL_URL
+        fromService:
+          type: web
+          name: flaton-ai
+          property: url
       - key: DATABASE_URL
         sync: false
       - key: POSTGRES_URL
