@@ -45,9 +45,9 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen">
-      <header className="glass sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+      <header className="glass fixed top-[7px] left-[7px] right-[7px] z-50 rounded-full shadow-2xl shadow-indigo-500/20">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+          <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-4">
               <Link to="/" className="flex items-center gap-2">
                 <Sparkles className="w-8 h-8 text-indigo-500" />

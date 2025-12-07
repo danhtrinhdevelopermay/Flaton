@@ -306,15 +306,33 @@ function ScrollIndicator({ scrollProgress }: { scrollProgress: number }) {
   )
 }
 
+function checkWebGLSupport(): boolean {
+  try {
+    const canvas = document.createElement('canvas')
+    return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')))
+  } catch (e) {
+    return false
+  }
+}
+
 export default function Hero3D() {
   const [scrollProgress, setScrollProgress] = useState(0)
   const [model1Loaded, setModel1Loaded] = useState(false)
   const [model2Loaded, setModel2Loaded] = useState(false)
   const [isHiding, setIsHiding] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)
+  const [webglSupported, setWebglSupported] = useState(true)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const allLoaded = model1Loaded && model2Loaded
+
+  useEffect(() => {
+    const supported = checkWebGLSupport()
+    setWebglSupported(supported)
+    if (!supported) {
+      setIsHiding(true)
+    }
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -330,14 +348,12 @@ export default function Hero3D() {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (!isHiding) {
-        setLoadProgress(100)
-        setIsHiding(true)
-      }
-    }, 5000)
+      setLoadProgress(100)
+      setIsHiding(true)
+    }, 3000)
     
     return () => clearTimeout(timeout)
-  }, [isHiding])
+  }, [])
 
   useEffect(() => {
     const interval = setInterval(() => {
