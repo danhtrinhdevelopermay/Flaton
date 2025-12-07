@@ -67,11 +67,11 @@ A web application providing AI tools powered by Flaton AI. Users can generate im
    - **Start Command:** `npm start`
 5. Add Environment Variables:
    - `NODE_ENV` = `production`
-   - `PORT` = `3001`
    - `POSTGRES_URL` = Your PostgreSQL connection string
    - `JWT_SECRET` = Your secret key
    - `KIE_API_KEY` = Your KIE API key
    - `RENDER_EXTERNAL_URL` = URL của app (vd: https://your-app.onrender.com)
+   - **Lưu ý:** KHÔNG set PORT - Render tự động cung cấp
 
 ### Anti-Spindown Feature
 Server tự động ping chính nó mỗi 14 phút để ngăn Render tắt instance do không hoạt động.
