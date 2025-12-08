@@ -10,6 +10,8 @@ import pool from './db';
 import { hashPassword, verifyPassword, generateToken, authMiddleware, optionalAuthMiddleware, AuthRequest } from './auth';
 import * as apiKeyManager from './apiKeyManager';
 import jwt from 'jsonwebtoken';
+import { generateVBACode, chatWithAI, extractVBAFromResponse } from './gemini';
+import { createWordDocument, createExcelDocument, createPowerPointDocument } from './documentGenerator';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1175,6 +1177,89 @@ app.get('/api/system-stats', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('System stats error:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/vba/generate', optionalAuthMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { prompt, documentType } = req.body;
+    
+    if (!prompt || !documentType) {
+      return res.status(400).json({ error: 'Prompt and document type are required' });
+    }
+
+    if (!['word', 'excel', 'powerpoint'].includes(documentType)) {
+      return res.status(400).json({ error: 'Invalid document type. Must be word, excel, or powerpoint' });
+    }
+
+    const vbaCode = await generateVBACode(prompt, documentType);
+    res.json({ success: true, vbaCode });
+  } catch (error: any) {
+    console.error('VBA generation error:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate VBA code' });
+  }
+});
+
+app.post('/api/vba/chat', optionalAuthMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { messages } = req.body;
+    
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Messages array is required' });
+    }
+
+    const response = await chatWithAI(messages);
+    const extractedCode = extractVBAFromResponse(response);
+    
+    res.json({ 
+      success: true, 
+      response,
+      extractedCode
+    });
+  } catch (error: any) {
+    console.error('VBA chat error:', error);
+    res.status(500).json({ error: error.message || 'Failed to chat with AI' });
+  }
+});
+
+app.post('/api/vba/download', optionalAuthMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { vbaCode, documentType, title } = req.body;
+    
+    if (!vbaCode || !documentType) {
+      return res.status(400).json({ error: 'VBA code and document type are required' });
+    }
+
+    let buffer: Buffer;
+    let filename: string;
+    let contentType: string;
+
+    switch (documentType) {
+      case 'word':
+        buffer = await createWordDocument(vbaCode, title || 'VBA Macro');
+        filename = `${title || 'vba-macro'}.docx`;
+        contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        break;
+      case 'excel':
+        buffer = await createExcelDocument(vbaCode, title || 'VBA Macro');
+        filename = `${title || 'vba-macro'}.xlsx`;
+        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        break;
+      case 'powerpoint':
+        buffer = await createPowerPointDocument(vbaCode, title || 'VBA Macro');
+        filename = `${title || 'vba-macro'}.pptx`;
+        contentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid document type' });
+    }
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+    res.send(buffer);
+  } catch (error: any) {
+    console.error('Document creation error:', error);
+    res.status(500).json({ error: error.message || 'Failed to create document' });
   }
 });
 
