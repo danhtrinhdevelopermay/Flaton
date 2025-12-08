@@ -36,8 +36,14 @@ A web application providing AI tools powered by Flaton AI. Users can generate im
 - **Flaton Music V1.5** - Higher quality
 - **Flaton Music V2** - Latest
 
+### VBA Document Generator
+- Chat với AI để tạo mã VBA macro
+- Hỗ trợ xuất file Word (.docx), Excel (.xlsx), PowerPoint (.pptx)
+- Sử dụng Google Gemini API (miễn phí)
+
 ## Environment Variables
 - `KIE_API_KEY` - Required: API key from kie.ai
+- `GEMINI_API_KEY` - Required for VBA Generator: API key from Google AI Studio (https://aistudio.google.com)
 
 ## API Endpoints
 
@@ -50,6 +56,9 @@ A web application providing AI tools powered by Flaton AI. Users can generate im
 - `GET /api/task/:taskType/:taskId` - Check task status
 - `GET /api/credits` - Get remaining credits
 - `GET /api/health` - Health check
+- `POST /api/vba/generate` - Generate VBA code with Gemini AI
+- `POST /api/vba/chat` - Chat with AI about VBA
+- `POST /api/vba/download` - Download VBA code as Office document
 
 ## Development
 - Frontend runs on port 5000 (Vite)
@@ -100,6 +109,10 @@ Uses the official KIE AI API endpoints:
 - `/api/v1/jobs/recordInfo` - Poll Grok task status
 
 ## Recent Changes (Dec 2024)
+- Added VBA Document Generator feature with Google Gemini AI integration
+  - Chat interface to generate VBA macro code
+  - Download as Word, Excel, or PowerPoint files
+  - Supports quick code generation and conversational mode
 - Fixed Midjourney image generation endpoint (changed from /mj/imagine to /mj/txt2img)
 - Fixed Midjourney video generation endpoint with proper taskType parameter
 - Implemented robust multi-layer fallback parsing for all response types:
