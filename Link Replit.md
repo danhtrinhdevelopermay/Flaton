@@ -1,1 +1,1 @@
-https://replit.com/@jav716/Jsjsj
+https://replit.com/@bqi751/Jsjsj
