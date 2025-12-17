@@ -84,7 +84,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       endpoint = `/playground/recordInfo?taskId=${taskId}`;
       break;
     case 'seedream':
-      endpoint = `/seedream-v4-text-to-image/recordInfo?taskId=${taskId}`;
+      endpoint = `/seedream/recordInfo?taskId=${taskId}`;
       break;
     case 'grok':
       endpoint = `/jobs/recordInfo?taskId=${taskId}`;
