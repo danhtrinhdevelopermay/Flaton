@@ -1,43 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
-import { Video, Loader2, Zap, Check, RefreshCw, Upload, Sparkles, LogIn, Rocket, Film, Clapperboard, ImagePlay, Crown } from 'lucide-react'
+import { Video, Loader2, Zap, Check, RefreshCw, Sparkles, LogIn, Rocket } from 'lucide-react'
 import VideoPlayer from '../components/VideoPlayer'
 import { useAuth } from '../contexts/AuthContext'
 
 const videoTools = [
-  { id: 'veo3-fast', name: 'Flaton Video V1', credits: 60, provider: 'Flaton', type: 'text', description: 'Nhanh, 720P', icon: Rocket, color: 'text-blue-400' },
-  { id: 'veo3', name: 'Flaton Video V2', credits: 100, provider: 'Flaton', type: 'text', description: 'Chất lượng cao, chậm hơn', icon: Film, color: 'text-purple-400' },
-  { id: 'grok-t2v', name: 'Flaton Video X (Text)', credits: 20, provider: 'Flaton', type: 'text', description: 'Text to Video', icon: Clapperboard, color: 'text-green-400' },
-  { id: 'grok-i2v', name: 'Flaton Video X (Image)', credits: 20, provider: 'Flaton', type: 'image', description: 'Image to Video', icon: ImagePlay, color: 'text-orange-400' },
-  { id: 'midjourney-video', name: 'Flaton Video Pro', credits: 40, provider: 'Flaton', type: 'image', description: 'Image to Video', icon: Crown, color: 'text-yellow-400' },
+  { id: 'veo3-fast', name: 'Flaton Video V1', credits: 60, provider: 'Flaton', type: 'text', description: 'Text to Video, 720P', icon: Rocket, color: 'text-blue-400' },
 ]
 
 const aspectRatios = [
   { value: '16:9', label: '16:9 (Ngang)' },
   { value: '9:16', label: '9:16 (Dọc)' },
-  { value: '1:1', label: '1:1 (Vuông)' },
-]
-
-const grokAspectRatios = [
-  { value: '3:2', label: '3:2 (Ngang)' },
-  { value: '2:3', label: '2:3 (Dọc)' },
-  { value: '1:1', label: '1:1 (Vuông)' },
-]
-
-const grokModes = [
-  { value: 'normal', label: 'Normal', desc: 'Chế độ chuẩn' },
-  { value: 'fun', label: 'Fun', desc: 'Vui nhộn, sáng tạo' },
-  { value: 'spicy', label: 'Spicy', desc: 'Nghệ thuật, táo bạo' },
-]
-
-const sora2AspectRatios = [
-  { value: 'landscape', label: 'Ngang (Landscape)' },
-  { value: 'portrait', label: 'Dọc (Portrait)' },
-]
-
-const sora2Durations = [
-  { value: '10', label: '10 giây' },
-  { value: '15', label: '15 giây' },
 ]
 
 interface GenerationResult {
@@ -56,10 +29,6 @@ export default function VideoGeneratorPage() {
   const [prompt, setPrompt] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [aspectRatio, setAspectRatio] = useState('16:9')
-  const [grokAspectRatio, setGrokAspectRatio] = useState('3:2')
-  const [grokMode, setGrokMode] = useState('normal')
-  const [sora2AspectRatio, setSora2AspectRatio] = useState('landscape')
-  const [sora2Duration, setSora2Duration] = useState('10')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [polling, setPolling] = useState(false)
@@ -182,22 +151,10 @@ export default function VideoGeneratorPage() {
     const currentPrompt = prompt
     const currentImageUrl = imageUrl
     const currentModel = selectedTool
-    const currentVideoAspectRatio = selectedTool === 'grok-t2v' ? grokAspectRatio : 
-                                     (selectedTool === 'grok-i2v' || selectedTool === 'midjourney-video') ? '1:1' : 
-                                     aspectRatio
+    const currentVideoAspectRatio = aspectRatio
 
     try {
-      let body: any = {}
-      
-      if (selectedTool === 'veo3-fast' || selectedTool === 'veo3') {
-        body = { prompt: currentPrompt, aspectRatio }
-      } else if (selectedTool === 'grok-t2v') {
-        body = { prompt: currentPrompt, aspectRatio: grokAspectRatio, mode: grokMode }
-      } else if (selectedTool === 'grok-i2v') {
-        body = { imageUrl: currentImageUrl, prompt: currentPrompt, aspectRatio: sora2AspectRatio, duration: sora2Duration }
-      } else if (selectedTool === 'midjourney-video') {
-        body = { imageUrl: currentImageUrl, prompt: currentPrompt }
-      }
+      const body = { prompt: currentPrompt, aspectRatio }
 
       const response = await fetch(`/api/generate/${selectedTool}`, {
         method: 'POST',
@@ -217,19 +174,13 @@ export default function VideoGeneratorPage() {
       }
 
       if (data.taskId) {
-        // Use taskType from response if available, otherwise fallback to mapping
-        let taskType = data.taskType || 'midjourney'
-        if (!data.taskType) {
-          if (selectedTool === 'veo3-fast' || selectedTool === 'veo3') taskType = 'veo3'
-          else if (selectedTool.startsWith('grok')) taskType = 'grok'
-          else if (selectedTool === 'midjourney-video') taskType = 'midjourney-video'
-        }
+        const taskType = data.taskType || 'veo3'
         
         setCurrentTaskId(data.taskId)
         const finalResult = await pollTaskStatus(data.taskId, taskType)
         
         // Enable 1080p upgrade for Veo 3 videos
-        if ((selectedTool === 'veo3-fast' || selectedTool === 'veo3') && finalResult.videoUrl) {
+        if (selectedTool === 'veo3-fast' && finalResult.videoUrl) {
           finalResult.canUpgrade1080p = true
         }
         
@@ -355,160 +306,38 @@ export default function VideoGeneratorPage() {
             </div>
           </div>
 
-          {(selectedTool === 'veo3-fast' || selectedTool === 'veo3') && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Tỷ lệ khung hình</label>
-              <div className="grid grid-cols-3 gap-2">
-                {aspectRatios.map((ratio) => (
-                  <button
-                    key={ratio.value}
-                    onClick={() => setAspectRatio(ratio.value)}
-                    className={`p-3 rounded-xl border text-sm transition-all ${
-                      aspectRatio === ratio.value
-                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                        : 'border-slate-600 hover:border-slate-500'
-                    }`}
-                  >
-                    {ratio.label}
-                  </button>
-                ))}
-              </div>
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-300 mb-2">Tỷ lệ khung hình</label>
+            <div className="grid grid-cols-2 gap-2">
+              {aspectRatios.map((ratio) => (
+                <button
+                  key={ratio.value}
+                  onClick={() => setAspectRatio(ratio.value)}
+                  className={`p-3 rounded-xl border text-sm transition-all ${
+                    aspectRatio === ratio.value
+                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                      : 'border-slate-600 hover:border-slate-500'
+                  }`}
+                >
+                  {ratio.label}
+                </button>
+              ))}
             </div>
-          )}
-
-          {selectedTool === 'grok-t2v' && (
-            <>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Tỷ lệ khung hình</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {grokAspectRatios.map((ratio) => (
-                    <button
-                      key={ratio.value}
-                      onClick={() => setGrokAspectRatio(ratio.value)}
-                      className={`p-3 rounded-xl border text-sm transition-all ${
-                        grokAspectRatio === ratio.value
-                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                          : 'border-slate-600 hover:border-slate-500'
-                      }`}
-                    >
-                      {ratio.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Chế độ tạo video</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {grokModes.map((mode) => (
-                    <button
-                      key={mode.value}
-                      onClick={() => setGrokMode(mode.value)}
-                      className={`p-3 rounded-xl border text-sm transition-all ${
-                        grokMode === mode.value
-                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                          : 'border-slate-600 hover:border-slate-500'
-                      }`}
-                    >
-                      <div className="font-medium">{mode.label}</div>
-                      <div className="text-xs text-slate-400 mt-1">{mode.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          {selectedTool === 'grok-i2v' && (
-            <>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-300 mb-2">URL hình ảnh nguồn</label>
-                <div className="flex items-center gap-2">
-                  <Upload className="w-5 h-5 text-slate-400" />
-                  <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    className="flex-1 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <p className="text-xs text-slate-400 mt-2">Nhập URL công khai của hình ảnh bạn muốn chuyển thành video (Max 10MB, JPEG/PNG/WebP)</p>
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Tỷ lệ khung hình</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {sora2AspectRatios.map((ratio) => (
-                    <button
-                      key={ratio.value}
-                      onClick={() => setSora2AspectRatio(ratio.value)}
-                      className={`p-3 rounded-xl border text-sm transition-all ${
-                        sora2AspectRatio === ratio.value
-                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                          : 'border-slate-600 hover:border-slate-500'
-                      }`}
-                    >
-                      {ratio.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Thời lượng video</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {sora2Durations.map((duration) => (
-                    <button
-                      key={duration.value}
-                      onClick={() => setSora2Duration(duration.value)}
-                      className={`p-3 rounded-xl border text-sm transition-all ${
-                        sora2Duration === duration.value
-                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                          : 'border-slate-600 hover:border-slate-500'
-                      }`}
-                    >
-                      {duration.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          {selectedTool === 'midjourney-video' && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">URL hình ảnh nguồn</label>
-              <div className="flex items-center gap-2">
-                <Upload className="w-5 h-5 text-slate-400" />
-                <input
-                  type="url"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  className="flex-1 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-              <p className="text-xs text-slate-400 mt-2">Nhập URL công khai của hình ảnh bạn muốn chuyển thành video</p>
-            </div>
-          )}
+          </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              {currentTool?.type === 'text' ? 'Mô tả video (Prompt)' : 'Mô tả chuyển động'}
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Mô tả video (Prompt)</label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder={
-                currentTool?.type === 'text'
-                  ? "Mô tả chi tiết video bạn muốn tạo... Ví dụ: A majestic eagle soaring through mountain peaks at sunset, cinematic lighting"
-                  : "Mô tả chuyển động bạn muốn... Ví dụ: Camera slowly zooms in, gentle wind effect"
-              }
+              placeholder="Mô tả chi tiết video bạn muốn tạo... Ví dụ: A majestic eagle soaring through mountain peaks at sunset, cinematic lighting"
               className="w-full h-32 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 resize-none"
             />
           </div>
 
           <button
             onClick={handleGenerate}
-            disabled={loading || (currentTool?.type === 'text' ? !prompt.trim() : !imageUrl.trim())}
+            disabled={loading || !prompt.trim()}
             className="w-full bubble-btn btn-primary py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
           >
             {loading ? (

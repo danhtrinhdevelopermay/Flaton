@@ -6,7 +6,6 @@ import { useAuth } from '../contexts/AuthContext'
 const imageTools = [
   { id: 'nano-banana', name: 'Flaton Image V1', credits: 4, provider: 'Nhanh, tiết kiệm', icon: Rocket, color: 'text-blue-400' },
   { id: 'seedream', name: 'Flaton Image V2', credits: 6.5, provider: 'Chi tiết 4K', icon: Sparkles, color: 'text-purple-400' },
-  { id: 'midjourney', name: 'Flaton Image Pro', credits: 8, provider: 'Nghệ thuật, 4 biến thể', icon: Palette, color: 'text-pink-400' },
 ]
 
 const aspectRatios = [

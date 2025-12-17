@@ -395,12 +395,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
 const MODEL_CREDITS: Record<string, number> = {
   'nano-banana': 4,
   'seedream': 6.5,
-  'midjourney': 8,
   'veo3-fast': 60,
-  'veo3': 100,
-  'midjourney-video': 40,
-  'grok-i2v': 20,
-  'grok-t2v': 20,
   'suno': 10,
 };
 
@@ -514,37 +509,26 @@ app.post('/api/generate/seedream', authMiddleware, async (req: AuthRequest, res:
       return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
     }
     
-    const { prompt, aspectRatio = '1:1' } = req.body;
-    const result = await callKieApi('/seedream/createTask', {
-      model: 'bytedance/seedream-4.0',
+    const { prompt, aspectRatio = '1:1', resolution = '1K' } = req.body;
+    const imageSizeMap: Record<string, string> = {
+      '1:1': 'square_hd',
+      '16:9': 'landscape_16_9',
+      '9:16': 'portrait_16_9',
+      '4:3': 'landscape_4_3',
+      '3:4': 'portrait_4_3',
+      '3:2': 'landscape_3_2',
+      '2:3': 'portrait_3_2',
+    };
+    const result = await callKieApi('/jobs/createTask', {
+      model: 'bytedance/seedream-v4-text-to-image',
       input: {
         prompt,
-        image_size: aspectRatio,
+        image_size: imageSizeMap[aspectRatio] || 'square_hd',
+        image_resolution: resolution,
+        max_images: 1,
       },
     });
     res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'seedream' });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/generate/midjourney', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const modelCredits = MODEL_CREDITS['midjourney'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
-    const { prompt, aspectRatio = '1:1' } = req.body;
-    const result = await callKieApi('/mj/txt2img', {
-      taskType: 'mj_txt2img',
-      prompt,
-      aspectRatio,
-      speed: 'fast',
-      version: '7',
-    });
-    res.json({ taskId: result.data.taskId, taskType: 'midjourney' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -562,27 +546,6 @@ app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res
     const result = await callKieApi('/veo/generate', {
       prompt,
       model: 'veo3_fast',
-      aspectRatio,
-    });
-    res.json({ taskId: result.data.taskId, taskType: 'veo3' });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Veo 3 Quality - Higher quality but slower
-app.post('/api/generate/veo3', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const modelCredits = MODEL_CREDITS['veo3'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
-    const { prompt, aspectRatio = '16:9' } = req.body;
-    const result = await callKieApi('/veo/generate', {
-      prompt,
-      model: 'veo3',
       aspectRatio,
     });
     res.json({ taskId: result.data.taskId, taskType: 'veo3' });
@@ -620,77 +583,6 @@ app.get('/api/veo3/1080p/:taskId', authMiddleware, async (req: AuthRequest, res:
         message: result.msg || 'Video 1080P not ready yet, please try again later'
       });
     }
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/generate/midjourney-video', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const modelCredits = MODEL_CREDITS['midjourney-video'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
-    const { imageUrl, prompt } = req.body;
-    const result = await callKieApi('/mj/img2video', {
-      taskType: 'mj_video',
-      imageUrl,
-      prompt,
-      speed: 'fast',
-    });
-    res.json({ taskId: result.data.taskId, taskType: 'midjourney-video' });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Sora 2 - Image to Video
-app.post('/api/generate/grok-i2v', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const modelCredits = MODEL_CREDITS['grok-i2v'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
-    const { imageUrl, prompt, aspectRatio = 'landscape', duration = '10' } = req.body;
-    const result = await callKieApi('/jobs/createTask', {
-      model: 'sora-2-image-to-video',
-      input: {
-        image_urls: [imageUrl],
-        prompt,
-        aspect_ratio: aspectRatio,
-        n_frames: duration,
-        remove_watermark: true,
-      },
-    });
-    res.json({ taskId: result.data?.taskId, taskType: 'grok' });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Grok Imagenia - Text to Video
-app.post('/api/generate/grok-t2v', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const modelCredits = MODEL_CREDITS['grok-t2v'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
-    const { prompt, aspectRatio = '3:2', mode = 'normal' } = req.body;
-    const result = await callKieApi('/jobs/createTask', {
-      model: 'grok-imagine/text-to-video',
-      input: {
-        prompt,
-        aspect_ratio: aspectRatio,
-        mode,
-      },
-    });
-    res.json({ taskId: result.data?.taskId, taskType: 'grok' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
