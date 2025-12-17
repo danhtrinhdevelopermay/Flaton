@@ -1,16 +1,28 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
-import { Video, Loader2, Zap, Check, RefreshCw, Sparkles, LogIn, Rocket } from 'lucide-react'
+import { Video, Loader2, Zap, Check, RefreshCw, Sparkles, LogIn, Rocket, Crown, Image } from 'lucide-react'
 import VideoPlayer from '../components/VideoPlayer'
 import { useAuth } from '../contexts/AuthContext'
 
 const videoTools = [
   { id: 'veo3-fast', name: 'Flaton Video V1', credits: 60, provider: 'Flaton', type: 'text', description: 'Text to Video, 720P', icon: Rocket, color: 'text-blue-400' },
+  { id: 'sora2-text', name: 'Sora 2 Text', credits: 80, provider: 'OpenAI', type: 'text', description: 'Text to Video, HD', icon: Crown, color: 'text-yellow-400' },
+  { id: 'sora2-image', name: 'Sora 2 Image', credits: 85, provider: 'OpenAI', type: 'image', description: 'Image to Video, HD', icon: Image, color: 'text-purple-400' },
 ]
 
 const aspectRatios = [
   { value: '16:9', label: '16:9 (Ngang)' },
   { value: '9:16', label: '9:16 (Dọc)' },
+]
+
+const sora2AspectRatios = [
+  { value: 'landscape', label: 'Landscape (Ngang)' },
+  { value: 'portrait', label: 'Portrait (Dọc)' },
+]
+
+const sora2Durations = [
+  { value: '10', label: '10 giây' },
+  { value: '15', label: '15 giây' },
 ]
 
 interface GenerationResult {
@@ -29,6 +41,8 @@ export default function VideoGeneratorPage() {
   const [prompt, setPrompt] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [aspectRatio, setAspectRatio] = useState('16:9')
+  const [sora2Ratio, setSora2Ratio] = useState('landscape')
+  const [duration, setDuration] = useState('10')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [polling, setPolling] = useState(false)
@@ -136,9 +150,10 @@ export default function VideoGeneratorPage() {
   const handleGenerate = async () => {
     const isTextTool = currentTool?.type === 'text'
     const isImageTool = currentTool?.type === 'image'
+    const isSora2 = selectedTool.startsWith('sora2')
     
     if (isTextTool && !prompt.trim()) return
-    if (isImageTool && !imageUrl.trim()) return
+    if (isImageTool && (!prompt.trim() || !imageUrl.trim())) return
     
     if (!isAuthenticated || !token) {
       navigate('/login')
@@ -151,10 +166,20 @@ export default function VideoGeneratorPage() {
     const currentPrompt = prompt
     const currentImageUrl = imageUrl
     const currentModel = selectedTool
-    const currentVideoAspectRatio = aspectRatio
+    const currentVideoAspectRatio = isSora2 ? sora2Ratio : aspectRatio
 
     try {
-      const body = { prompt: currentPrompt, aspectRatio }
+      let body: any = { prompt: currentPrompt }
+      
+      if (isSora2) {
+        body.aspectRatio = sora2Ratio
+        body.duration = duration
+        if (isImageTool) {
+          body.imageUrl = currentImageUrl
+        }
+      } else {
+        body.aspectRatio = aspectRatio
+      }
 
       const response = await fetch(`/api/generate/${selectedTool}`, {
         method: 'POST',
@@ -309,21 +334,72 @@ export default function VideoGeneratorPage() {
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-300 mb-2">Tỷ lệ khung hình</label>
             <div className="grid grid-cols-2 gap-2">
-              {aspectRatios.map((ratio) => (
-                <button
-                  key={ratio.value}
-                  onClick={() => setAspectRatio(ratio.value)}
-                  className={`p-3 rounded-xl border text-sm transition-all ${
-                    aspectRatio === ratio.value
-                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                      : 'border-slate-600 hover:border-slate-500'
-                  }`}
-                >
-                  {ratio.label}
-                </button>
-              ))}
+              {selectedTool.startsWith('sora2') ? (
+                sora2AspectRatios.map((ratio) => (
+                  <button
+                    key={ratio.value}
+                    onClick={() => setSora2Ratio(ratio.value)}
+                    className={`p-3 rounded-xl border text-sm transition-all ${
+                      sora2Ratio === ratio.value
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-600 hover:border-slate-500'
+                    }`}
+                  >
+                    {ratio.label}
+                  </button>
+                ))
+              ) : (
+                aspectRatios.map((ratio) => (
+                  <button
+                    key={ratio.value}
+                    onClick={() => setAspectRatio(ratio.value)}
+                    className={`p-3 rounded-xl border text-sm transition-all ${
+                      aspectRatio === ratio.value
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-600 hover:border-slate-500'
+                    }`}
+                  >
+                    {ratio.label}
+                  </button>
+                ))
+              )}
             </div>
           </div>
+
+          {selectedTool.startsWith('sora2') && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Thời lượng video</label>
+              <div className="grid grid-cols-2 gap-2">
+                {sora2Durations.map((d) => (
+                  <button
+                    key={d.value}
+                    onClick={() => setDuration(d.value)}
+                    className={`p-3 rounded-xl border text-sm transition-all ${
+                      duration === d.value
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-600 hover:border-slate-500'
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedTool === 'sora2-image' && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-300 mb-2">URL hình ảnh</label>
+              <input
+                type="url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+                className="w-full p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+              />
+              <p className="text-xs text-slate-400 mt-2">Hỗ trợ: JPEG, PNG, WebP (tối đa 10MB)</p>
+            </div>
+          )}
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-300 mb-2">Mô tả video (Prompt)</label>
@@ -337,7 +413,7 @@ export default function VideoGeneratorPage() {
 
           <button
             onClick={handleGenerate}
-            disabled={loading || !prompt.trim()}
+            disabled={loading || !prompt.trim() || (selectedTool === 'sora2-image' && !imageUrl.trim())}
             className="w-full bubble-btn btn-primary py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
           >
             {loading ? (

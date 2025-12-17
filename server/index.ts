@@ -89,6 +89,9 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     case 'grok':
       endpoint = `/jobs/recordInfo?taskId=${taskId}`;
       break;
+    case 'sora2':
+      endpoint = `/jobs/recordInfo?taskId=${taskId}`;
+      break;
     case 'suno':
       endpoint = `/generate/record-info?taskId=${taskId}`;
       break;
@@ -137,6 +140,41 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       return {
         status: 'processing',
         progress: data.progress,
+      };
+    }
+  }
+
+  // Handle Sora 2 video generation
+  if (taskType === 'sora2') {
+    if (result.code !== 200) {
+      const errorMsg = result.msg || result.message || 'Failed to check task status';
+      throw new Error(errorMsg);
+    }
+    
+    const data = result.data;
+    if (data.state === 'success') {
+      let videoUrl = null;
+      if (data.resultJson) {
+        try {
+          const resultData = JSON.parse(data.resultJson);
+          videoUrl = resultData.resultUrls?.[0] || null;
+        } catch (e) {
+          console.error('Failed to parse resultJson:', e);
+        }
+      }
+      return {
+        status: 'completed',
+        videoUrl: videoUrl,
+      };
+    } else if (data.state === 'fail' || data.state === 'failed') {
+      return {
+        status: 'failed',
+        error: data.failMsg || 'Video generation failed',
+      };
+    } else {
+      return {
+        status: 'processing',
+        progress: data.state || 'waiting',
       };
     }
   }
@@ -397,9 +435,11 @@ const MODEL_CREDITS: Record<string, number> = {
   'seedream': 6.5,
   'veo3-fast': 60,
   'suno': 10,
+  'sora2-text': 80,
+  'sora2-image': 85,
 };
 
-const MAX_CREDITS = 70;
+const MAX_CREDITS = 100;
 const DAILY_CHECKIN_CREDITS = 60;
 const DEFAULT_CREDITS = 50;
 
@@ -549,6 +589,62 @@ app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res
       aspectRatio,
     });
     res.json({ taskId: result.data.taskId, taskType: 'veo3' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Sora 2 Text to Video
+app.post('/api/generate/sora2-text', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const modelCredits = MODEL_CREDITS['sora2-text'];
+    const hasCredits = await deductCredits(req.userId!, modelCredits);
+    if (!hasCredits) {
+      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
+    }
+    
+    const { prompt, aspectRatio = 'landscape', duration = '10' } = req.body;
+    const result = await callKieApi('/jobs/createTask', {
+      model: 'sora-2-text-to-video',
+      input: {
+        prompt,
+        aspect_ratio: aspectRatio,
+        n_frames: duration,
+        remove_watermark: true,
+      },
+    });
+    res.json({ taskId: result.data?.taskId, taskType: 'sora2' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Sora 2 Image to Video
+app.post('/api/generate/sora2-image', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const modelCredits = MODEL_CREDITS['sora2-image'];
+    const hasCredits = await deductCredits(req.userId!, modelCredits);
+    if (!hasCredits) {
+      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
+    }
+    
+    const { prompt, imageUrl, aspectRatio = 'landscape', duration = '10' } = req.body;
+    
+    if (!imageUrl) {
+      return res.status(400).json({ error: 'Image URL is required' });
+    }
+    
+    const result = await callKieApi('/jobs/createTask', {
+      model: 'sora-2-image-to-video',
+      input: {
+        prompt,
+        image_urls: [imageUrl],
+        aspect_ratio: aspectRatio,
+        n_frames: duration,
+        remove_watermark: true,
+      },
+    });
+    res.json({ taskId: result.data?.taskId, taskType: 'sora2' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
