@@ -21,35 +21,23 @@ A web application providing AI tools powered by Flaton AI. Users can generate im
 ## Available AI Tools
 
 ### Image Generation
-- **FLUX Schnell** (3 credits) - Ultra-fast 1-4 step generation (WaveSpeed)
 - **Flaton Image V1** (4 credits) - Fast high-quality images
-- **FLUX Dev** (5 credits) - High quality 12B parameter model (WaveSpeed)
 - **Flaton Image V2** (6.5 credits) - 4K images with cinematic style
 - **Flaton Image Pro** (8 credits) - Artistic style images with 4 variants
 
 ### Video Generation
-- **Flaton Video X (Text)** (20 credits) - Text to Video
-- **Flaton Video X (Image)** (20 credits) - Image to Video
-- **WAN 2.2 T2V 720p** (30 credits) - Text to Video HD (WaveSpeed)
-- **WAN 2.2 I2V 720p** (35 credits) - Image to Video HD (WaveSpeed)
-- **Flaton Video Pro** (40 credits) - Image to 5s video
 - **Flaton Video V1** (60 credits) - Fast 720P video with audio
 - **Flaton Video V2** (100 credits) - High quality video
+- **Flaton Video X** (20 credits) - Text/Image to video
+- **Flaton Video Pro** (40 credits) - Image to 5s video
 
 ### Music Generation
 - **Flaton Music V1** - Fast, stable
 - **Flaton Music V1.5** - Higher quality
 - **Flaton Music V2** - Latest
 
-### VBA Document Generator
-- Chat với AI để tạo mã VBA macro
-- Hỗ trợ xuất file Word (.docx), Excel (.xlsx), PowerPoint (.pptx)
-- Sử dụng Google Gemini API (miễn phí)
-
 ## Environment Variables
 - `KIE_API_KEY` - Required: API key from kie.ai
-- `WAVESPEED_API_KEY` - Required for WaveSpeed models (FLUX, WAN): API key from https://wavespeed.ai/accesskey
-- `GEMINI_API_KEY` - Required for VBA Generator: API key from Google AI Studio (https://aistudio.google.com)
 
 ## API Endpoints
 
@@ -57,18 +45,11 @@ A web application providing AI tools powered by Flaton AI. Users can generate im
 - `POST /api/generate/nano-banana` - Generate image with Nano Banana
 - `POST /api/generate/seedream` - Generate image with Seedream 4.5
 - `POST /api/generate/midjourney` - Generate image with Midjourney
-- `POST /api/generate/flux-schnell` - Generate image with FLUX Schnell (WaveSpeed)
-- `POST /api/generate/flux-dev` - Generate image with FLUX Dev (WaveSpeed)
 - `POST /api/generate/veo3-fast` - Generate video with Veo 3 Fast
 - `POST /api/generate/midjourney-video` - Generate video from image
-- `POST /api/generate/wan-t2v-720p` - Generate video from text (WaveSpeed WAN 2.2)
-- `POST /api/generate/wan-i2v-720p` - Generate video from image (WaveSpeed WAN 2.2)
 - `GET /api/task/:taskType/:taskId` - Check task status
 - `GET /api/credits` - Get remaining credits
 - `GET /api/health` - Health check
-- `POST /api/vba/generate` - Generate VBA code with Gemini AI
-- `POST /api/vba/chat` - Chat with AI about VBA
-- `POST /api/vba/download` - Download VBA code as Office document
 
 ## Development
 - Frontend runs on port 5000 (Vite)
@@ -119,15 +100,6 @@ Uses the official KIE AI API endpoints:
 - `/api/v1/jobs/recordInfo` - Poll Grok task status
 
 ## Recent Changes (Dec 2024)
-- Integrated WaveSpeed.ai API for additional AI models:
-  - FLUX Schnell (3 credits) - Ultra-fast image generation
-  - FLUX Dev (5 credits) - High quality 12B parameter image model
-  - WAN 2.2 T2V 720p (30 credits) - Text to Video HD
-  - WAN 2.2 I2V 720p (35 credits) - Image to Video HD
-- Added VBA Document Generator feature with Google Gemini AI integration
-  - Chat interface to generate VBA macro code
-  - Download as Word, Excel, or PowerPoint files
-  - Supports quick code generation and conversational mode
 - Fixed Midjourney image generation endpoint (changed from /mj/imagine to /mj/txt2img)
 - Fixed Midjourney video generation endpoint with proper taskType parameter
 - Implemented robust multi-layer fallback parsing for all response types:
@@ -136,13 +108,3 @@ Uses the official KIE AI API endpoints:
 - Added comprehensive handling for both successFlag-based and status-based API responses
 - Updated frontend to dynamically use taskType from server responses for polling
 - Ensured URL extraction works across all provider response format variations
-
-## WaveSpeed API Integration
-Uses WaveSpeed.ai REST API endpoints:
-- Base URL: `https://api.wavespeed.ai/api/v3`
-- Authentication: Bearer token (WAVESPEED_API_KEY)
-- `/wavespeed-ai/flux-schnell` - FLUX Schnell image generation
-- `/wavespeed-ai/flux-dev` - FLUX Dev image generation
-- `/wavespeed-ai/wan-2.2/t2v-720p` - WAN 2.2 Text to Video
-- `/wavespeed-ai/wan-2.2/i2v-720p` - WAN 2.2 Image to Video
-- `/predictions/{taskId}/result` - Poll task status

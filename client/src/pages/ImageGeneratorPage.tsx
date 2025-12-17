@@ -4,9 +4,7 @@ import { Image, Loader2, Download, Zap, Check, RefreshCw, LogIn, Rocket, Sparkle
 import { useAuth } from '../contexts/AuthContext'
 
 const imageTools = [
-  { id: 'flux-schnell', name: 'FLUX Schnell', credits: 3, provider: 'Siêu nhanh, 1-4 bước', icon: Rocket, color: 'text-cyan-400' },
   { id: 'nano-banana', name: 'Flaton Image V1', credits: 4, provider: 'Nhanh, tiết kiệm', icon: Rocket, color: 'text-blue-400' },
-  { id: 'flux-dev', name: 'FLUX Dev', credits: 5, provider: 'Chất lượng cao, 12B', icon: Sparkles, color: 'text-indigo-400' },
   { id: 'seedream', name: 'Flaton Image V2', credits: 6.5, provider: 'Chi tiết 4K', icon: Sparkles, color: 'text-purple-400' },
   { id: 'midjourney', name: 'Flaton Image Pro', credits: 8, provider: 'Nghệ thuật, 4 biến thể', icon: Palette, color: 'text-pink-400' },
 ]

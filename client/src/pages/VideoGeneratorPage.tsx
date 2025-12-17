@@ -5,13 +5,11 @@ import VideoPlayer from '../components/VideoPlayer'
 import { useAuth } from '../contexts/AuthContext'
 
 const videoTools = [
-  { id: 'grok-t2v', name: 'Flaton Video X (Text)', credits: 20, provider: 'Flaton', type: 'text', description: 'Text to Video', icon: Clapperboard, color: 'text-green-400' },
-  { id: 'grok-i2v', name: 'Flaton Video X (Image)', credits: 20, provider: 'Flaton', type: 'image', description: 'Image to Video', icon: ImagePlay, color: 'text-orange-400' },
-  { id: 'wan-t2v-720p', name: 'WAN 2.2 T2V 720p', credits: 30, provider: 'WaveSpeed', type: 'text', description: 'Text to Video HD', icon: Film, color: 'text-cyan-400' },
-  { id: 'wan-i2v-720p', name: 'WAN 2.2 I2V 720p', credits: 35, provider: 'WaveSpeed', type: 'image', description: 'Image to Video HD', icon: ImagePlay, color: 'text-indigo-400' },
-  { id: 'midjourney-video', name: 'Flaton Video Pro', credits: 40, provider: 'Flaton', type: 'image', description: 'Image to Video', icon: Crown, color: 'text-yellow-400' },
   { id: 'veo3-fast', name: 'Flaton Video V1', credits: 60, provider: 'Flaton', type: 'text', description: 'Nhanh, 720P', icon: Rocket, color: 'text-blue-400' },
   { id: 'veo3', name: 'Flaton Video V2', credits: 100, provider: 'Flaton', type: 'text', description: 'Chất lượng cao, chậm hơn', icon: Film, color: 'text-purple-400' },
+  { id: 'grok-t2v', name: 'Flaton Video X (Text)', credits: 20, provider: 'Flaton', type: 'text', description: 'Text to Video', icon: Clapperboard, color: 'text-green-400' },
+  { id: 'grok-i2v', name: 'Flaton Video X (Image)', credits: 20, provider: 'Flaton', type: 'image', description: 'Image to Video', icon: ImagePlay, color: 'text-orange-400' },
+  { id: 'midjourney-video', name: 'Flaton Video Pro', credits: 40, provider: 'Flaton', type: 'image', description: 'Image to Video', icon: Crown, color: 'text-yellow-400' },
 ]
 
 const aspectRatios = [
@@ -187,10 +185,6 @@ export default function VideoGeneratorPage() {
         body = { imageUrl: currentImageUrl, prompt: currentPrompt, mode: grokMode }
       } else if (selectedTool === 'midjourney-video') {
         body = { imageUrl: currentImageUrl, prompt: currentPrompt }
-      } else if (selectedTool === 'wan-t2v-720p') {
-        body = { prompt: currentPrompt, aspectRatio, duration: 5 }
-      } else if (selectedTool === 'wan-i2v-720p') {
-        body = { imageUrl: currentImageUrl, prompt: currentPrompt, aspectRatio, duration: 5 }
       }
 
       const response = await fetch(`/api/generate/${selectedTool}`, {
@@ -466,70 +460,6 @@ export default function VideoGeneratorPage() {
               </div>
               <p className="text-xs text-slate-400 mt-2">Nhập URL công khai của hình ảnh bạn muốn chuyển thành video</p>
             </div>
-          )}
-
-          {selectedTool === 'wan-t2v-720p' && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Tỷ lệ khung hình</label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { value: '16:9', label: '16:9 (Ngang - 1280x720)' },
-                  { value: '9:16', label: '9:16 (Dọc - 720x1280)' },
-                ].map((ratio) => (
-                  <button
-                    key={ratio.value}
-                    onClick={() => setAspectRatio(ratio.value)}
-                    className={`p-3 rounded-xl border text-sm transition-all ${
-                      aspectRatio === ratio.value
-                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                        : 'border-slate-600 hover:border-slate-500'
-                    }`}
-                  >
-                    {ratio.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {selectedTool === 'wan-i2v-720p' && (
-            <>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-300 mb-2">URL hình ảnh nguồn</label>
-                <div className="flex items-center gap-2">
-                  <Upload className="w-5 h-5 text-slate-400" />
-                  <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    className="flex-1 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <p className="text-xs text-slate-400 mt-2">Nhập URL công khai của hình ảnh bạn muốn chuyển thành video</p>
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Tỷ lệ khung hình</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: '16:9', label: '16:9 (Ngang - 1280x720)' },
-                    { value: '9:16', label: '9:16 (Dọc - 720x1280)' },
-                  ].map((ratio) => (
-                    <button
-                      key={ratio.value}
-                      onClick={() => setAspectRatio(ratio.value)}
-                      className={`p-3 rounded-xl border text-sm transition-all ${
-                        aspectRatio === ratio.value
-                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                          : 'border-slate-600 hover:border-slate-500'
-                      }`}
-                    >
-                      {ratio.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
           )}
 
           <div className="mb-6">

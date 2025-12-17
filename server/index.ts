@@ -10,8 +10,6 @@ import pool from './db';
 import { hashPassword, verifyPassword, generateToken, authMiddleware, optionalAuthMiddleware, AuthRequest } from './auth';
 import * as apiKeyManager from './apiKeyManager';
 import jwt from 'jsonwebtoken';
-import { generateVBACode, chatWithAI, extractVBAFromResponse } from './gemini';
-import { createWordDocument, createExcelDocument, createPowerPointDocument } from './documentGenerator';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,7 +29,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 const KIE_API_BASE = 'https://api.kie.ai/api/v1';
-const WAVESPEED_API_BASE = 'https://api.wavespeed.ai/api/v3';
 
 async function getActiveApiKey(): Promise<string> {
   const dbKey = await apiKeyManager.getCurrentApiKey();
@@ -71,86 +68,7 @@ async function callKieApi(endpoint: string, data: any) {
   return result;
 }
 
-function getWavespeedApiKey(): string {
-  const apiKey = process.env.WAVESPEED_API_KEY;
-  if (!apiKey) {
-    throw new Error('WAVESPEED_API_KEY is not configured. Please add your WaveSpeed API key.');
-  }
-  return apiKey;
-}
-
-async function callWavespeedApi(endpoint: string, data: any) {
-  const apiKey = getWavespeedApiKey();
-  
-  console.log(`Calling WaveSpeed API: ${endpoint}`, JSON.stringify(data, null, 2));
-  
-  const response = await fetch(`${WAVESPEED_API_BASE}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(data),
-  });
-
-  const result = await response.json();
-  console.log(`WaveSpeed API response for ${endpoint}:`, JSON.stringify(result, null, 2));
-  
-  if (result.code !== 200) {
-    const errorMsg = result.message || result.error || 'WaveSpeed API request failed';
-    console.error(`WaveSpeed API Error: ${errorMsg}`, result);
-    throw new Error(errorMsg);
-  }
-
-  return result;
-}
-
-async function checkWavespeedTaskStatus(taskId: string) {
-  const apiKey = getWavespeedApiKey();
-  
-  const response = await fetch(`${WAVESPEED_API_BASE}/predictions/${taskId}/result`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-    },
-  });
-
-  const result = await response.json();
-  console.log(`WaveSpeed task status check for ${taskId}:`, JSON.stringify(result, null, 2));
-  
-  if (result.code !== 200) {
-    const errorMsg = result.message || result.error || 'Failed to check WaveSpeed task status';
-    throw new Error(errorMsg);
-  }
-
-  const data = result.data;
-  
-  if (data.status === 'completed') {
-    return {
-      status: 'completed',
-      outputs: data.outputs || [],
-      imageUrl: data.outputs?.[0],
-      videoUrl: data.outputs?.[0],
-      images: data.outputs,
-    };
-  } else if (data.status === 'failed') {
-    return {
-      status: 'failed',
-      error: data.error || 'WaveSpeed generation failed',
-    };
-  } else {
-    return {
-      status: 'processing',
-      progress: data.status,
-    };
-  }
-}
-
 async function checkTaskStatus(taskId: string, taskType: string) {
-  if (taskType === 'wavespeed' || taskType === 'wavespeed-video') {
-    return checkWavespeedTaskStatus(taskId);
-  }
-
   const apiKey = await getActiveApiKey();
 
   let endpoint = '';
@@ -478,15 +396,11 @@ const MODEL_CREDITS: Record<string, number> = {
   'nano-banana': 4,
   'seedream': 6.5,
   'midjourney': 8,
-  'flux-schnell': 3,
-  'flux-dev': 5,
   'veo3-fast': 60,
   'veo3': 100,
   'midjourney-video': 40,
   'grok-i2v': 20,
   'grok-t2v': 20,
-  'wan-t2v-720p': 30,
-  'wan-i2v-720p': 35,
   'suno': 10,
 };
 
@@ -631,125 +545,6 @@ app.post('/api/generate/midjourney', authMiddleware, async (req: AuthRequest, re
       version: '7',
     });
     res.json({ taskId: result.data.taskId, taskType: 'midjourney' });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/generate/flux-schnell', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const modelCredits = MODEL_CREDITS['flux-schnell'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
-    const { prompt, aspectRatio = '1:1' } = req.body;
-    const sizeMap: Record<string, string> = {
-      '1:1': '1024*1024',
-      '16:9': '1344*768',
-      '9:16': '768*1344',
-      '4:3': '1152*896',
-      '3:4': '896*1152',
-    };
-    
-    const result = await callWavespeedApi('/wavespeed-ai/flux-schnell', {
-      prompt,
-      size: sizeMap[aspectRatio] || '1024*1024',
-      num_images: 1,
-      seed: -1,
-      output_format: 'jpeg',
-      enable_base64_output: false,
-      enable_sync_mode: false,
-    });
-    res.json({ taskId: result.data.id, taskType: 'wavespeed' });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/generate/flux-dev', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const modelCredits = MODEL_CREDITS['flux-dev'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
-    const { prompt, aspectRatio = '1:1' } = req.body;
-    const sizeMap: Record<string, string> = {
-      '1:1': '1024*1024',
-      '16:9': '1344*768',
-      '9:16': '768*1344',
-      '4:3': '1152*896',
-      '3:4': '896*1152',
-    };
-    
-    const result = await callWavespeedApi('/wavespeed-ai/flux-dev', {
-      prompt,
-      size: sizeMap[aspectRatio] || '1024*1024',
-      num_inference_steps: 28,
-      guidance_scale: 3.5,
-      num_images: 1,
-      seed: -1,
-      output_format: 'jpeg',
-      enable_base64_output: false,
-      enable_sync_mode: false,
-    });
-    res.json({ taskId: result.data.id, taskType: 'wavespeed' });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/generate/wan-t2v-720p', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const modelCredits = MODEL_CREDITS['wan-t2v-720p'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
-    const { prompt, aspectRatio = '16:9', duration = 5 } = req.body;
-    const sizeMap: Record<string, string> = {
-      '16:9': '1280*720',
-      '9:16': '720*1280',
-    };
-    
-    const result = await callWavespeedApi('/wavespeed-ai/wan-2.2/t2v-720p', {
-      prompt,
-      size: sizeMap[aspectRatio] || '1280*720',
-      duration: duration,
-      seed: -1,
-    });
-    res.json({ taskId: result.data.id, taskType: 'wavespeed-video' });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/generate/wan-i2v-720p', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const modelCredits = MODEL_CREDITS['wan-i2v-720p'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
-    const { imageUrl, prompt, aspectRatio = '16:9', duration = 5 } = req.body;
-    const sizeMap: Record<string, string> = {
-      '16:9': '1280*720',
-      '9:16': '720*1280',
-    };
-    
-    const result = await callWavespeedApi('/wavespeed-ai/wan-2.2/i2v-720p', {
-      prompt,
-      image: imageUrl,
-      size: sizeMap[aspectRatio] || '1280*720',
-      duration: duration,
-      seed: -1,
-    });
-    res.json({ taskId: result.data.id, taskType: 'wavespeed-video' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -1380,89 +1175,6 @@ app.get('/api/system-stats', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('System stats error:', error);
     res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/vba/generate', optionalAuthMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const { prompt, documentType } = req.body;
-    
-    if (!prompt || !documentType) {
-      return res.status(400).json({ error: 'Prompt and document type are required' });
-    }
-
-    if (!['word', 'excel', 'powerpoint'].includes(documentType)) {
-      return res.status(400).json({ error: 'Invalid document type. Must be word, excel, or powerpoint' });
-    }
-
-    const vbaCode = await generateVBACode(prompt, documentType);
-    res.json({ success: true, vbaCode });
-  } catch (error: any) {
-    console.error('VBA generation error:', error);
-    res.status(500).json({ error: error.message || 'Failed to generate VBA code' });
-  }
-});
-
-app.post('/api/vba/chat', optionalAuthMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const { messages } = req.body;
-    
-    if (!messages || !Array.isArray(messages)) {
-      return res.status(400).json({ error: 'Messages array is required' });
-    }
-
-    const response = await chatWithAI(messages);
-    const extractedCode = extractVBAFromResponse(response);
-    
-    res.json({ 
-      success: true, 
-      response,
-      extractedCode
-    });
-  } catch (error: any) {
-    console.error('VBA chat error:', error);
-    res.status(500).json({ error: error.message || 'Failed to chat with AI' });
-  }
-});
-
-app.post('/api/vba/download', optionalAuthMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const { vbaCode, documentType, title } = req.body;
-    
-    if (!vbaCode || !documentType) {
-      return res.status(400).json({ error: 'VBA code and document type are required' });
-    }
-
-    let buffer: Buffer;
-    let filename: string;
-    let contentType: string;
-
-    switch (documentType) {
-      case 'word':
-        buffer = await createWordDocument(vbaCode, title || 'VBA Macro');
-        filename = `${title || 'vba-macro'}.docx`;
-        contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-        break;
-      case 'excel':
-        buffer = await createExcelDocument(vbaCode, title || 'VBA Macro');
-        filename = `${title || 'vba-macro'}.xlsx`;
-        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-        break;
-      case 'powerpoint':
-        buffer = await createPowerPointDocument(vbaCode, title || 'VBA Macro');
-        filename = `${title || 'vba-macro'}.pptx`;
-        contentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-        break;
-      default:
-        return res.status(400).json({ error: 'Invalid document type' });
-    }
-
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
-    res.send(buffer);
-  } catch (error: any) {
-    console.error('Document creation error:', error);
-    res.status(500).json({ error: error.message || 'Failed to create document' });
   }
 });
 
