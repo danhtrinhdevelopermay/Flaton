@@ -27,9 +27,8 @@ A web application providing AI tools powered by Flaton AI. Users can generate im
 
 ### Video Generation
 - **Flaton Video V1** (60 credits) - Fast 720P video with audio
-- **Flaton Video V2** (100 credits) - High quality video
-- **Flaton Video X** (20 credits) - Text/Image to video
-- **Flaton Video Pro** (40 credits) - Image to 5s video
+- **Sora 2 Text** (80 credits) - Text to HD video, 10-15s duration
+- **Sora 2 Image** (85 credits) - Image to HD video, 10-15s duration
 
 ### Music Generation
 - **Flaton Music V1** - Fast, stable
@@ -46,7 +45,8 @@ A web application providing AI tools powered by Flaton AI. Users can generate im
 - `POST /api/generate/seedream` - Generate image with Seedream 4.5
 - `POST /api/generate/midjourney` - Generate image with Midjourney
 - `POST /api/generate/veo3-fast` - Generate video with Veo 3 Fast
-- `POST /api/generate/midjourney-video` - Generate video from image
+- `POST /api/generate/sora2-text` - Generate video with Sora 2 Text
+- `POST /api/generate/sora2-image` - Generate video from image with Sora 2
 - `GET /api/task/:taskType/:taskId` - Check task status
 - `GET /api/credits` - Get remaining credits
 - `GET /api/health` - Health check
@@ -96,10 +96,13 @@ Uses the official KIE AI API endpoints:
 - `/api/v1/mj/record-info` - Poll Midjourney task status
 - `/api/v1/veo/generate` - For Veo 3 video generation
 - `/api/v1/veo/record-info` - Poll Veo 3 task status
-- `/api/v1/jobs/createTask` - For Grok Imagenia
-- `/api/v1/jobs/recordInfo` - Poll Grok task status
+- `/api/v1/jobs/createTask` - For Grok Imagenia, Seedream, Sora 2
+- `/api/v1/jobs/recordInfo` - Poll Grok, Seedream, Sora 2 task status
 
 ## Recent Changes (Dec 2024)
+- Added Sora 2 Text-to-Video and Image-to-Video models
+- Fixed Seedream endpoint (changed from /seedream/recordInfo to /jobs/recordInfo)
+- Increased MAX_CREDITS to 100 to support higher-cost models
 - Fixed Midjourney image generation endpoint (changed from /mj/imagine to /mj/txt2img)
 - Fixed Midjourney video generation endpoint with proper taskType parameter
 - Implemented robust multi-layer fallback parsing for all response types:
