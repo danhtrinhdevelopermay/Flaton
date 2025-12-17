@@ -30,6 +30,16 @@ const grokModes = [
   { value: 'spicy', label: 'Spicy', desc: 'Nghệ thuật, táo bạo' },
 ]
 
+const sora2AspectRatios = [
+  { value: 'landscape', label: 'Ngang (Landscape)' },
+  { value: 'portrait', label: 'Dọc (Portrait)' },
+]
+
+const sora2Durations = [
+  { value: '10', label: '10 giây' },
+  { value: '15', label: '15 giây' },
+]
+
 interface GenerationResult {
   taskId?: string
   status?: string
@@ -48,6 +58,8 @@ export default function VideoGeneratorPage() {
   const [aspectRatio, setAspectRatio] = useState('16:9')
   const [grokAspectRatio, setGrokAspectRatio] = useState('3:2')
   const [grokMode, setGrokMode] = useState('normal')
+  const [sora2AspectRatio, setSora2AspectRatio] = useState('landscape')
+  const [sora2Duration, setSora2Duration] = useState('10')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [polling, setPolling] = useState(false)
@@ -182,7 +194,7 @@ export default function VideoGeneratorPage() {
       } else if (selectedTool === 'grok-t2v') {
         body = { prompt: currentPrompt, aspectRatio: grokAspectRatio, mode: grokMode }
       } else if (selectedTool === 'grok-i2v') {
-        body = { imageUrl: currentImageUrl, prompt: currentPrompt, mode: grokMode }
+        body = { imageUrl: currentImageUrl, prompt: currentPrompt, aspectRatio: sora2AspectRatio, duration: sora2Duration }
       } else if (selectedTool === 'midjourney-video') {
         body = { imageUrl: currentImageUrl, prompt: currentPrompt }
       }
@@ -420,27 +432,43 @@ export default function VideoGeneratorPage() {
                     className="flex-1 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
-                <p className="text-xs text-slate-400 mt-2">Nhập URL công khai của hình ảnh bạn muốn chuyển thành video</p>
+                <p className="text-xs text-slate-400 mt-2">Nhập URL công khai của hình ảnh bạn muốn chuyển thành video (Max 10MB, JPEG/PNG/WebP)</p>
               </div>
               <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Chế độ tạo video</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {grokModes.filter(m => m.value !== 'spicy').map((mode) => (
+                <label className="block text-sm font-medium text-slate-300 mb-2">Tỷ lệ khung hình</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {sora2AspectRatios.map((ratio) => (
                     <button
-                      key={mode.value}
-                      onClick={() => setGrokMode(mode.value)}
+                      key={ratio.value}
+                      onClick={() => setSora2AspectRatio(ratio.value)}
                       className={`p-3 rounded-xl border text-sm transition-all ${
-                        grokMode === mode.value
+                        sora2AspectRatio === ratio.value
                           ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
                           : 'border-slate-600 hover:border-slate-500'
                       }`}
                     >
-                      <div className="font-medium">{mode.label}</div>
-                      <div className="text-xs text-slate-400 mt-1">{mode.desc}</div>
+                      {ratio.label}
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-slate-400 mt-2">Lưu ý: Chế độ Spicy không hỗ trợ với ảnh bên ngoài</p>
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-300 mb-2">Thời lượng video</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {sora2Durations.map((duration) => (
+                    <button
+                      key={duration.value}
+                      onClick={() => setSora2Duration(duration.value)}
+                      className={`p-3 rounded-xl border text-sm transition-all ${
+                        sora2Duration === duration.value
+                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                          : 'border-slate-600 hover:border-slate-500'
+                      }`}
+                    >
+                      {duration.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </>
           )}

@@ -646,7 +646,7 @@ app.post('/api/generate/midjourney-video', authMiddleware, async (req: AuthReque
   }
 });
 
-// Grok Imagenia - Image to Video
+// Sora 2 - Image to Video
 app.post('/api/generate/grok-i2v', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const modelCredits = MODEL_CREDITS['grok-i2v'];
@@ -655,13 +655,15 @@ app.post('/api/generate/grok-i2v', authMiddleware, async (req: AuthRequest, res:
       return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
     }
     
-    const { imageUrl, prompt, mode = 'normal' } = req.body;
+    const { imageUrl, prompt, aspectRatio = 'landscape', duration = '10' } = req.body;
     const result = await callKieApi('/jobs/createTask', {
-      model: 'grok-imagine/image-to-video',
+      model: 'sora-2-image-to-video',
       input: {
         image_urls: [imageUrl],
         prompt,
-        mode,
+        aspect_ratio: aspectRatio,
+        n_frames: duration,
+        remove_watermark: true,
       },
     });
     res.json({ taskId: result.data?.taskId, taskType: 'grok' });
