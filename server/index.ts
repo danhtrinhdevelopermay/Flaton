@@ -717,11 +717,15 @@ app.post('/api/generate/sora2-image', authMiddleware, async (req: AuthRequest, r
       return res.status(400).json({ error: 'Image URL is required' });
     }
     
+    // Upload image to Cloudinary first
+    const cloudinaryImageUrl = await cloudinaryUtil.uploadImageToCloudinary(imageUrl);
+    console.log(`Image uploaded to Cloudinary: ${imageUrl} -> ${cloudinaryImageUrl}`);
+    
     const result = await callKieApi('/jobs/createTask', {
       model: 'sora-2-image-to-video',
       input: {
         prompt,
-        image_urls: [imageUrl],
+        image_urls: [cloudinaryImageUrl],
         aspect_ratio: aspectRatio,
         n_frames: duration,
         remove_watermark: true,
