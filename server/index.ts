@@ -9,6 +9,7 @@ import { initDatabase } from './db';
 import pool from './db';
 import { hashPassword, verifyPassword, generateToken, authMiddleware, optionalAuthMiddleware, AuthRequest } from './auth';
 import * as apiKeyManager from './apiKeyManager';
+import * as cloudinaryUtil from './cloudinaryUtil';
 import jwt from 'jsonwebtoken';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -153,7 +154,8 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       if (data.resultJson) {
         try {
           const resultData = JSON.parse(data.resultJson);
-          images = resultData.resultUrls || [];
+          const originalImages = resultData.resultUrls || [];
+          images = await Promise.all(originalImages.map((url: string) => cloudinaryUtil.uploadImageToCloudinary(url)));
         } catch (e) {
           console.error('Failed to parse resultJson:', e);
         }
@@ -187,7 +189,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     if (data.status === 'SUCCESS' || data.successFlag === 1) {
       let images: string[] = [];
       if (data.response?.resultUrls && Array.isArray(data.response.resultUrls)) {
-        images = data.response.resultUrls;
+        images = await Promise.all(data.response.resultUrls.map((url: string) => cloudinaryUtil.uploadImageToCloudinary(url)));
       }
       return {
         status: 'completed',
@@ -231,7 +233,10 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       if (data.resultJson) {
         try {
           const resultData = JSON.parse(data.resultJson);
-          videoUrl = resultData.resultUrls?.[0] || null;
+          const originalUrl = resultData.resultUrls?.[0] || null;
+          if (originalUrl) {
+            videoUrl = await cloudinaryUtil.uploadVideoToCloudinary(originalUrl);
+          }
         } catch (e) {
           console.error('Failed to parse resultJson:', e);
         }
