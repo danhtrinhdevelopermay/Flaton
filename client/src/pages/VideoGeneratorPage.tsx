@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 
 const videoTools = [
   { id: 'veo3-fast', name: 'Flaton Video V1', credits: 60, provider: 'Flaton', type: 'text', description: 'Text to Video, 720P', icon: Rocket, color: 'text-blue-400' },
-  { id: 'sora2', name: 'Sora 2', credits: 80, provider: 'OpenAI', type: 'text', description: 'Text or Image to Video, HD', icon: Crown, color: 'text-yellow-400' },
+  { id: 'sora2', name: 'Flaton VXX Pro', credits: 80, provider: 'OpenAI', type: 'text', description: 'Tạo video chân thực và âm thanh sống động hơn', icon: Crown, color: 'text-yellow-400' },
 ]
 
 const aspectRatios = [
@@ -321,7 +321,7 @@ export default function VideoGeneratorPage() {
                           {selectedTool === tool.id && <Check className="w-4 h-4 text-indigo-400" />}
                         </div>
                         <div className="text-sm text-slate-400">
-                          {tool.description} • {tool.type === 'text' ? 'Text to Video' : 'Image to Video'}
+                          {tool.description} • {tool.type === 'text' ? 'V.Ima' : 'V.Vid'}
                         </div>
                       </div>
                     </div>
