@@ -42,6 +42,26 @@ async function getActiveApiKey(): Promise<string> {
   return envKey;
 }
 
+async function checkApiKeyCredits(): Promise<number> {
+  try {
+    const apiKey = await getActiveApiKey();
+    const response = await fetch(`${KIE_API_BASE}/chat/credit`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+    });
+    const result = await response.json();
+    if (result.code === 200 && typeof result.data === 'number') {
+      return result.data;
+    }
+    return 0;
+  } catch (error) {
+    console.error('Error checking API key credits:', error);
+    return 0;
+  }
+}
+
 async function callKieApi(endpoint: string, data: any) {
   const apiKey = await getActiveApiKey();
 
@@ -62,6 +82,15 @@ async function callKieApi(endpoint: string, data: any) {
   if (result.code !== 200) {
     const errorMsg = result.msg || result.message || result.error || 'API request failed';
     console.error(`API Error: ${errorMsg}`, result);
+    
+    // Check if error is due to insufficient API credits
+    const apiCredits = await checkApiKeyCredits();
+    if (apiCredits <= 0) {
+      const error = new Error(`API key không đủ credits (${apiCredits}). Vui lòng liên hệ admin để thêm API keys!`);
+      (error as any).isApiCreditsError = true;
+      throw error;
+    }
+    
     throw new Error(errorMsg);
   }
 
@@ -464,6 +493,10 @@ async function addCredits(userId: number, amount: number): Promise<number> {
   return newCredits;
 }
 
+async function refundCredits(userId: number, amount: number): Promise<number> {
+  return await addCredits(userId, amount);
+}
+
 app.get('/api/user/credits', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(
@@ -537,6 +570,7 @@ app.post('/api/generate/nano-banana', authMiddleware, async (req: AuthRequest, r
     });
     res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'playground' });
   } catch (error: any) {
+    await refundCredits(req.userId!, MODEL_CREDITS['nano-banana']);
     res.status(500).json({ error: error.message });
   }
 });
@@ -570,6 +604,7 @@ app.post('/api/generate/seedream', authMiddleware, async (req: AuthRequest, res:
     });
     res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'seedream' });
   } catch (error: any) {
+    await refundCredits(req.userId!, MODEL_CREDITS['seedream']);
     res.status(500).json({ error: error.message });
   }
 });
@@ -590,6 +625,7 @@ app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res
     });
     res.json({ taskId: result.data.taskId, taskType: 'veo3' });
   } catch (error: any) {
+    await refundCredits(req.userId!, MODEL_CREDITS['veo3-fast']);
     res.status(500).json({ error: error.message });
   }
 });
@@ -615,6 +651,7 @@ app.post('/api/generate/sora2-text', authMiddleware, async (req: AuthRequest, re
     });
     res.json({ taskId: result.data?.taskId, taskType: 'sora2' });
   } catch (error: any) {
+    await refundCredits(req.userId!, MODEL_CREDITS['sora2-text']);
     res.status(500).json({ error: error.message });
   }
 });
@@ -631,6 +668,7 @@ app.post('/api/generate/sora2-image', authMiddleware, async (req: AuthRequest, r
     const { prompt, imageUrl, aspectRatio = 'landscape', duration = '10' } = req.body;
     
     if (!imageUrl) {
+      await refundCredits(req.userId!, modelCredits);
       return res.status(400).json({ error: 'Image URL is required' });
     }
     
@@ -646,6 +684,7 @@ app.post('/api/generate/sora2-image', authMiddleware, async (req: AuthRequest, r
     });
     res.json({ taskId: result.data?.taskId, taskType: 'sora2' });
   } catch (error: any) {
+    await refundCredits(req.userId!, MODEL_CREDITS['sora2-image']);
     res.status(500).json({ error: error.message });
   }
 });
@@ -705,9 +744,6 @@ app.post('/api/generate/suno', authMiddleware, async (req: AuthRequest, res: Res
       vocalGender
     } = req.body;
     
-    // Map prompt theo tài liệu KIE API:
-    // - customMode = false: dùng songDescription làm prompt (mô tả chung)
-    // - customMode = true: dùng prompt (lời bài hát hoặc mô tả)
     let finalPrompt = '';
     if (customMode) {
       finalPrompt = prompt || '';
@@ -736,6 +772,7 @@ app.post('/api/generate/suno', authMiddleware, async (req: AuthRequest, res: Res
     const result = await callKieApi('/generate', payload);
     res.json({ taskId: result.data?.taskId, taskType: 'suno' });
   } catch (error: any) {
+    await refundCredits(req.userId!, MODEL_CREDITS['suno']);
     res.status(500).json({ error: error.message });
   }
 });
