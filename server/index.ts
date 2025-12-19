@@ -460,17 +460,17 @@ async function checkTaskStatus(taskId: string, taskType: string) {
 }
 
 const MODEL_CREDITS: Record<string, number> = {
-  'nano-banana': 4,
-  'seedream': 6.5,
-  'veo3-fast': 60,
-  'suno': 10,
-  'sora2-text': 80,
-  'sora2-image': 85,
+  'nano-banana': 0,
+  'seedream': 0,
+  'veo3-fast': 0,
+  'suno': 0,
+  'sora2-text': 0,
+  'sora2-image': 0,
 };
 
-const MAX_CREDITS = 100;
-const DAILY_CHECKIN_CREDITS = 60;
-const DEFAULT_CREDITS = 50;
+const MAX_CREDITS = 999999;
+const DAILY_CHECKIN_CREDITS = 0;
+const DEFAULT_CREDITS = 999999;
 
 async function getUserCredits(userId: number): Promise<number> {
   const result = await pool.query('SELECT credits FROM users WHERE id = $1', [userId]);
@@ -553,12 +553,6 @@ app.post('/api/user/checkin', authMiddleware, async (req: AuthRequest, res: Resp
 
 app.post('/api/generate/nano-banana', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const modelCredits = MODEL_CREDITS['nano-banana'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
     const { prompt, aspectRatio = '1:1' } = req.body;
     const result = await callKieApi('/playground/createTask', {
       model: 'google/nano-banana',
@@ -577,12 +571,6 @@ app.post('/api/generate/nano-banana', authMiddleware, async (req: AuthRequest, r
 
 app.post('/api/generate/seedream', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const modelCredits = MODEL_CREDITS['seedream'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
     const { prompt, aspectRatio = '1:1', resolution = '1K' } = req.body;
     const imageSizeMap: Record<string, string> = {
       '1:1': 'square_hd',
@@ -611,12 +599,6 @@ app.post('/api/generate/seedream', authMiddleware, async (req: AuthRequest, res:
 
 app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const modelCredits = MODEL_CREDITS['veo3-fast'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
     const { prompt, aspectRatio = '16:9' } = req.body;
     const result = await callKieApi('/veo/generate', {
       prompt,
@@ -633,12 +615,6 @@ app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res
 // Sora 2 Text to Video
 app.post('/api/generate/sora2-text', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const modelCredits = MODEL_CREDITS['sora2-text'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
     const { prompt, aspectRatio = 'landscape', duration = '10' } = req.body;
     const result = await callKieApi('/jobs/createTask', {
       model: 'sora-2-text-to-video',
@@ -659,16 +635,9 @@ app.post('/api/generate/sora2-text', authMiddleware, async (req: AuthRequest, re
 // Sora 2 Image to Video
 app.post('/api/generate/sora2-image', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const modelCredits = MODEL_CREDITS['sora2-image'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
     const { prompt, imageUrl, aspectRatio = 'landscape', duration = '10' } = req.body;
     
     if (!imageUrl) {
-      await refundCredits(req.userId!, modelCredits);
       return res.status(400).json({ error: 'Image URL is required' });
     }
     
@@ -726,12 +695,6 @@ app.get('/api/veo3/1080p/:taskId', authMiddleware, async (req: AuthRequest, res:
 // Suno AI - Generate Music
 app.post('/api/generate/suno', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const modelCredits = MODEL_CREDITS['suno'];
-    const hasCredits = await deductCredits(req.userId!, modelCredits);
-    if (!hasCredits) {
-      return res.status(400).json({ error: 'Không đủ credits. Vui lòng điểm danh để nhận thêm credits.' });
-    }
-    
     const { 
       prompt, 
       songDescription,
