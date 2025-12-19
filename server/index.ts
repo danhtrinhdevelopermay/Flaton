@@ -125,7 +125,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       endpoint = `/generate/record-info?taskId=${taskId}`;
       break;
     case 'gpt4o-image':
-      endpoint = `/gpt4o-image/get-details?taskId=${taskId}`;
+      endpoint = `/gpt4o-image/recordInfo?taskId=${taskId}`;
       break;
     default:
       throw new Error('Unknown task type');
