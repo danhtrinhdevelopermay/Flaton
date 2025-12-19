@@ -125,7 +125,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       endpoint = `/generate/record-info?taskId=${taskId}`;
       break;
     case 'gpt4o-image':
-      endpoint = `/gpt4o-image/recordInfo?taskId=${taskId}`;
+      endpoint = `/gpt4o-image/record-info?taskId=${taskId}`;
       break;
     default:
       throw new Error('Unknown task type');
@@ -184,25 +184,36 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     }
     
     const data = result.data;
-    if (data.state === 'success' || data.info?.result_urls) {
+    if (data.status === 'SUCCESS' || data.successFlag === 1) {
       let images: string[] = [];
-      if (data.info?.result_urls && Array.isArray(data.info.result_urls)) {
-        images = data.info.result_urls;
+      if (data.response?.resultUrls && Array.isArray(data.response.resultUrls)) {
+        images = data.response.resultUrls;
       }
       return {
         status: 'completed',
         imageUrl: images[0],
         images: images,
       };
-    } else if (data.state === 'failed' || data.state === 'fail') {
+    } else if (data.status === 'GENERATE_FAILED' || data.status === 'CREATE_TASK_FAILED' || data.successFlag === 0) {
+      if (data.successFlag === 0 && data.status === 'GENERATING') {
+        return {
+          status: 'processing',
+          progress: data.progress || '0.00',
+        };
+      }
       return {
         status: 'failed',
-        error: data.failMsg || data.errorMessage || 'Image generation failed',
+        error: data.errorMessage || 'Image generation failed',
+      };
+    } else if (data.status === 'GENERATING') {
+      return {
+        status: 'processing',
+        progress: data.progress || '0.00',
       };
     } else {
       return {
         status: 'processing',
-        progress: data.state || 'processing',
+        progress: data.progress || '0.00',
       };
     }
   }
