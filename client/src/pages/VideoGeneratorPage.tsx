@@ -6,8 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 
 const videoTools = [
   { id: 'veo3-fast', name: 'Flaton Video V1', credits: 60, provider: 'Flaton', type: 'text', description: 'Text to Video, 720P', icon: Rocket, color: 'text-blue-400' },
-  { id: 'sora2-text', name: 'Sora 2 Text', credits: 80, provider: 'OpenAI', type: 'text', description: 'Text to Video, HD', icon: Crown, color: 'text-yellow-400' },
-  { id: 'sora2-image', name: 'Sora 2 Image', credits: 85, provider: 'OpenAI', type: 'image', description: 'Image to Video, HD', icon: Image, color: 'text-purple-400' },
+  { id: 'sora2', name: 'Sora 2', credits: 80, provider: 'OpenAI', type: 'text', description: 'Text or Image to Video, HD', icon: Crown, color: 'text-yellow-400' },
 ]
 
 const aspectRatios = [
@@ -42,6 +41,7 @@ export default function VideoGeneratorPage() {
   const [imageUrl, setImageUrl] = useState('')
   const [aspectRatio, setAspectRatio] = useState('16:9')
   const [sora2Ratio, setSora2Ratio] = useState('landscape')
+  const [sora2Type, setSora2Type] = useState<'text' | 'image'>('text')
   const [duration, setDuration] = useState('10')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
@@ -149,11 +149,11 @@ export default function VideoGeneratorPage() {
 
   const handleGenerate = async () => {
     const isTextTool = currentTool?.type === 'text'
-    const isImageTool = currentTool?.type === 'image'
-    const isSora2 = selectedTool.startsWith('sora2')
+    const isSora2 = selectedTool === 'sora2'
+    const isImageTool = isSora2 && sora2Type === 'image'
     
-    if (isTextTool && !prompt.trim()) return
-    if (isImageTool && (!prompt.trim() || !imageUrl.trim())) return
+    if (!prompt.trim()) return
+    if (isImageTool && !imageUrl.trim()) return
     
     if (!isAuthenticated || !token) {
       navigate('/login')
@@ -181,7 +181,11 @@ export default function VideoGeneratorPage() {
         body.aspectRatio = aspectRatio
       }
 
-      const response = await fetch(`/api/generate/${selectedTool}`, {
+      const endpoint = selectedTool === 'sora2' 
+        ? `/api/generate/sora2-${sora2Type}`
+        : `/api/generate/${selectedTool}`
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -387,7 +391,35 @@ export default function VideoGeneratorPage() {
             </div>
           )}
 
-          {selectedTool === 'sora2-image' && (
+          {selectedTool === 'sora2' && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Loại tạo video</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setSora2Type('text')}
+                  className={`p-3 rounded-xl border text-sm transition-all ${
+                    sora2Type === 'text'
+                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                      : 'border-slate-600 hover:border-slate-500'
+                  }`}
+                >
+                  Văn bản → Video
+                </button>
+                <button
+                  onClick={() => setSora2Type('image')}
+                  className={`p-3 rounded-xl border text-sm transition-all ${
+                    sora2Type === 'image'
+                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                      : 'border-slate-600 hover:border-slate-500'
+                  }`}
+                >
+                  Hình ảnh → Video
+                </button>
+              </div>
+            </div>
+          )}
+
+          {selectedTool === 'sora2' && sora2Type === 'image' && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-300 mb-2">URL hình ảnh</label>
               <input
@@ -413,7 +445,7 @@ export default function VideoGeneratorPage() {
 
           <button
             onClick={handleGenerate}
-            disabled={loading || !prompt.trim() || (selectedTool === 'sora2-image' && !imageUrl.trim())}
+            disabled={loading || !prompt.trim() || (selectedTool === 'sora2' && sora2Type === 'image' && !imageUrl.trim())}
             className="w-full bubble-btn btn-primary py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
           >
             {loading ? (
