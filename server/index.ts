@@ -124,6 +124,9 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     case 'suno':
       endpoint = `/generate/record-info?taskId=${taskId}`;
       break;
+    case 'gpt4o-image':
+      endpoint = `/gpt4o-image/get?taskId=${taskId}`;
+      break;
     default:
       throw new Error('Unknown task type');
   }
@@ -169,6 +172,37 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       return {
         status: 'processing',
         progress: data.progress,
+      };
+    }
+  }
+
+  // Handle GPT-4o Image generation
+  if (taskType === 'gpt4o-image') {
+    if (result.code !== 200) {
+      const errorMsg = result.msg || result.message || 'Failed to check task status';
+      throw new Error(errorMsg);
+    }
+    
+    const data = result.data;
+    if (data.state === 'success' || data.info?.result_urls) {
+      let images: string[] = [];
+      if (data.info?.result_urls && Array.isArray(data.info.result_urls)) {
+        images = data.info.result_urls;
+      }
+      return {
+        status: 'completed',
+        imageUrl: images[0],
+        images: images,
+      };
+    } else if (data.state === 'failed' || data.state === 'fail') {
+      return {
+        status: 'failed',
+        error: data.failMsg || data.errorMessage || 'Image generation failed',
+      };
+    } else {
+      return {
+        status: 'processing',
+        progress: data.state || 'processing',
       };
     }
   }
@@ -466,6 +500,7 @@ const MODEL_CREDITS: Record<string, number> = {
   'suno': 0,
   'sora2-text': 0,
   'sora2-image': 0,
+  'gpt4o-image': 0,
 };
 
 const MAX_CREDITS = 999999;
@@ -593,6 +628,31 @@ app.post('/api/generate/seedream', authMiddleware, async (req: AuthRequest, res:
     res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'seedream' });
   } catch (error: any) {
     await refundCredits(req.userId!, MODEL_CREDITS['seedream']);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/generate/gpt4o-image', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { prompt, aspectRatio = '1:1' } = req.body;
+    const sizeMap: Record<string, string> = {
+      '1:1': '1:1',
+      '3:2': '3:2',
+      '2:3': '2:3',
+      '16:9': '3:2',
+      '9:16': '2:3',
+      '4:3': '3:2',
+      '3:4': '2:3',
+    };
+    const result = await callKieApi('/gpt4o-image/generate', {
+      prompt,
+      size: sizeMap[aspectRatio] || '1:1',
+      nVariants: 1,
+      isEnhance: false,
+      enableFallback: true,
+    });
+    res.json({ taskId: result.data?.taskId, taskType: 'gpt4o-image' });
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });

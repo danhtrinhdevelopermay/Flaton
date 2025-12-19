@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 const imageTools = [
   { id: 'nano-banana', name: 'Flaton Image V1', credits: 4, provider: 'Nhanh, tiết kiệm', icon: Rocket, color: 'text-blue-400' },
   { id: 'seedream', name: 'Flaton Image V2', credits: 6.5, provider: 'Chi tiết 4K', icon: Sparkles, color: 'text-purple-400' },
+  { id: 'gpt4o-image', name: '4o Image (GPT)', credits: 0, provider: 'OpenAI GPT-4o', icon: Palette, color: 'text-emerald-400' },
 ]
 
 const aspectRatios = [
@@ -14,6 +15,8 @@ const aspectRatios = [
   { value: '9:16', label: '9:16 (Dọc)' },
   { value: '4:3', label: '4:3 (Cổ điển)' },
   { value: '3:4', label: '3:4 (Chân dung)' },
+  { value: '3:2', label: '3:2 (Rộng)' },
+  { value: '2:3', label: '2:3 (Hẹp)' },
 ]
 
 interface GenerationResult {
@@ -165,7 +168,7 @@ export default function ImageGeneratorPage() {
       }
 
       if (data.taskId) {
-        const taskType = data.taskType || (selectedTool === 'midjourney' ? 'midjourney' : 'gpt4o-image')
+        const taskType = data.taskType || (selectedTool === 'gpt4o-image' ? 'gpt4o-image' : 'playground')
         const finalResult = await pollTaskStatus(data.taskId, taskType)
         setResult(finalResult)
         
