@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 
 const pool = new Pool({
-  connectionString: process.env.POSTGRES_URL,
+  connectionString: 'postgresql://danhtrinh:MiIkrtq70adcDWXo-6hfow@flaton-19206.j77.aws-ap-southeast-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full',
   ssl: {
     rejectUnauthorized: false
   }

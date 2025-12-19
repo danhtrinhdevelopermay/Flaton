@@ -15,12 +15,12 @@ import jwt from 'jsonwebtoken';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+const JWT_SECRET = 'your-super-secret-jwt-key-change-this-in-production-2024';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = 3001;
 
 app.use(cors({
   origin: true,
@@ -36,7 +36,7 @@ async function getActiveApiKey(): Promise<string> {
   if (dbKey) {
     return dbKey;
   }
-  const envKey = process.env.KIE_API_KEY;
+  const envKey = '91c279a652aa73025b6beab73aadfbd8';
   if (!envKey) {
     throw new Error('No API key available. Please add API keys in admin panel.');
   }
@@ -1244,7 +1244,7 @@ app.get('/api/system-stats', async (req: Request, res: Response) => {
   }
 });
 
-if (process.env.NODE_ENV === 'production') {
+if ('production' === 'production') {
   app.use(express.static(path.join(__dirname, '../client/dist')));
   
   app.use((req, res, next) => {
@@ -1257,7 +1257,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 function startKeepAlive() {
-  const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
+  const RENDER_URL = 'https://flaton.onrender.com';
   if (!RENDER_URL) {
     console.log('Keep-alive disabled: RENDER_EXTERNAL_URL not set');
     return;
@@ -1283,10 +1283,10 @@ async function startServer() {
     await initDatabase();
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`Environment: production`);
       console.log('Database initialized successfully');
       
-      if (process.env.NODE_ENV === 'production') {
+      if ('production' === 'production') {
         startKeepAlive();
       }
     });

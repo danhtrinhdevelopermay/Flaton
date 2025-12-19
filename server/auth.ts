@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import pool from './db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+const JWT_SECRET = 'your-super-secret-jwt-key-change-this-in-production-2024';
 const SALT_ROUNDS = 10;
 
 export interface AuthRequest extends Request {

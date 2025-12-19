@@ -65,7 +65,7 @@ export async function getCurrentApiKey(): Promise<string | null> {
     return fallbackResult.rows[0].api_key;
   }
   
-  return process.env.KIE_API_KEY || null;
+  return '91c279a652aa73025b6beab73aadfbd8';
 }
 
 export async function updateAllApiKeyCredits(): Promise<void> {
