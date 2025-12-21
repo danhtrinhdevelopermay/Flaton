@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Compass, Image, Video, Music, Loader2, Share2 } from 'lucide-react';
+import { Compass, Image, Video, Music, Loader2, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ExplorerData {
   images: any[];
@@ -11,6 +12,8 @@ export default function ExplorerPage() {
   const [data, setData] = useState<ExplorerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'images' | 'videos' | 'music'>('images');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [dragStart, setDragStart] = useState(0);
 
   useEffect(() => {
     fetchExplore();
@@ -43,6 +46,123 @@ export default function ExplorerPage() {
     }
   };
 
+  const getItems = () => {
+    switch (activeTab) {
+      case 'images':
+        return data?.images || [];
+      case 'videos':
+        return data?.videos || [];
+      case 'music':
+        return data?.music || [];
+      default:
+        return [];
+    }
+  };
+
+  const items = getItems();
+  const maxIndex = Math.max(0, items.length - 1);
+
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
+  };
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    setDragStart(clientX);
+  };
+
+  const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
+    const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : (e as React.MouseEvent).clientX;
+    const diff = dragStart - clientX;
+
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        handleNext();
+      } else {
+        handlePrev();
+      }
+    }
+  };
+
+  const renderItem = (item: any) => {
+    switch (activeTab) {
+      case 'images':
+        return (
+          <div className="w-full h-full flex flex-col">
+            <img src={item.image_url} alt={item.prompt} className="w-full h-96 object-cover rounded-xl" />
+            <div className="p-6 flex-1 flex flex-col justify-between">
+              <div>
+                <p className="text-sm text-slate-400 mb-2">{item.model}</p>
+                <p className="text-lg font-semibold mb-3">{item.prompt}</p>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
+                <button
+                  onClick={() => handleShare(item.image_url)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm transition-colors"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Chia sẻ
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      case 'videos':
+        return (
+          <div className="w-full h-full flex flex-col">
+            <video src={item.video_url} controls className="w-full h-96 bg-black rounded-xl" />
+            <div className="p-6 flex-1 flex flex-col justify-between">
+              <div>
+                <p className="text-sm text-slate-400 mb-2">{item.model}</p>
+                <p className="text-lg font-semibold mb-3">{item.prompt}</p>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
+                <button
+                  onClick={() => handleShare(item.video_url)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm transition-colors"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Chia sẻ
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      case 'music':
+        return (
+          <div className="w-full h-full flex flex-col">
+            <div className="w-full h-96 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+              <Music className="w-24 h-24 text-white opacity-50" />
+            </div>
+            <div className="p-6 flex-1 flex flex-col justify-between">
+              <div>
+                <h3 className="text-2xl font-semibold mb-2">{item.title || 'Untitled'}</h3>
+                <p className="text-sm text-slate-400 mb-2">{item.model}</p>
+                <p className="text-lg mb-4">{item.prompt}</p>
+                <audio src={item.audio_url} controls className="w-full mb-4" />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
+                <button
+                  onClick={() => handleShare(item.audio_url)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm transition-colors"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Chia sẻ
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -50,6 +170,12 @@ export default function ExplorerPage() {
       </div>
     );
   }
+
+  const emptyMessage = {
+    images: 'Chưa có hình ảnh công khai nào',
+    videos: 'Chưa có video công khai nào',
+    music: 'Chưa có nhạc công khai nào'
+  };
 
   return (
     <div className="fade-in">
@@ -63,9 +189,12 @@ export default function ExplorerPage() {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-8">
         <button
-          onClick={() => setActiveTab('images')}
+          onClick={() => {
+            setActiveTab('images');
+            setCurrentIndex(0);
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
             activeTab === 'images'
               ? 'bg-indigo-500 text-white'
@@ -76,7 +205,10 @@ export default function ExplorerPage() {
           Hình ảnh ({data?.images.length || 0})
         </button>
         <button
-          onClick={() => setActiveTab('videos')}
+          onClick={() => {
+            setActiveTab('videos');
+            setCurrentIndex(0);
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
             activeTab === 'videos'
               ? 'bg-purple-500 text-white'
@@ -87,7 +219,10 @@ export default function ExplorerPage() {
           Video ({data?.videos.length || 0})
         </button>
         <button
-          onClick={() => setActiveTab('music')}
+          onClick={() => {
+            setActiveTab('music');
+            setCurrentIndex(0);
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
             activeTab === 'music'
               ? 'bg-green-500 text-white'
@@ -99,93 +234,68 @@ export default function ExplorerPage() {
         </button>
       </div>
 
-      {activeTab === 'images' && (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {data?.images.map((item) => (
-            <div key={item.id} className="glass rounded-xl overflow-hidden hover:scale-105 transition-transform">
-              <img src={item.image_url} alt={item.prompt} className="w-full h-64 object-cover" />
-              <div className="p-4">
-                <p className="text-sm text-slate-400 mb-2">{item.model}</p>
-                <p className="text-sm line-clamp-2 mb-3">{item.prompt}</p>
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
-                  <button
-                    onClick={() => handleShare(item.image_url)}
-                    className="flex items-center gap-1 hover:text-indigo-400"
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-          {(!data?.images || data.images.length === 0) && (
-            <div className="col-span-full text-center py-12 text-slate-400">
-              Chưa có hình ảnh công khai nào
-            </div>
-          )}
+      {items.length === 0 ? (
+        <div className="glass rounded-xl p-12 text-center">
+          <p className="text-slate-400 text-lg">{emptyMessage[activeTab]}</p>
         </div>
-      )}
+      ) : (
+        <div className="glass rounded-xl p-6 overflow-hidden">
+          <div
+            className="relative touch-pan-y"
+            onMouseDown={handleDragStart}
+            onMouseUp={handleDragEnd}
+            onTouchStart={handleDragStart}
+            onTouchEnd={handleDragEnd}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.3 }}
+                className="min-h-[600px]"
+              >
+                {renderItem(items[currentIndex])}
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-      {activeTab === 'videos' && (
-        <div className="grid md:grid-cols-2 gap-6">
-          {data?.videos.map((item) => (
-            <div key={item.id} className="glass rounded-xl overflow-hidden hover:scale-105 transition-transform">
-              <video src={item.video_url} controls className="w-full h-64 bg-black" />
-              <div className="p-4">
-                <p className="text-sm text-slate-400 mb-2">{item.model}</p>
-                <p className="text-sm line-clamp-2 mb-3">{item.prompt}</p>
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
+          {/* Navigation */}
+          <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-700">
+            <button
+              onClick={handlePrev}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg glass hover:bg-slate-700/50 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              Trước
+            </button>
+
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">
+                {currentIndex + 1} / {items.length}
+              </span>
+              <div className="flex gap-1">
+                {items.map((_, idx) => (
                   <button
-                    onClick={() => handleShare(item.video_url)}
-                    className="flex items-center gap-1 hover:text-purple-400"
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </button>
-                </div>
+                    key={idx}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      idx === currentIndex ? 'bg-indigo-500 w-6' : 'bg-slate-600'
+                    }`}
+                  />
+                ))}
               </div>
             </div>
-          ))}
-          {(!data?.videos || data.videos.length === 0) && (
-            <div className="col-span-full text-center py-12 text-slate-400">
-              Chưa có video công khai nào
-            </div>
-          )}
-        </div>
-      )}
 
-      {activeTab === 'music' && (
-        <div className="grid md:grid-cols-2 gap-6">
-          {data?.music.map((item) => (
-            <div key={item.id} className="glass rounded-xl p-6 hover:scale-105 transition-transform">
-              <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center flex-shrink-0">
-                  <Music className="w-8 h-8 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold mb-1 truncate">{item.title || 'Untitled'}</h3>
-                  <p className="text-sm text-slate-400 mb-2">{item.model}</p>
-                  <p className="text-sm line-clamp-2 mb-3">{item.prompt}</p>
-                  <audio src={item.audio_url} controls className="w-full mb-3" />
-                  <div className="flex items-center justify-between text-xs text-slate-400">
-                    <span>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
-                    <button
-                      onClick={() => handleShare(item.audio_url)}
-                      className="flex items-center gap-1 hover:text-green-400"
-                    >
-                      <Share2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-          {(!data?.music || data.music.length === 0) && (
-            <div className="col-span-full text-center py-12 text-slate-400">
-              Chưa có nhạc công khai nào
-            </div>
-          )}
+            <button
+              onClick={handleNext}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg glass hover:bg-slate-700/50 transition-colors"
+            >
+              Sau
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       )}
     </div>
