@@ -1179,6 +1179,70 @@ app.get('/api/products/history', authMiddleware, async (req: AuthRequest, res: R
   }
 });
 
+app.get('/api/products/explore', optionalAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const images = await pool.query(
+      'SELECT id, user_id, image_url, prompt, model, aspect_ratio, created_at FROM generated_images WHERE is_public = true ORDER BY created_at DESC LIMIT 100'
+    );
+    
+    const videos = await pool.query(
+      'SELECT id, user_id, video_url, prompt, model, aspect_ratio, created_at FROM generated_videos WHERE is_public = true ORDER BY created_at DESC LIMIT 100'
+    );
+    
+    const music = await pool.query(
+      'SELECT id, user_id, audio_url, title, prompt, style, model, created_at FROM generated_music WHERE is_public = true ORDER BY created_at DESC LIMIT 100'
+    );
+
+    res.json({
+      images: images.rows,
+      videos: videos.rows,
+      music: music.rows
+    });
+  } catch (error: any) {
+    console.error('Get explore error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/products/publish', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { type, id } = req.body;
+    
+    if (!type || !id) {
+      return res.status(400).json({ error: 'Missing type or id' });
+    }
+
+    let result;
+    if (type === 'image') {
+      result = await pool.query(
+        'UPDATE generated_images SET is_public = true WHERE id = $1 AND user_id = $2 RETURNING *',
+        [id, req.userId]
+      );
+    } else if (type === 'video') {
+      result = await pool.query(
+        'UPDATE generated_videos SET is_public = true WHERE id = $1 AND user_id = $2 RETURNING *',
+        [id, req.userId]
+      );
+    } else if (type === 'music') {
+      result = await pool.query(
+        'UPDATE generated_music SET is_public = true WHERE id = $1 AND user_id = $2 RETURNING *',
+        [id, req.userId]
+      );
+    } else {
+      return res.status(400).json({ error: 'Invalid type' });
+    }
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.json({ success: true, product: result.rows[0] });
+  } catch (error: any) {
+    console.error('Publish error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 let cpuHistory: { time: string; cpu: number }[] = [];
 let latencyHistory: { time: string; latency: number }[] = [];
 const serverStartTime = Date.now();

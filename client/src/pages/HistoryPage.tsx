@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { History, Image, Video, Music, Loader2, Download } from 'lucide-react';
+import { History, Image, Video, Music, Loader2, Download, Share2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -58,6 +58,29 @@ export default function HistoryPage() {
       URL.revokeObjectURL(blobUrl);
     } catch (err) {
       window.open(url, '_blank');
+    }
+  };
+
+  const handlePublish = async (type: 'image' | 'video' | 'music', id: number) => {
+    try {
+      const response = await fetch('/api/products/publish', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ type, id })
+      });
+
+      if (response.ok) {
+        alert('Đã đăng công khai sản phẩm!');
+        fetchHistory();
+      } else {
+        alert('Lỗi khi đăng sản phẩm');
+      }
+    } catch (error) {
+      console.error('Publish error:', error);
+      alert('Lỗi khi đăng sản phẩm');
     }
   };
 
@@ -125,15 +148,31 @@ export default function HistoryPage() {
               <div className="p-4">
                 <p className="text-sm text-slate-400 mb-2">{item.model}</p>
                 <p className="text-sm line-clamp-2 mb-3">{item.prompt}</p>
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
-                  <button
-                    onClick={() => handleDownload(item.image_url, `image-${item.id}.png`)}
-                    className="flex items-center gap-1 hover:text-indigo-400"
-                  >
-                    <Download className="w-4 h-4" />
-                    Tải về
-                  </button>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-xs text-slate-400">
+                    <span>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
+                    <button
+                      onClick={() => handleDownload(item.image_url, `image-${item.id}.png`)}
+                      className="flex items-center gap-1 hover:text-indigo-400"
+                    >
+                      <Download className="w-4 h-4" />
+                      Tải về
+                    </button>
+                  </div>
+                  {!item.is_public && (
+                    <button
+                      onClick={() => handlePublish('image', item.id)}
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-medium transition-colors"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      Đăng công khai
+                    </button>
+                  )}
+                  {item.is_public && (
+                    <div className="w-full text-center py-2 rounded-lg bg-green-500/20 text-green-400 text-xs font-medium">
+                      ✓ Đã đăng công khai
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -154,15 +193,31 @@ export default function HistoryPage() {
               <div className="p-4">
                 <p className="text-sm text-slate-400 mb-2">{item.model}</p>
                 <p className="text-sm line-clamp-2 mb-3">{item.prompt}</p>
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
-                  <button
-                    onClick={() => handleDownload(item.video_url, `video-${item.id}.mp4`)}
-                    className="flex items-center gap-1 hover:text-purple-400"
-                  >
-                    <Download className="w-4 h-4" />
-                    Tải về
-                  </button>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-xs text-slate-400">
+                    <span>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
+                    <button
+                      onClick={() => handleDownload(item.video_url, `video-${item.id}.mp4`)}
+                      className="flex items-center gap-1 hover:text-purple-400"
+                    >
+                      <Download className="w-4 h-4" />
+                      Tải về
+                    </button>
+                  </div>
+                  {!item.is_public && (
+                    <button
+                      onClick={() => handlePublish('video', item.id)}
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium transition-colors"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      Đăng công khai
+                    </button>
+                  )}
+                  {item.is_public && (
+                    <div className="w-full text-center py-2 rounded-lg bg-green-500/20 text-green-400 text-xs font-medium">
+                      ✓ Đã đăng công khai
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -188,15 +243,31 @@ export default function HistoryPage() {
                   <p className="text-sm text-slate-400 mb-2">{item.model}</p>
                   <p className="text-sm line-clamp-2 mb-3">{item.prompt}</p>
                   <audio src={item.audio_url} controls className="w-full mb-3" />
-                  <div className="flex items-center justify-between text-xs text-slate-400">
-                    <span>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
-                    <button
-                      onClick={() => handleDownload(item.audio_url, `music-${item.id}.mp3`)}
-                      className="flex items-center gap-1 hover:text-green-400"
-                    >
-                      <Download className="w-4 h-4" />
-                      Tải về
-                    </button>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between text-xs text-slate-400">
+                      <span>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
+                      <button
+                        onClick={() => handleDownload(item.audio_url, `music-${item.id}.mp3`)}
+                        className="flex items-center gap-1 hover:text-green-400"
+                      >
+                        <Download className="w-4 h-4" />
+                        Tải về
+                      </button>
+                    </div>
+                    {!item.is_public && (
+                      <button
+                        onClick={() => handlePublish('music', item.id)}
+                        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-xs font-medium transition-colors"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        Đăng công khai
+                      </button>
+                    )}
+                    {item.is_public && (
+                      <div className="w-full text-center py-2 rounded-lg bg-green-500/20 text-green-400 text-xs font-medium">
+                        ✓ Đã đăng công khai
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

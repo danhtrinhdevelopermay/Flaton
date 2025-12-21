@@ -49,9 +49,19 @@ export async function initDatabase() {
         prompt TEXT,
         model VARCHAR(100),
         aspect_ratio VARCHAR(20),
+        is_public BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Add is_public column if it doesn't exist
+    const imagesPublicCheck = await client.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'generated_images' AND column_name = 'is_public'
+    `);
+    if (imagesPublicCheck.rows.length === 0) {
+      await client.query(`ALTER TABLE generated_images ADD COLUMN is_public BOOLEAN DEFAULT false`);
+    }
 
     // Create generated_videos table
     await client.query(`
@@ -63,9 +73,19 @@ export async function initDatabase() {
         image_url TEXT,
         model VARCHAR(100),
         aspect_ratio VARCHAR(20),
+        is_public BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Add is_public column if it doesn't exist
+    const videosPublicCheck = await client.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'generated_videos' AND column_name = 'is_public'
+    `);
+    if (videosPublicCheck.rows.length === 0) {
+      await client.query(`ALTER TABLE generated_videos ADD COLUMN is_public BOOLEAN DEFAULT false`);
+    }
 
     // Create generated_music table
     await client.query(`
@@ -77,9 +97,19 @@ export async function initDatabase() {
         prompt TEXT,
         style VARCHAR(100),
         model VARCHAR(100),
+        is_public BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Add is_public column if it doesn't exist
+    const musicPublicCheck = await client.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'generated_music' AND column_name = 'is_public'
+    `);
+    if (musicPublicCheck.rows.length === 0) {
+      await client.query(`ALTER TABLE generated_music ADD COLUMN is_public BOOLEAN DEFAULT false`);
+    }
 
     // Create api_keys table for managing multiple KIE API keys
     await client.query(`
