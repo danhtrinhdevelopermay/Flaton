@@ -1,13 +1,5 @@
-import { GoogleGenAI } from '@google/genai';
+import { ai } from './replit_integrations/image/client';
 import pool from './db';
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
-  httpOptions: {
-    apiVersion: '',
-    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL,
-  },
-});
 
 export async function generateLessonScript(
   topic: string,
@@ -65,18 +57,18 @@ export async function generateLessonSlides(
     Return as JSON array of slide objects with keys: title, bullets, imagePrompt, speakerNotes
   `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-  });
-
   try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    });
+
     const text = response.text || '[]';
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
   } catch (error) {
     console.error('Error parsing slides:', error);
-    return [];
+    throw error;
   }
 }
 
