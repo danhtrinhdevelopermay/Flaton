@@ -20,13 +20,21 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export function generateToken(userId: number): string {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
+  const id = parseInt(String(userId), 10);
+  console.log('[JWT] Generating token for user:', id);
+  const token = jwt.sign({ userId: id }, JWT_SECRET, { expiresIn: '7d' });
+  console.log('[JWT] Token generated successfully');
+  return token;
 }
 
 export function verifyToken(token: string): any {
   try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch (error) {
+    console.log('[JWT] Verifying token... Token:', token.substring(0, 20) + '...');
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    console.log('[JWT] Token verified successfully:', { userId: decoded?.userId, iat: decoded?.iat });
+    return decoded;
+  } catch (error: any) {
+    console.error('[JWT] Token verification failed:', { error: error.message, name: error.name });
     return null;
   }
 }
@@ -36,26 +44,32 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
     
     if (!token) {
+      console.log('[AuthMiddleware] No token provided');
       return res.status(401).json({ error: 'No token provided' });
     }
 
+    console.log('[AuthMiddleware] Token received:', token.substring(0, 20) + '...');
     const decoded = verifyToken(token);
     if (!decoded || !decoded.userId) {
+      console.log('[AuthMiddleware] Invalid token or no userId:', decoded);
       return res.status(401).json({ error: 'Invalid token' });
     }
 
     const userId = parseInt(String(decoded.userId), 10);
+    console.log('[AuthMiddleware] Looking up user:', userId);
     const result = await pool.query('SELECT id, email, name FROM users WHERE id = $1', [userId]);
     
     if (result.rows.length === 0) {
+      console.log('[AuthMiddleware] User not found in DB:', userId);
       return res.status(401).json({ error: 'User not found' });
     }
 
+    console.log('[AuthMiddleware] Auth successful for:', result.rows[0].email);
     req.userId = userId;
     req.user = result.rows[0];
     next();
   } catch (error) {
-    console.error('Auth middleware error:', error);
+    console.error('[AuthMiddleware] Error:', error);
     return res.status(401).json({ error: 'Authentication failed' });
   }
 }
