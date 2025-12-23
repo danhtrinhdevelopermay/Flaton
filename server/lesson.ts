@@ -111,11 +111,13 @@ export async function getLessonById(lessonId: number) {
   return result.rows[0];
 }
 
-export async function getLessonsByUser(userId: number) {
+export async function getLessonsByUser(userId: any) {
+  console.log('[Lesson Service] Getting lessons for user:', { userId, type: typeof userId });
   const result = await pool.query(
     'SELECT * FROM lessons WHERE user_id = $1 ORDER BY created_at DESC',
     [userId]
   );
+  console.log('[Lesson Service] Found lessons:', result.rows.length);
   return result.rows;
 }
 

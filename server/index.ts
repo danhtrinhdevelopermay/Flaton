@@ -1277,7 +1277,9 @@ app.post('/api/lessons', authMiddleware, async (req: AuthRequest, res: Response)
 
 app.get('/api/lessons', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    console.log('[Get Lessons] Fetching lessons for user:', { userId: req.userId, type: typeof req.userId });
     const lessons = await lessonService.getLessonsByUser(req.userId!);
+    console.log('[Get Lessons] Found lessons:', lessons.length);
     res.json({ lessons });
   } catch (error: any) {
     console.error('Get lessons error:', error);
