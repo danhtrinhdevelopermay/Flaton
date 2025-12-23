@@ -20,9 +20,9 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export function generateToken(userId: number): string {
-  const id = parseInt(String(userId), 10);
-  console.log('[JWT] Generating token for user:', id);
-  const token = jwt.sign({ userId: id }, JWT_SECRET, { expiresIn: '7d' });
+  const idString = String(userId);
+  console.log('[JWT] Generating token for user:', idString);
+  const token = jwt.sign({ userId: idString }, JWT_SECRET, { expiresIn: '7d' });
   console.log('[JWT] Token generated successfully');
   return token;
 }
@@ -55,7 +55,7 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    const userId = parseInt(String(decoded.userId), 10);
+    const userId = decoded.userId;
     console.log('[AuthMiddleware] Looking up user:', userId);
     const result = await pool.query('SELECT id, email, name FROM users WHERE id = $1', [userId]);
     
@@ -65,7 +65,7 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     }
 
     console.log('[AuthMiddleware] Auth successful for:', result.rows[0].email);
-    req.userId = userId;
+    req.userId = result.rows[0].id;
     req.user = result.rows[0];
     next();
   } catch (error) {
@@ -81,10 +81,10 @@ export async function optionalAuthMiddleware(req: AuthRequest, res: Response, ne
     if (token) {
       const decoded = verifyToken(token);
       if (decoded && decoded.userId) {
-        const userId = parseInt(String(decoded.userId), 10);
+        const userId = decoded.userId;
         const result = await pool.query('SELECT id, email, name FROM users WHERE id = $1', [userId]);
         if (result.rows.length > 0) {
-          req.userId = userId;
+          req.userId = result.rows[0].id;
           req.user = result.rows[0];
         }
       }
