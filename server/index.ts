@@ -11,6 +11,7 @@ import { hashPassword, verifyPassword, generateToken, authMiddleware, optionalAu
 import * as apiKeyManager from './apiKeyManager';
 import * as cloudinaryUtil from './cloudinaryUtil';
 import jwt from 'jsonwebtoken';
+import * as lessonService from './lesson';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1239,6 +1240,49 @@ app.post('/api/products/publish', authMiddleware, async (req: AuthRequest, res: 
     res.json({ success: true, product: result.rows[0] });
   } catch (error: any) {
     console.error('Publish error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Lesson API Endpoints
+app.post('/api/lessons', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { title, subject, gradeLevel, duration, objectives, teachingStyle } = req.body;
+    const lesson = await lessonService.createLesson(
+      req.userId,
+      title,
+      subject,
+      gradeLevel,
+      duration,
+      objectives,
+      teachingStyle
+    );
+    res.json({ success: true, id: lesson.id, ...lesson });
+  } catch (error: any) {
+    console.error('Create lesson error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/lessons', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const lessons = await lessonService.getLessonsByUser(req.userId);
+    res.json({ lessons });
+  } catch (error: any) {
+    console.error('Get lessons error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/lessons/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const lesson = await lessonService.getLessonById(parseInt(req.params.id));
+    if (!lesson || lesson.user_id !== req.userId) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+    res.json(lesson);
+  } catch (error: any) {
+    console.error('Get lesson error:', error);
     res.status(500).json({ error: error.message });
   }
 });

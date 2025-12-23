@@ -148,6 +148,109 @@ export async function initDatabase() {
       )
     `);
 
+    // Create lessons table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS lessons (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        subject VARCHAR(100),
+        grade_level VARCHAR(50),
+        duration_minutes INTEGER,
+        learning_objectives TEXT,
+        target_audience VARCHAR(255),
+        teaching_style VARCHAR(100),
+        status VARCHAR(50) DEFAULT 'draft',
+        script_content TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create workflows table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS workflows (
+        id SERIAL PRIMARY KEY,
+        lesson_id INTEGER REFERENCES lessons(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        workflow_json JSONB,
+        status VARCHAR(50) DEFAULT 'inactive',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create workflow_steps table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS workflow_steps (
+        id SERIAL PRIMARY KEY,
+        workflow_id INTEGER REFERENCES workflows(id) ON DELETE CASCADE,
+        step_order INTEGER,
+        step_type VARCHAR(50),
+        step_config JSONB,
+        input_data JSONB,
+        output_data JSONB,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create schedules table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS schedules (
+        id SERIAL PRIMARY KEY,
+        workflow_id INTEGER REFERENCES workflows(id) ON DELETE CASCADE,
+        schedule_type VARCHAR(50),
+        cron_expression VARCHAR(255),
+        scheduled_datetime TIMESTAMP,
+        is_active BOOLEAN DEFAULT true,
+        last_run TIMESTAMP,
+        next_run TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create lesson_content table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS lesson_content (
+        id SERIAL PRIMARY KEY,
+        lesson_id INTEGER REFERENCES lessons(id) ON DELETE CASCADE,
+        content_type VARCHAR(50),
+        content_data JSONB,
+        order_index INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create lesson_assets table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS lesson_assets (
+        id SERIAL PRIMARY KEY,
+        lesson_id INTEGER REFERENCES lessons(id) ON DELETE CASCADE,
+        asset_type VARCHAR(50),
+        asset_url TEXT,
+        asset_data JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create lesson_approvals table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS lesson_approvals (
+        id SERIAL PRIMARY KEY,
+        lesson_id INTEGER REFERENCES lessons(id) ON DELETE CASCADE,
+        step_type VARCHAR(50),
+        status VARCHAR(50) DEFAULT 'pending',
+        approver_comment TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     console.log('Database tables created successfully');
   } catch (error) {
     console.error('Error initializing database:', error);

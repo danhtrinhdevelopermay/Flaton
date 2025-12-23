@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift, Compass } from 'lucide-react'
+import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift, Compass, BookOpen } from 'lucide-react'
 import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { PageTransition } from './animations'
@@ -64,6 +64,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/image-generator', label: 'Tạo hình ảnh', icon: Image },
     { path: '/video-generator', label: 'Tạo video', icon: Video },
     { path: '/music-generator', label: 'Tạo nhạc', icon: Music },
+    { path: '/lesson-builder', label: 'Tạo Bài Giảng', icon: BookOpen },
     { path: '/explorer', label: 'Explorer', icon: Compass },
     { path: '/status', label: 'Trạng thái dịch vụ', icon: Activity },
   ]
@@ -126,6 +127,14 @@ export default function Layout({ children }: LayoutProps) {
                       >
                         <Compass className="w-4 h-4" />
                         Explorer
+                      </Link>
+                      <Link
+                        to="/lesson-builder"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-2 px-4 py-3 hover:bg-slate-700/50 transition-all"
+                      >
+                        <BookOpen className="w-4 h-4" />
+                        Tạo Bài Giảng
                       </Link>
                       <button
                         onClick={() => {
