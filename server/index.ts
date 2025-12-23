@@ -1070,9 +1070,11 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
+    console.log('[Login] Attempting login for:', email);
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     
     if (result.rows.length === 0) {
+      console.log('[Login] User not found:', email);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -1080,10 +1082,12 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     const validPassword = await verifyPassword(password, user.password_hash);
 
     if (!validPassword) {
+      console.log('[Login] Invalid password for:', email);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const token = generateToken(user.id);
+    console.log('[Login] Login successful for:', email, 'userId:', user.id);
 
     res.json({ 
       success: true, 
@@ -1098,8 +1102,13 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
 
 app.get('/api/auth/me', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    console.log('[Auth ME] User request:', { userId: req.userId, email: req.user?.email });
+    if (!req.user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
     res.json({ user: req.user });
   } catch (error: any) {
+    console.error('[Auth ME] Error:', error);
     res.status(500).json({ error: error.message });
   }
 });

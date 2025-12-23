@@ -67,9 +67,10 @@ export async function optionalAuthMiddleware(req: AuthRequest, res: Response, ne
     if (token) {
       const decoded = verifyToken(token);
       if (decoded && decoded.userId) {
-        const result = await pool.query('SELECT id, email, name FROM users WHERE id = $1', [decoded.userId]);
+        const userId = parseInt(String(decoded.userId), 10);
+        const result = await pool.query('SELECT id, email, name FROM users WHERE id = $1', [userId]);
         if (result.rows.length > 0) {
-          req.userId = decoded.userId;
+          req.userId = userId;
           req.user = result.rows[0];
         }
       }

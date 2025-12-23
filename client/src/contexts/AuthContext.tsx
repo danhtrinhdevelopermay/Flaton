@@ -24,34 +24,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      fetchCurrentUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
-
-  const fetchCurrentUser = async () => {
-    try {
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      } else {
-        logout();
+    const fetchCurrentUser = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      console.error('Failed to fetch user:', error);
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  };
+      
+      try {
+        console.log('[Auth] Verifying token...');
+        const response = await fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        console.log('[Auth] /api/auth/me response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[Auth] User verified:', data.user?.email);
+          setUser(data.user);
+        } else {
+          console.log('[Auth] Token verification failed, logging out');
+          logout();
+        }
+      } catch (error) {
+        console.error('[Auth] Failed to fetch user:', error);
+        logout();
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCurrentUser();
+  }, [token]);
 
   const login = async (email: string, password: string) => {
     const response = await fetch('/api/auth/login', {
