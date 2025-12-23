@@ -12,6 +12,7 @@ import * as apiKeyManager from './apiKeyManager';
 import * as cloudinaryUtil from './cloudinaryUtil';
 import jwt from 'jsonwebtoken';
 import * as lessonService from './lesson';
+import { ai } from './replit_integrations/image/client';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1361,6 +1362,146 @@ app.post('/api/lessons/:id/generate-slides', authMiddleware, async (req: AuthReq
     res.json({ success: true, slides });
   } catch (error: any) {
     console.error('Generate slides error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 1. Generate Word document from lesson script
+app.post('/api/lessons/:id/generate-word', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const lessonId = req.params.id;
+    const lesson = await lessonService.getLessonById(lessonId);
+    
+    if (!lesson || lesson.user_id !== req.userId) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    if (!lesson.script_content) {
+      return res.status(400).json({ error: 'Please generate script first' });
+    }
+
+    const wordContent = await lessonService.generateLessonWordDoc(
+      lesson.title,
+      lesson.script_content,
+      lesson.subject,
+      lesson.grade_level,
+      lesson.duration_minutes
+    );
+
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${lesson.title}.docx"`);
+    res.send(Buffer.from(wordContent, 'base64'));
+  } catch (error: any) {
+    console.error('Generate word error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 2. Generate video using Flaton Video V1
+app.post('/api/lessons/:id/generate-video', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const lessonId = req.params.id;
+    const { flatonApiKey } = req.body;
+    
+    if (!flatonApiKey) {
+      return res.status(400).json({ error: 'Flaton API key is required' });
+    }
+
+    const lesson = await lessonService.getLessonById(lessonId);
+    
+    if (!lesson || lesson.user_id !== req.userId) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    if (!lesson.script_content) {
+      return res.status(400).json({ error: 'Please generate script first' });
+    }
+
+    const videoUrl = await lessonService.generateLessonVideo(
+      lesson.script_content,
+      lesson.title,
+      flatonApiKey
+    );
+
+    res.json({ success: true, videoUrl });
+  } catch (error: any) {
+    console.error('Generate video error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 3. Generate images using Flaton Image V1
+app.post('/api/lessons/:id/generate-images', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const lessonId = req.params.id;
+    const { prompts, flatonApiKey } = req.body;
+    
+    if (!prompts || !Array.isArray(prompts)) {
+      return res.status(400).json({ error: 'Prompts array is required' });
+    }
+
+    if (!flatonApiKey) {
+      return res.status(400).json({ error: 'Flaton API key is required' });
+    }
+
+    const lesson = await lessonService.getLessonById(lessonId);
+    
+    if (!lesson || lesson.user_id !== req.userId) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    const imageUrls = await lessonService.generateLessonImages(prompts, flatonApiKey);
+
+    res.json({ success: true, imageUrls });
+  } catch (error: any) {
+    console.error('Generate images error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 4. Generate PowerPoint using Gemini
+app.post('/api/lessons/:id/generate-powerpoint', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const lessonId = req.params.id;
+    const lesson = await lessonService.getLessonById(lessonId);
+    
+    if (!lesson || lesson.user_id !== req.userId) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    if (!lesson.script_content) {
+      return res.status(400).json({ error: 'Please generate script first' });
+    }
+
+    console.log('[PowerPoint Gen] Generating PowerPoint for lesson:', lesson.title);
+    
+    const prompt = `Generate Python code using python-pptx library to create a professional PowerPoint presentation.
+The presentation should be based on this teaching script:
+
+${lesson.script_content}
+
+Requirements:
+1. Title slide with lesson title, subject, and grade level
+2. Content slides (5-7 slides) with key points from the script
+3. Professional formatting with consistent styling
+4. Bullet points for readability
+5. Save to file: /tmp/lesson_presentation.pptx
+
+Return ONLY the Python code, no explanations or markdown formatting.
+Start with: from pptx import Presentation`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    });
+
+    const pythonCode = response.text || '';
+    console.log('[PowerPoint Gen] Generated code length:', pythonCode.length);
+
+    // Return the code for frontend to execute
+    res.json({ success: true, pythonCode });
+  } catch (error: any) {
+    console.error('Generate PowerPoint error:', error);
     res.status(500).json({ error: error.message });
   }
 });

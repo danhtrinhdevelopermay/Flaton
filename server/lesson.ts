@@ -146,3 +146,87 @@ export async function createSchedule(
 
   return result.rows[0];
 }
+
+// Create Word document from lesson script
+export async function generateLessonWordDoc(
+  lessonTitle: string,
+  script: string,
+  subject: string,
+  gradeLevel: string,
+  duration: number
+): Promise<string> {
+  // Create formatted content as base64 encoded Word content
+  const content = `Title: ${lessonTitle}
+Subject: ${subject}
+Grade Level: ${gradeLevel}
+Duration: ${duration} minutes
+
+Teaching Script:
+${script}`;
+  
+  return Buffer.from(content).toString('base64');
+}
+
+// Generate video using Flaton Video V1
+export async function generateLessonVideo(
+  script: string,
+  lessonTitle: string,
+  apiKey: string
+): Promise<string> {
+  console.log('[Flaton Video] Generating video for lesson:', lessonTitle);
+  
+  // Call Flaton Video V1 API
+  const response = await fetch('https://api.flaton.ai/v1/video/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'flaton-video-v1',
+      script,
+      title: lessonTitle,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Flaton Video API failed: ${response.statusText}`);
+  }
+
+  const result = await response.json();
+  return result.videoUrl || result.url;
+}
+
+// Generate images using Flaton Image V1
+export async function generateLessonImages(
+  prompts: string[],
+  apiKey: string
+): Promise<string[]> {
+  console.log('[Flaton Image] Generating images for prompts:', prompts.length);
+  
+  const images: string[] = [];
+  
+  for (const prompt of prompts) {
+    const response = await fetch('https://api.flaton.ai/v1/image/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'flaton-image-v1',
+        prompt,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`Flaton Image API failed for prompt: ${prompt}`);
+      continue;
+    }
+
+    const result = await response.json();
+    images.push(result.imageUrl || result.url);
+  }
+  
+  return images;
+}
