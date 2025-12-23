@@ -106,7 +106,7 @@ export async function createLesson(
   return result.rows[0];
 }
 
-export async function getLessonById(lessonId: number) {
+export async function getLessonById(lessonId: string) {
   const result = await pool.query('SELECT * FROM lessons WHERE id = $1', [lessonId]);
   return result.rows[0];
 }
@@ -121,7 +121,7 @@ export async function getLessonsByUser(userId: any) {
   return result.rows;
 }
 
-export async function createWorkflow(lessonId: number, name: string, workflowJson: any) {
+export async function createWorkflow(lessonId: string, name: string, workflowJson: any) {
   const result = await pool.query(
     `INSERT INTO workflows (lesson_id, name, workflow_json, status)
      VALUES ($1, $2, $3, 'inactive')
@@ -132,7 +132,7 @@ export async function createWorkflow(lessonId: number, name: string, workflowJso
   return result.rows[0];
 }
 
-export async function getWorkflowsByLesson(lessonId: number) {
+export async function getWorkflowsByLesson(lessonId: string) {
   const result = await pool.query(
     'SELECT * FROM workflows WHERE lesson_id = $1 ORDER BY created_at DESC',
     [lessonId]
