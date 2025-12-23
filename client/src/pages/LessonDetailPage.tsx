@@ -42,13 +42,17 @@ export default function LessonDetailPage() {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
       });
+      const data = await response.json();
       if (response.ok) {
-        const data = await response.json();
         setLesson({ ...lesson, script_content: data.script });
+        alert('Kịch bản đã được sinh thành công!');
+      } else {
+        alert(`Lỗi: ${data.error || 'Không thể sinh kịch bản'}`);
+        console.error('Generate script error:', data);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Lỗi khi sinh kịch bản');
+      alert('Lỗi kết nối: ' + (error instanceof Error ? error.message : 'Không xác định'));
     } finally {
       setGenerating(false);
     }
@@ -61,13 +65,17 @@ export default function LessonDetailPage() {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
       });
+      const data = await response.json();
       if (response.ok) {
-        alert('Slides đã được tạo!');
+        alert('Slides đã được tạo thành công!');
         fetchLesson();
+      } else {
+        alert(`Lỗi: ${data.error || 'Không thể sinh slides'}`);
+        console.error('Generate slides error:', data);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Lỗi khi sinh slides');
+      alert('Lỗi kết nối: ' + (error instanceof Error ? error.message : 'Không xác định'));
     } finally {
       setGenerating(false);
     }

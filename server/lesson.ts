@@ -15,6 +15,7 @@ export async function generateLessonScript(
   duration: number,
   objectives: string[]
 ): Promise<string> {
+  console.log(`[Gemini] Generating script for topic: ${topic}, grade: ${gradeLevel}`);
   const prompt = `
     Create a comprehensive lesson script for teaching ${topic} to ${gradeLevel} students.
     Duration: ${duration} minutes
@@ -31,12 +32,19 @@ export async function generateLessonScript(
     Format as a structured lesson plan with clear section headers.
   `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-  });
-
-  return response.text || '';
+  try {
+    console.log(`[Gemini] API Key exists: ${!!process.env.AI_INTEGRATIONS_GEMINI_API_KEY}`);
+    console.log(`[Gemini] Base URL: ${process.env.AI_INTEGRATIONS_GEMINI_BASE_URL}`);
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    });
+    console.log(`[Gemini] Response received, text length: ${response.text?.length || 0}`);
+    return response.text || '';
+  } catch (error) {
+    console.error('[Gemini] Error generating script:', error);
+    throw error;
+  }
 }
 
 export async function generateLessonSlides(

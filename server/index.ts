@@ -1291,6 +1291,7 @@ app.get('/api/lessons/:id', authMiddleware, async (req: AuthRequest, res: Respon
 app.post('/api/lessons/:id/generate-script', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const lessonId = parseInt(req.params.id);
+    console.log(`[Script Gen] Starting script generation for lesson ${lessonId}`);
     const lesson = await lessonService.getLessonById(lessonId);
     
     if (!lesson || lesson.user_id !== req.userId) {
@@ -1298,6 +1299,7 @@ app.post('/api/lessons/:id/generate-script', authMiddleware, async (req: AuthReq
     }
 
     const objectives = JSON.parse(lesson.learning_objectives || '[]');
+    console.log(`[Script Gen] Objectives: ${JSON.stringify(objectives)}`);
     const script = await lessonService.generateLessonScript(
       lesson.title,
       lesson.grade_level,
@@ -1305,6 +1307,7 @@ app.post('/api/lessons/:id/generate-script', authMiddleware, async (req: AuthReq
       objectives
     );
 
+    console.log(`[Script Gen] Script generated, length: ${script?.length || 0}`);
     const result = await pool.query(
       'UPDATE lessons SET script_content = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
       [script, lessonId]
@@ -1313,7 +1316,7 @@ app.post('/api/lessons/:id/generate-script', authMiddleware, async (req: AuthReq
     res.json({ success: true, script });
   } catch (error: any) {
     console.error('Generate script error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message || 'Unknown error' });
   }
 });
 
