@@ -86,7 +86,7 @@ export async function generateImagePrompts(slideContent: any[]): Promise<string[
 }
 
 export async function createLesson(
-  userId: number,
+  userId: any,
   title: string,
   subject: string,
   gradeLevel: string,
@@ -94,6 +94,7 @@ export async function createLesson(
   objectives: string[],
   teachingStyle: string
 ) {
+  console.log('[Lesson Service] Creating lesson with userId:', { userId, type: typeof userId });
   const result = await pool.query(
     `INSERT INTO lessons (user_id, title, subject, grade_level, duration_minutes, learning_objectives, teaching_style, status)
      VALUES ($1, $2, $3, $4, $5, $6, $7, 'draft')
@@ -101,6 +102,7 @@ export async function createLesson(
     [userId, title, subject, gradeLevel, duration, JSON.stringify(objectives), teachingStyle]
   );
 
+  console.log('[Lesson Service] Created lesson:', result.rows[0]);
   return result.rows[0];
 }
 

@@ -1257,6 +1257,7 @@ app.post('/api/products/publish', authMiddleware, async (req: AuthRequest, res: 
 app.post('/api/lessons', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { title, subject, gradeLevel, duration, objectives, teachingStyle } = req.body;
+    console.log('[Create Lesson] User ID:', { userId: req.userId, type: typeof req.userId });
     const lesson = await lessonService.createLesson(
       req.userId!,
       title,
@@ -1266,6 +1267,7 @@ app.post('/api/lessons', authMiddleware, async (req: AuthRequest, res: Response)
       objectives,
       teachingStyle
     );
+    console.log('[Create Lesson] Lesson created:', { id: lesson.id, userId: lesson.user_id });
     res.json({ success: true, id: lesson.id, ...lesson });
   } catch (error: any) {
     console.error('Create lesson error:', error);
