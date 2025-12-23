@@ -1276,9 +1276,14 @@ app.get('/api/lessons', authMiddleware, async (req: AuthRequest, res: Response) 
 
 app.get('/api/lessons/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const lessonId = parseInt(req.params.id);
+    const lessonId = parseInt(req.params.id, 10);
+    const userId = parseInt(String(req.userId), 10);
+    console.log(`[Lesson Fetch] Fetching lesson ${lessonId} for user ${userId}`);
     const lesson = await lessonService.getLessonById(lessonId);
-    if (!lesson || lesson.user_id !== req.userId) {
+    const lessonUserId = lesson ? parseInt(String(lesson.user_id), 10) : null;
+    console.log(`[Lesson Fetch] Found lesson: ${lesson ? `id=${lesson.id}, user_id=${lessonUserId}` : 'NOT FOUND'}`);
+    console.log(`[Lesson Fetch] User comparison: ${lessonUserId} === ${userId} ? ${lessonUserId === userId}`);
+    if (!lesson || lessonUserId !== userId) {
       return res.status(404).json({ error: 'Lesson not found' });
     }
     res.json(lesson);
@@ -1290,11 +1295,15 @@ app.get('/api/lessons/:id', authMiddleware, async (req: AuthRequest, res: Respon
 
 app.post('/api/lessons/:id/generate-script', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const lessonId = parseInt(req.params.id);
-    console.log(`[Script Gen] Starting script generation for lesson ${lessonId}`);
+    const lessonId = parseInt(req.params.id, 10);
+    const userId = parseInt(String(req.userId), 10);
+    console.log(`[Script Gen] Starting script generation for lesson ${lessonId} for user ${userId}`);
     const lesson = await lessonService.getLessonById(lessonId);
+    const lessonUserId = lesson ? parseInt(String(lesson.user_id), 10) : null;
+    console.log(`[Script Gen] Found lesson: ${lesson ? `id=${lesson.id}, user_id=${lessonUserId}` : 'NOT FOUND'}`);
+    console.log(`[Script Gen] User comparison: ${lessonUserId} === ${userId} ? ${lessonUserId === userId}`);
     
-    if (!lesson || lesson.user_id !== req.userId) {
+    if (!lesson || lessonUserId !== userId) {
       return res.status(404).json({ error: 'Lesson not found' });
     }
 
@@ -1322,10 +1331,12 @@ app.post('/api/lessons/:id/generate-script', authMiddleware, async (req: AuthReq
 
 app.post('/api/lessons/:id/generate-slides', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const lessonId = parseInt(req.params.id);
+    const lessonId = parseInt(req.params.id, 10);
+    const userId = parseInt(String(req.userId), 10);
     const lesson = await lessonService.getLessonById(lessonId);
+    const lessonUserId = lesson ? parseInt(String(lesson.user_id), 10) : null;
     
-    if (!lesson || lesson.user_id !== req.userId) {
+    if (!lesson || lessonUserId !== userId) {
       return res.status(404).json({ error: 'Lesson not found' });
     }
 
