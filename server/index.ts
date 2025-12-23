@@ -1249,7 +1249,7 @@ app.post('/api/lessons', authMiddleware, async (req: AuthRequest, res: Response)
   try {
     const { title, subject, gradeLevel, duration, objectives, teachingStyle } = req.body;
     const lesson = await lessonService.createLesson(
-      req.userId,
+      req.userId!,
       title,
       subject,
       gradeLevel,
@@ -1266,7 +1266,7 @@ app.post('/api/lessons', authMiddleware, async (req: AuthRequest, res: Response)
 
 app.get('/api/lessons', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const lessons = await lessonService.getLessonsByUser(req.userId);
+    const lessons = await lessonService.getLessonsByUser(req.userId!);
     res.json({ lessons });
   } catch (error: any) {
     console.error('Get lessons error:', error);
@@ -1276,13 +1276,104 @@ app.get('/api/lessons', authMiddleware, async (req: AuthRequest, res: Response) 
 
 app.get('/api/lessons/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const lesson = await lessonService.getLessonById(parseInt(req.params.id));
+    const lessonId = parseInt(req.params.id);
+    const lesson = await lessonService.getLessonById(lessonId);
     if (!lesson || lesson.user_id !== req.userId) {
       return res.status(404).json({ error: 'Lesson not found' });
     }
     res.json(lesson);
   } catch (error: any) {
     console.error('Get lesson error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/lessons/:id/generate-script', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const lessonId = parseInt(req.params.id);
+    const lesson = await lessonService.getLessonById(lessonId);
+    
+    if (!lesson || lesson.user_id !== req.userId) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    const objectives = JSON.parse(lesson.learning_objectives || '[]');
+    const script = await lessonService.generateLessonScript(
+      lesson.title,
+      lesson.grade_level,
+      lesson.duration_minutes,
+      objectives
+    );
+
+    const result = await pool.query(
+      'UPDATE lessons SET script_content = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+      [script, lessonId]
+    );
+
+    res.json({ success: true, script });
+  } catch (error: any) {
+    console.error('Generate script error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/lessons/:id/generate-slides', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const lessonId = parseInt(req.params.id);
+    const lesson = await lessonService.getLessonById(lessonId);
+    
+    if (!lesson || lesson.user_id !== req.userId) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    if (!lesson.script_content) {
+      return res.status(400).json({ error: 'Please generate script first' });
+    }
+
+    const slides = await lessonService.generateLessonSlides(lesson.script_content, 5);
+    
+    const result = await pool.query(
+      'INSERT INTO lesson_content (lesson_id, content_type, content_data, order_index) VALUES ($1, $2, $3, $4) RETURNING *',
+      [lessonId, 'slides', JSON.stringify(slides), 0]
+    );
+
+    res.json({ success: true, slides });
+  } catch (error: any) {
+    console.error('Generate slides error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/workflows', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { lessonId, name, steps } = req.body;
+    
+    const lesson = await lessonService.getLessonById(lessonId);
+    if (!lesson || lesson.user_id !== req.userId) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    const workflow = await lessonService.createWorkflow(lessonId, name, { steps });
+    res.json({ success: true, ...workflow });
+  } catch (error: any) {
+    console.error('Create workflow error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/lessons/:id/workflows', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const lessonId = parseInt(req.params.id);
+    const lesson = await lessonService.getLessonById(lessonId);
+    
+    if (!lesson || lesson.user_id !== req.userId) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    const workflows = await lessonService.getWorkflowsByLesson(lessonId);
+    res.json({ workflows });
+  } catch (error: any) {
+    console.error('Get workflows error:', error);
     res.status(500).json({ error: error.message });
   }
 });

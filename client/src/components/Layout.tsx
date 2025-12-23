@@ -64,7 +64,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/image-generator', label: 'Tạo hình ảnh', icon: Image },
     { path: '/video-generator', label: 'Tạo video', icon: Video },
     { path: '/music-generator', label: 'Tạo nhạc', icon: Music },
-    { path: '/lesson-builder', label: 'Tạo Bài Giảng', icon: BookOpen },
+    { path: '/lessons', label: 'Bài Giảng', icon: BookOpen },
     { path: '/explorer', label: 'Explorer', icon: Compass },
     { path: '/status', label: 'Trạng thái dịch vụ', icon: Activity },
   ]
@@ -129,12 +129,12 @@ export default function Layout({ children }: LayoutProps) {
                         Explorer
                       </Link>
                       <Link
-                        to="/lesson-builder"
+                        to="/lessons"
                         onClick={() => setShowUserMenu(false)}
                         className="flex items-center gap-2 px-4 py-3 hover:bg-slate-700/50 transition-all"
                       >
                         <BookOpen className="w-4 h-4" />
-                        Tạo Bài Giảng
+                        Bài Giảng
                       </Link>
                       <button
                         onClick={() => {

@@ -1,7 +1,7 @@
-# Flaton - AI Tools Web App
+# Flaton - AI Tools & Automated Lesson Builder
 
 ## Overview
-A web application providing AI tools powered by Flaton AI. Users can generate images, videos, and music using various AI models.
+A comprehensive web application providing AI tools powered by Flaton AI and an automated lesson builder system. Users can generate images, videos, and music using various AI models, and create automated educational lessons with AI-generated content.
 
 ## Project Structure
 ```
@@ -100,14 +100,52 @@ Uses the official KIE AI API endpoints:
 - `/api/v1/jobs/recordInfo` - Poll Grok, Seedream, Sora 2 task status
 
 ## Recent Changes (Dec 2024)
+
+### AI Tools Updates
 - Added Sora 2 Text-to-Video and Image-to-Video models
 - Fixed Seedream endpoint (changed from /seedream/recordInfo to /jobs/recordInfo)
 - Increased MAX_CREDITS to 100 to support higher-cost models
 - Fixed Midjourney image generation endpoint (changed from /mj/imagine to /mj/txt2img)
 - Fixed Midjourney video generation endpoint with proper taskType parameter
-- Implemented robust multi-layer fallback parsing for all response types:
-  - Images: resultInfoJson → response.result_urls → resultUrls
-  - Videos: videos array → resultInfoJson → response.result_urls → resultUrls
-- Added comprehensive handling for both successFlag-based and status-based API responses
+- Implemented robust multi-layer fallback parsing for all response types
 - Updated frontend to dynamically use taskType from server responses for polling
-- Ensured URL extraction works across all provider response format variations
+
+### Explorer Feature
+- Added public Explorer page to showcase user-shared AI-generated content
+- Implemented swipeable carousel interface for browsing content
+- Added "Publish to Public" buttons in History pages (images, videos, music)
+- Database schema includes `is_public` flag for all content types
+- API endpoints: `/api/products/explore`, `/api/products/publish`
+
+### Automated Lesson Builder System (NEW)
+- **Lesson Creation**: Multi-step form to create lessons with objectives, teaching style
+- **AI-Powered Content Generation**: Gemini AI integration for:
+  - Auto-generating lesson scripts from topics and objectives
+  - Auto-generating slide content from scripts
+  - Image prompt suggestions for visual aids
+- **Database Schema** for lessons system:
+  - `lessons` - Core lesson metadata
+  - `workflows` - Automated workflow definitions
+  - `workflow_steps` - Individual steps in workflows
+  - `schedules` - Scheduling for automated execution
+  - `lesson_content` - Various content types (scripts, slides, etc)
+  - `lesson_assets` - Media assets (images, videos, PDFs)
+  - `lesson_approvals` - Content review & approval status
+- **Frontend Pages**:
+  - `/lesson-builder` - Create new lessons step-by-step
+  - `/lessons` - View all lessons with status
+  - `/lessons/:id` - Edit lesson, generate script/slides, manage workflows
+- **API Endpoints**:
+  - `POST /api/lessons` - Create lesson
+  - `GET /api/lessons` - List user's lessons
+  - `GET /api/lessons/:id` - Get lesson details
+  - `POST /api/lessons/:id/generate-script` - Generate script from Gemini
+  - `POST /api/lessons/:id/generate-slides` - Generate slides from script
+  - `POST /api/workflows` - Create lesson workflow
+  - `GET /api/lessons/:id/workflows` - Get workflows for lesson
+
+### Gemini AI Integration
+- Uses Replit AI Integrations (no separate API key needed)
+- Models: gemini-2.5-flash for chat/generation
+- Batch processing utilities for rate limiting & retries
+- Modular chat, image, and batch utilities

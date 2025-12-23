@@ -256,6 +256,9 @@ export default function LessonBuilderPage() {
           </div>
           <h2 className="text-2xl font-bold mb-2">Tạo bài giảng thành công!</h2>
           <p className="text-slate-400 mb-6">Đang chuyển hướng tới bài giảng của bạn...</p>
+          <div className="animate-pulse">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-400" />
+          </div>
         </div>
       )}
     </div>
