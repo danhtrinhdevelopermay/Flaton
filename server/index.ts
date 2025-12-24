@@ -1401,12 +1401,6 @@ app.post('/api/lessons/:id/generate-word', authMiddleware, async (req: AuthReque
 app.post('/api/lessons/:id/generate-video', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const lessonId = req.params.id;
-    const { flatonApiKey } = req.body;
-    
-    if (!flatonApiKey) {
-      return res.status(400).json({ error: 'Flaton API key is required' });
-    }
-
     const lesson = await lessonService.getLessonById(lessonId);
     
     if (!lesson || lesson.user_id !== req.userId) {
@@ -1419,8 +1413,7 @@ app.post('/api/lessons/:id/generate-video', authMiddleware, async (req: AuthRequ
 
     const videoUrl = await lessonService.generateLessonVideo(
       lesson.script_content,
-      lesson.title,
-      flatonApiKey
+      lesson.title
     );
 
     res.json({ success: true, videoUrl });
@@ -1434,14 +1427,10 @@ app.post('/api/lessons/:id/generate-video', authMiddleware, async (req: AuthRequ
 app.post('/api/lessons/:id/generate-images', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const lessonId = req.params.id;
-    const { prompts, flatonApiKey } = req.body;
+    const { prompts } = req.body;
     
     if (!prompts || !Array.isArray(prompts)) {
       return res.status(400).json({ error: 'Prompts array is required' });
-    }
-
-    if (!flatonApiKey) {
-      return res.status(400).json({ error: 'Flaton API key is required' });
     }
 
     const lesson = await lessonService.getLessonById(lessonId);
@@ -1450,7 +1439,7 @@ app.post('/api/lessons/:id/generate-images', authMiddleware, async (req: AuthReq
       return res.status(404).json({ error: 'Lesson not found' });
     }
 
-    const imageUrls = await lessonService.generateLessonImages(prompts, flatonApiKey);
+    const imageUrls = await lessonService.generateLessonImages(prompts);
 
     res.json({ success: true, imageUrls });
   } catch (error: any) {

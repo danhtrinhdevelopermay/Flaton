@@ -22,8 +22,6 @@ export default function WorkflowBuilder({ lessonId, onWorkflowSave }: WorkflowBu
   const [workflowName, setWorkflowName] = useState('');
   const [steps, setSteps] = useState<WorkflowStep[]>([]);
   const [isExecuting, setIsExecuting] = useState(false);
-  const [flatonApiKey, setFlatonApiKey] = useState('');
-  const [showConfig, setShowConfig] = useState(false);
 
   const addStep = (stepType: string) => {
     setSteps([
@@ -58,7 +56,6 @@ export default function WorkflowBuilder({ lessonId, onWorkflowSave }: WorkflowBu
         body: JSON.stringify({
           name: workflowName,
           steps,
-          config: { flatonApiKey },
         }),
       });
 
@@ -81,10 +78,7 @@ export default function WorkflowBuilder({ lessonId, onWorkflowSave }: WorkflowBu
       const response = await fetch(`/api/lessons/${lessonId}/workflows/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          steps,
-          config: { flatonApiKey },
-        }),
+        body: JSON.stringify({ steps }),
       });
 
       if (!response.ok) throw new Error('Failed to execute workflow');
@@ -114,16 +108,6 @@ export default function WorkflowBuilder({ lessonId, onWorkflowSave }: WorkflowBu
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">API Key Flaton</label>
-          <input
-            type="password"
-            value={flatonApiKey}
-            onChange={(e) => setFlatonApiKey(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Nhập Flaton API Key (cần để tạo ảnh/video)"
-          />
-        </div>
       </div>
 
       <div className="mb-6">

@@ -170,13 +170,16 @@ ${script}`;
 // Generate video using Flaton Video V1
 export async function generateLessonVideo(
   script: string,
-  lessonTitle: string,
-  apiKey: string
+  lessonTitle: string
 ): Promise<string> {
   console.log('[Flaton Video] Generating video for lesson:', lessonTitle);
   
-  // Call Flaton Video V1 API
-  const response = await fetch('https://api.flaton.ai/v1/video/generate', {
+  // Use KIE API for Flaton Video V1
+  const apiKeyManager = require('./apiKeyManager');
+  const apiKey = await apiKeyManager.getCurrentApiKey();
+  
+  const KIE_API_BASE = 'https://api.kie.ai/api/v1';
+  const response = await fetch(`${KIE_API_BASE}/jobs/createTask`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -184,48 +187,51 @@ export async function generateLessonVideo(
     },
     body: JSON.stringify({
       model: 'flaton-video-v1',
-      script,
+      prompt: script,
       title: lessonTitle,
     }),
   });
 
   if (!response.ok) {
-    throw new Error(`Flaton Video API failed: ${response.statusText}`);
+    throw new Error(`Video generation failed: ${response.statusText}`);
   }
 
   const result = await response.json();
-  return result.videoUrl || result.url;
+  return result.taskId || result.url || 'Video queued for generation';
 }
 
 // Generate images using Flaton Image V1
 export async function generateLessonImages(
-  prompts: string[],
-  apiKey: string
+  prompts: string[]
 ): Promise<string[]> {
   console.log('[Flaton Image] Generating images for prompts:', prompts.length);
   
+  const apiKeyManager = require('./apiKeyManager');
+  const apiKey = await apiKeyManager.getCurrentApiKey();
+  
+  const KIE_API_BASE = 'https://api.kie.ai/api/v1';
   const images: string[] = [];
   
   for (const prompt of prompts) {
-    const response = await fetch('https://api.flaton.ai/v1/image/generate', {
+    const response = await fetch(`${KIE_API_BASE}/playground/createTask`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'flaton-image-v1',
         prompt,
+        model: 'flaton-image-v1',
       }),
     });
 
     if (!response.ok) {
-      console.error(`Flaton Image API failed for prompt: ${prompt}`);
+      console.error(`Image generation failed for prompt: ${prompt}`);
       continue;
     }
 
     const result = await response.json();
-    images.push(result.imageUrl || result.url);
+    images.push(result.taskId || result.url || 'Image queued for generation');
   }
   
   return images;
@@ -316,15 +322,14 @@ export async function executeWorkflow(
 
         case 'image':
           const prompts = step.config?.prompts || [lesson.title];
-          results.images = await generateLessonImages(prompts, config?.flatonApiKey);
+          results.images = await generateLessonImages(prompts);
           console.log('[Workflow] Images generated:', results.images?.length);
           break;
 
         case 'video':
           results.video = await generateLessonVideo(
             lesson.script_content || 'Default script',
-            lesson.title,
-            config?.flatonApiKey
+            lesson.title
           );
           console.log('[Workflow] Video generated');
           break;
