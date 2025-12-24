@@ -119,29 +119,29 @@ export default function LessonDetailPage() {
   const handleExecuteWorkflow = async (workflow: any) => {
     setGenerating(true);
     console.log('Executing workflow:', workflow);
-    console.log('Workflow steps:', workflow.config?.steps);
+    console.log('Workflow steps from workflow_json:', workflow.workflow_json?.steps);
     try {
       const response = await fetch(`/api/lessons/${id}/workflows/execute`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workflowId: workflow.id,
-          steps: workflow.config?.steps || [],
-          config: workflow.config?.config || {},
+          steps: workflow.workflow_json?.steps || [],
+          config: workflow.workflow_json?.config || {},
         }),
       });
       if (response.ok) {
         const result = await response.json();
         setWorkflowResults(result.results || {});
         setActiveTab('results');
-        console.log('Workflow executed successfully!');
+        console.log('✅ Workflow executed successfully!');
         console.log('Workflow results:', result.results);
       } else {
         const err = await response.json();
-        console.error('Workflow execution error:', err.error);
+        console.error('❌ Workflow execution error:', err.error);
       }
     } catch (error) {
-      console.error('Error executing workflow:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('❌ Error executing workflow:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setGenerating(false);
     }
@@ -320,8 +320,11 @@ export default function LessonDetailPage() {
           <h3 className="text-2xl font-bold mb-6 text-white">Kết quả Quy trình</h3>
           {generating ? (
             <div className="text-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-400 mx-auto mb-4" />
-              <p className="text-slate-300">Quy trình đang chạy...</p>
+              <div className="mb-4">
+                <Loader2 className="w-12 h-12 animate-spin text-blue-400 mx-auto" />
+              </div>
+              <p className="text-slate-200 text-lg font-medium mb-2">Quy trình đang chạy...</p>
+              <p className="text-slate-400 text-sm">Vui lòng chờ trong khi hệ thống xử lý yêu cầu của bạn</p>
             </div>
           ) : !workflowResults || Object.keys(workflowResults).length === 0 ? (
             <div className="text-center py-12">
