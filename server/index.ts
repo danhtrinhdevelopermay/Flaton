@@ -1499,14 +1499,20 @@ Start with: from pptx import Presentation`;
 app.post('/api/lessons/:id/workflows/save', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const lessonId = req.params.id;
-    const { name, steps, config } = req.body;
+    const { name, steps } = req.body;
     
+    if (!name || !steps) {
+      return res.status(400).json({ error: 'Name and steps are required' });
+    }
+
     const lesson = await lessonService.getLessonById(lessonId);
     if (!lesson || lesson.user_id !== req.userId) {
       return res.status(404).json({ error: 'Lesson not found' });
     }
 
-    const workflow = await lessonService.createWorkflow(lessonId, name, { steps, config });
+    console.log('[Save Workflow] Saving workflow:', name, 'with', steps.length, 'steps');
+    const workflow = await lessonService.createWorkflow(lessonId, name, { steps });
+    console.log('[Save Workflow] Workflow saved successfully:', workflow.id);
     res.json({ success: true, workflow });
   } catch (error: any) {
     console.error('Save workflow error:', error);
@@ -1518,15 +1524,19 @@ app.post('/api/lessons/:id/workflows/save', authMiddleware, async (req: AuthRequ
 app.post('/api/lessons/:id/workflows/execute', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const lessonId = req.params.id;
-    const { steps, config } = req.body;
+    const { steps } = req.body;
     
+    if (!steps || !Array.isArray(steps)) {
+      return res.status(400).json({ error: 'Steps array is required' });
+    }
+
     const lesson = await lessonService.getLessonById(lessonId);
     if (!lesson || lesson.user_id !== req.userId) {
       return res.status(404).json({ error: 'Lesson not found' });
     }
 
     console.log('[Execute Workflow] Starting for lesson:', lessonId);
-    const results = await lessonService.executeWorkflow(lessonId, steps, config, ai);
+    const results = await lessonService.executeWorkflow(lessonId, steps, {}, ai);
     
     res.json({ success: true, results });
   } catch (error: any) {
