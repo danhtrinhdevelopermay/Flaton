@@ -118,11 +118,14 @@ export default function LessonDetailPage() {
 
   const handleExecuteWorkflow = async (workflow: any) => {
     setGenerating(true);
+    console.log('Executing workflow:', workflow);
+    console.log('Workflow steps:', workflow.config?.steps);
     try {
       const response = await fetch(`/api/lessons/${id}/workflows/execute`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          workflowId: workflow.id,
           steps: workflow.config?.steps || [],
           config: workflow.config?.config || {},
         }),
@@ -132,6 +135,7 @@ export default function LessonDetailPage() {
         setWorkflowResults(result.results || {});
         setActiveTab('results');
         console.log('Workflow executed successfully!');
+        console.log('Workflow results:', result.results);
       } else {
         const err = await response.json();
         console.error('Workflow execution error:', err.error);
@@ -314,7 +318,12 @@ export default function LessonDetailPage() {
       {activeTab === 'results' && (
         <div className="glass rounded-xl p-8">
           <h3 className="text-2xl font-bold mb-6 text-white">Kết quả Quy trình</h3>
-          {!workflowResults || Object.keys(workflowResults).length === 0 ? (
+          {generating ? (
+            <div className="text-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-400 mx-auto mb-4" />
+              <p className="text-slate-300">Quy trình đang chạy...</p>
+            </div>
+          ) : !workflowResults || Object.keys(workflowResults).length === 0 ? (
             <div className="text-center py-12">
               <p className="text-slate-400">Chưa có kết quả. Chạy một quy trình để xem kết quả tại đây.</p>
             </div>
