@@ -68,14 +68,12 @@ export default function LessonDetailPage() {
       const data = await response.json();
       if (response.ok) {
         setLesson({ ...lesson, script_content: data.script });
-        alert('Kịch bản đã được sinh thành công!');
+        console.log('Script generated successfully!');
       } else {
-        alert(`Lỗi: ${data.error || 'Không thể sinh kịch bản'}`);
         console.error('Generate script error:', data);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Lỗi kết nối: ' + (error instanceof Error ? error.message : 'Không xác định'));
     } finally {
       setGenerating(false);
     }
@@ -90,15 +88,13 @@ export default function LessonDetailPage() {
       });
       const data = await response.json();
       if (response.ok) {
-        alert('Slides đã được tạo thành công!');
+        console.log('Slides generated successfully!');
         fetchLesson();
       } else {
-        alert(`Lỗi: ${data.error || 'Không thể sinh slides'}`);
         console.error('Generate slides error:', data);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Lỗi kết nối: ' + (error instanceof Error ? error.message : 'Không xác định'));
     } finally {
       setGenerating(false);
     }
@@ -113,10 +109,10 @@ export default function LessonDetailPage() {
       });
       if (response.ok) {
         fetchWorkflows();
-        alert('Quy trình đã xóa!');
+        console.log('Workflow deleted successfully!');
       }
     } catch (error) {
-      alert('Lỗi: ' + (error instanceof Error ? error.message : 'Không xác định'));
+      console.error('Error deleting workflow:', error instanceof Error ? error.message : 'Unknown error');
     }
   };
 
@@ -135,13 +131,13 @@ export default function LessonDetailPage() {
         const result = await response.json();
         setWorkflowResults(result.results || {});
         setActiveTab('results');
-        alert('Quy trình đã chạy thành công! Xem kết quả ở tab Results.');
+        console.log('Workflow executed successfully!');
       } else {
         const err = await response.json();
-        alert('Lỗi: ' + err.error);
+        console.error('Workflow execution error:', err.error);
       }
     } catch (error) {
-      alert('Lỗi: ' + (error instanceof Error ? error.message : 'Không xác định'));
+      console.error('Error executing workflow:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setGenerating(false);
     }

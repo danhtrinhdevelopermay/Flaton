@@ -61,11 +61,10 @@ export default function LessonBuilderPage() {
           navigate(`/lessons/${data.id}`);
         }, 2000);
       } else {
-        alert('Lỗi khi tạo bài giảng');
+        console.error('Error creating lesson');
       }
     } catch (error) {
       console.error('Error creating lesson:', error);
-      alert('Lỗi kết nối server');
     } finally {
       setLoading(false);
     }

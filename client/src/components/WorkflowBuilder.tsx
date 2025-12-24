@@ -47,7 +47,7 @@ export default function WorkflowBuilder({ lessonId, onWorkflowSave }: WorkflowBu
 
   const handleSaveWorkflow = async () => {
     if (!workflowName || steps.length === 0) {
-      alert('Nhập tên quy trình và thêm ít nhất 1 bước');
+      console.log('Workflow validation: Please enter name and add at least 1 step');
       return;
     }
 
@@ -68,18 +68,18 @@ export default function WorkflowBuilder({ lessonId, onWorkflowSave }: WorkflowBu
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to save workflow');
       }
-      alert('Quy trình đã được lưu!');
+      console.log('Workflow saved successfully!');
       onWorkflowSave?.();
       setWorkflowName('');
       setSteps([]);
     } catch (error: any) {
-      alert('Lỗi: ' + error.message);
+      console.error('Error saving workflow:', error.message);
     }
   };
 
   const handleExecuteWorkflow = async () => {
     if (steps.length === 0) {
-      alert('Thêm ít nhất 1 bước');
+      console.log('Workflow execution: Please add at least 1 step');
       return;
     }
 
@@ -99,10 +99,10 @@ export default function WorkflowBuilder({ lessonId, onWorkflowSave }: WorkflowBu
         throw new Error(errorData.error || 'Failed to execute workflow');
       }
       const result = await response.json();
-      alert('Quy trình đã được thực thi thành công!');
+      console.log('Workflow executed successfully!');
       console.log('Workflow result:', result);
     } catch (error: any) {
-      alert('Lỗi: ' + error.message);
+      console.error('Error executing workflow:', error.message);
     } finally {
       setIsExecuting(false);
     }
