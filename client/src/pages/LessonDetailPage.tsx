@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Loader2, ChevronRight, Plus } from 'lucide-react';
+import { BookOpen, Loader2, ChevronRight, Plus, Trash2, Play } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
+import WorkflowBuilder from '../components/WorkflowBuilder';
 
 export default function LessonDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -11,6 +12,8 @@ export default function LessonDetailPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<'script' | 'slides' | 'workflow'>('script');
+  const [workflows, setWorkflows] = useState<any[]>([]);
+  const [workflowsLoading, setWorkflowsLoading] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -18,7 +21,26 @@ export default function LessonDetailPage() {
       return;
     }
     fetchLesson();
-  }, [isAuthenticated]);
+    if (id) fetchWorkflows();
+  }, [isAuthenticated, id]);
+
+  const fetchWorkflows = async () => {
+    if (!id) return;
+    setWorkflowsLoading(true);
+    try {
+      const response = await fetch(`/api/lessons/${id}/workflows`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setWorkflows(data.workflows || []);
+      }
+    } catch (error) {
+      console.error('Error fetching workflows:', error);
+    } finally {
+      setWorkflowsLoading(false);
+    }
+  };
 
   const fetchLesson = async () => {
     try {
@@ -76,6 +98,46 @@ export default function LessonDetailPage() {
     } catch (error) {
       console.error('Error:', error);
       alert('Lỗi kết nối: ' + (error instanceof Error ? error.message : 'Không xác định'));
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleDeleteWorkflow = async (workflowId: string) => {
+    if (!confirm('Bạn chắc chắn muốn xóa quy trình này?')) return;
+    try {
+      const response = await fetch(`/api/workflows/${workflowId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (response.ok) {
+        fetchWorkflows();
+        alert('Quy trình đã xóa!');
+      }
+    } catch (error) {
+      alert('Lỗi: ' + (error instanceof Error ? error.message : 'Không xác định'));
+    }
+  };
+
+  const handleExecuteWorkflow = async (workflow: any) => {
+    setGenerating(true);
+    try {
+      const response = await fetch(`/api/lessons/${id}/workflows/execute`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          steps: workflow.config?.steps || [],
+          config: workflow.config?.config || {},
+        }),
+      });
+      if (response.ok) {
+        alert('Quy trình đã chạy thành công!');
+      } else {
+        const err = await response.json();
+        alert('Lỗi: ' + err.error);
+      }
+    } catch (error) {
+      alert('Lỗi: ' + (error instanceof Error ? error.message : 'Không xác định'));
     } finally {
       setGenerating(false);
     }
@@ -191,16 +253,50 @@ export default function LessonDetailPage() {
       )}
 
       {activeTab === 'workflow' && (
-        <div className="glass rounded-xl p-8">
-          <p className="text-slate-400">Thiết lập quy trình tự động cho bài giảng này</p>
-          <div className="mt-6 space-y-3">
-            <div className="flex items-center p-3 rounded-lg bg-slate-700/30 border border-slate-600">
-              <span className="text-sm">1. Sinh kịch bản</span>
-              <ChevronRight className="w-4 h-4 text-slate-500 mx-3" />
-              <span className="text-sm">2. Sinh Slides</span>
-              <ChevronRight className="w-4 h-4 text-slate-500 mx-3" />
-              <span className="text-sm">3. Sinh hình ảnh</span>
-            </div>
+        <div className="space-y-6">
+          {/* Workflow Builder */}
+          <WorkflowBuilder lessonId={id || ''} onWorkflowSave={fetchWorkflows} />
+
+          {/* Saved Workflows */}
+          <div className="glass rounded-xl p-8">
+            <h3 className="text-xl font-bold mb-4">Các quy trình đã lưu</h3>
+            {workflowsLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+              </div>
+            ) : workflows.length === 0 ? (
+              <p className="text-slate-400 text-center py-6">Chưa có quy trình nào</p>
+            ) : (
+              <div className="space-y-3">
+                {workflows.map((workflow: any) => (
+                  <div key={workflow.id} className="flex items-center justify-between p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <div>
+                      <p className="font-medium text-white">{workflow.name}</p>
+                      <p className="text-sm text-slate-400">
+                        {workflow.config?.steps?.length || 0} bước
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleExecuteWorkflow(workflow)}
+                        disabled={generating}
+                        className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-md text-white text-sm disabled:opacity-50"
+                      >
+                        <Play size={16} />
+                        Chạy
+                      </button>
+                      <button
+                        onClick={() => handleDeleteWorkflow(workflow.id)}
+                        className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-md text-white text-sm"
+                      >
+                        <Trash2 size={16} />
+                        Xóa
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

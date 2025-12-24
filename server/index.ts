@@ -1580,6 +1580,26 @@ app.get('/api/lessons/:id/workflows', authMiddleware, async (req: AuthRequest, r
   }
 });
 
+// Delete workflow
+app.delete('/api/workflows/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const workflowId = req.params.id;
+    const result = await pool.query(
+      'DELETE FROM workflows WHERE id = $1 RETURNING *',
+      [workflowId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Workflow not found' });
+    }
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error('Delete workflow error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 let cpuHistory: { time: string; cpu: number }[] = [];
 let latencyHistory: { time: string; latency: number }[] = [];
 const serverStartTime = Date.now();

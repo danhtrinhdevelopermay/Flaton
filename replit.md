@@ -99,7 +99,34 @@ Uses the official KIE AI API endpoints:
 - `/api/v1/jobs/createTask` - For Grok Imagenia, Seedream, Sora 2
 - `/api/v1/jobs/recordInfo` - Poll Grok, Seedream, Sora 2 task status
 
-## Recent Changes (Dec 2024)
+## Recent Changes (Dec 24, 2024)
+
+### Workflow Builder System (NEW)
+- **Custom Workflow Creation**: Teachers can create automated workflows with up to 4 types of steps:
+  - **Word Document** - Export teaching script to .docx format
+  - **Flaton Image V1** - Generate images using kie.ai API
+  - **Flaton Video V1** - Generate videos using kie.ai API  
+  - **PowerPoint** - Auto-generate & execute Python code using Gemini + python-pptx
+- **Workflow Execution**: Teachers can save workflows and execute them with one click
+- **Auto-Execution for PowerPoint**: System automatically:
+  1. Prompts Gemini to generate python-pptx code
+  2. Writes code to temp file
+  3. Executes Python code to generate .pptx file
+  4. Returns success/error status
+- **UI Integration**: Added "Quy trình" tab in lesson detail page with:
+  - WorkflowBuilder component for creating custom workflows
+  - List of saved workflows with Execute/Delete buttons
+  - Flaton API key input for image/video generation
+- **Backend Endpoints**:
+  - `POST /api/lessons/:id/workflows/save` - Save new workflow
+  - `POST /api/lessons/:id/workflows/execute` - Execute workflow steps
+  - `DELETE /api/workflows/:id` - Delete workflow
+
+### Content Generation Endpoints
+- `POST /api/lessons/:id/generate-word` - Create Word document from script
+- `POST /api/lessons/:id/generate-video` - Generate video via Flaton Video V1
+- `POST /api/lessons/:id/generate-images` - Generate images via Flaton Image V1
+- `POST /api/lessons/:id/generate-powerpoint` - Generate PowerPoint presentation
 
 ### AI Tools Updates
 - Added Sora 2 Text-to-Video and Image-to-Video models
