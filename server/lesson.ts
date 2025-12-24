@@ -230,3 +230,119 @@ export async function generateLessonImages(
   
   return images;
 }
+
+// Execute PowerPoint with auto-execution
+export async function generateAndExecutePowerPoint(
+  lessonId: string,
+  ai: any
+): Promise<string> {
+  const { execSync } = require('child_process');
+  const fs = require('fs');
+  const os = require('os');
+  
+  const lesson = await getLessonById(lessonId);
+  if (!lesson) throw new Error('Lesson not found');
+
+  console.log('[PowerPoint] Generating code with Gemini...');
+  const prompt = `Generate Python code using python-pptx library to create a professional PowerPoint presentation.
+The presentation should be based on this teaching script:
+
+${lesson.script_content}
+
+Requirements:
+1. Title slide with lesson title="${lesson.title}", subject="${lesson.subject}", grade="${lesson.grade_level}"
+2. Content slides (5-7 slides) with key points from the script
+3. Professional formatting with consistent styling
+4. Bullet points for readability
+5. Save to file: /tmp/lesson_presentation_${lessonId}.pptx
+
+Return ONLY the Python code, no explanations or markdown formatting.`;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+  });
+
+  const pythonCode = response.text || '';
+  console.log('[PowerPoint] Generated code, executing...');
+
+  // Write to temp file and execute
+  const tmpFile = `/tmp/pptx_gen_${lessonId}.py`;
+  fs.writeFileSync(tmpFile, pythonCode);
+
+  try {
+    execSync(`python3 ${tmpFile}`, { stdio: 'pipe' });
+    const outputFile = `/tmp/lesson_presentation_${lessonId}.pptx`;
+    console.log('[PowerPoint] Execution complete, saved to:', outputFile);
+    return outputFile;
+  } catch (error: any) {
+    console.error('[PowerPoint] Execution failed:', error.message);
+    throw new Error(`PowerPoint generation failed: ${error.message}`);
+  }
+}
+
+// Execute complete workflow
+export async function executeWorkflow(
+  lessonId: string,
+  steps: any[],
+  config: any,
+  ai?: any
+): Promise<any> {
+  console.log('[Workflow] Starting execution for lesson:', lessonId);
+  const lesson = await getLessonById(lessonId);
+  
+  if (!lesson) {
+    throw new Error('Lesson not found');
+  }
+
+  const results: Record<string, any> = {};
+  
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+    console.log(`[Workflow] Step ${i + 1}: ${step.type}`);
+
+    try {
+      switch (step.type) {
+        case 'word':
+          results.word = await generateLessonWordDoc(
+            lesson.title,
+            lesson.script_content || 'No script yet',
+            lesson.subject,
+            lesson.grade_level,
+            lesson.duration_minutes
+          );
+          console.log('[Workflow] Word document generated');
+          break;
+
+        case 'image':
+          const prompts = step.config?.prompts || [lesson.title];
+          results.images = await generateLessonImages(prompts, config?.flatonApiKey);
+          console.log('[Workflow] Images generated:', results.images?.length);
+          break;
+
+        case 'video':
+          results.video = await generateLessonVideo(
+            lesson.script_content || 'Default script',
+            lesson.title,
+            config?.flatonApiKey
+          );
+          console.log('[Workflow] Video generated');
+          break;
+
+        case 'powerpoint':
+          if (ai) {
+            results.powerpoint = await generateAndExecutePowerPoint(lessonId, ai);
+            console.log('[Workflow] PowerPoint generated and executed');
+          } else {
+            results.powerpoint = { status: 'skipped', message: 'AI not available' };
+          }
+          break;
+      }
+    } catch (error: any) {
+      console.error(`[Workflow] Step ${i + 1} failed:`, error.message);
+      results[step.type] = { error: error.message };
+    }
+  }
+
+  return results;
+}

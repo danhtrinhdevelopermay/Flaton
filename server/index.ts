@@ -1506,6 +1506,46 @@ Start with: from pptx import Presentation`;
   }
 });
 
+// Save workflow
+app.post('/api/lessons/:id/workflows/save', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const lessonId = req.params.id;
+    const { name, steps, config } = req.body;
+    
+    const lesson = await lessonService.getLessonById(lessonId);
+    if (!lesson || lesson.user_id !== req.userId) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    const workflow = await lessonService.createWorkflow(lessonId, name, { steps, config });
+    res.json({ success: true, workflow });
+  } catch (error: any) {
+    console.error('Save workflow error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Execute workflow
+app.post('/api/lessons/:id/workflows/execute', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const lessonId = req.params.id;
+    const { steps, config } = req.body;
+    
+    const lesson = await lessonService.getLessonById(lessonId);
+    if (!lesson || lesson.user_id !== req.userId) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    console.log('[Execute Workflow] Starting for lesson:', lessonId);
+    const results = await lessonService.executeWorkflow(lessonId, steps, config, ai);
+    
+    res.json({ success: true, results });
+  } catch (error: any) {
+    console.error('Execute workflow error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/workflows', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { lessonId, name, steps } = req.body;
