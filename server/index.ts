@@ -1535,10 +1535,17 @@ app.post('/api/lessons/:id/workflows/execute', authMiddleware, async (req: AuthR
       return res.status(404).json({ error: 'Lesson not found' });
     }
 
-    console.log('[Execute Workflow] Starting for lesson:', lessonId);
-    console.log('[Execute Workflow] Steps:', JSON.stringify(steps, null, 2));
+    const startTime = Date.now();
+    console.log('\n========== 🚀 WORKFLOW EXECUTION STARTED ==========');
+    console.log(`[Execute Workflow] Lesson: ${lessonId}`);
+    console.log(`[Execute Workflow] Steps: ${steps.length} step(s)`);
+    console.log(`[Execute Workflow] Step types: ${steps.map((s: any) => s.type).join(', ')}`);
     const results = await lessonService.executeWorkflow(lessonId, steps, {}, ai);
-    console.log('[Execute Workflow] Completed, results:', JSON.stringify(results, null, 2));
+    const duration = Date.now() - startTime;
+    console.log('\n========== ✅ WORKFLOW EXECUTION COMPLETED ==========');
+    console.log(`[Execute Workflow] Duration: ${duration}ms`);
+    console.log(`[Execute Workflow] Results: ${JSON.stringify(results, null, 2)}`);
+    console.log('====================================================\n');
     
     res.json({ success: true, results });
   } catch (error: any) {

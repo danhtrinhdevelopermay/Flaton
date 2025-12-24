@@ -118,8 +118,9 @@ export default function LessonDetailPage() {
 
   const handleExecuteWorkflow = async (workflow: any) => {
     setGenerating(true);
-    console.log('Executing workflow:', workflow);
-    console.log('Workflow steps from workflow_json:', workflow.workflow_json?.steps);
+    console.log('\n🚀 WORKFLOW EXECUTION STARTED (CLIENT-SIDE)');
+    console.log('Workflow name:', workflow.name);
+    console.log('Workflow steps:', workflow.workflow_json?.steps);
     try {
       const response = await fetch(`/api/lessons/${id}/workflows/execute`, {
         method: 'POST',
@@ -134,14 +135,14 @@ export default function LessonDetailPage() {
         const result = await response.json();
         setWorkflowResults(result.results || {});
         setActiveTab('results');
-        console.log('✅ Workflow executed successfully!');
-        console.log('Workflow results:', result.results);
+        console.log('✅ WORKFLOW COMPLETED SUCCESSFULLY');
+        console.log('Results:', result.results);
       } else {
         const err = await response.json();
-        console.error('❌ Workflow execution error:', err.error);
+        console.error('❌ WORKFLOW ERROR:', err.error);
       }
     } catch (error) {
-      console.error('❌ Error executing workflow:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('❌ EXECUTION ERROR:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setGenerating(false);
     }
@@ -294,10 +295,19 @@ export default function LessonDetailPage() {
                       <button
                         onClick={() => handleExecuteWorkflow(workflow)}
                         disabled={generating}
-                        className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-md text-white text-sm disabled:opacity-50"
+                        className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-md text-white text-sm disabled:bg-slate-600 disabled:cursor-not-allowed"
                       >
-                        <Play size={16} />
-                        Chạy
+                        {generating ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            Đang chạy...
+                          </>
+                        ) : (
+                          <>
+                            <Play size={16} />
+                            Chạy
+                          </>
+                        )}
                       </button>
                       <button
                         onClick={() => handleDeleteWorkflow(workflow.id)}
