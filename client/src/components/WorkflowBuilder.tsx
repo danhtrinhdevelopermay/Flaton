@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Play } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface WorkflowStep {
   type: 'word' | 'image' | 'video' | 'powerpoint';
@@ -19,6 +20,7 @@ const STEP_TYPES = [
 ];
 
 export default function WorkflowBuilder({ lessonId, onWorkflowSave }: WorkflowBuilderProps) {
+  const { token } = useAuth();
   const [workflowName, setWorkflowName] = useState('');
   const [steps, setSteps] = useState<WorkflowStep[]>([]);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -52,16 +54,24 @@ export default function WorkflowBuilder({ lessonId, onWorkflowSave }: WorkflowBu
     try {
       const response = await fetch(`/api/lessons/${lessonId}/workflows/save`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({
           name: workflowName,
           steps,
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to save workflow');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save workflow');
+      }
       alert('Quy trình đã được lưu!');
       onWorkflowSave?.();
+      setWorkflowName('');
+      setSteps([]);
     } catch (error: any) {
       alert('Lỗi: ' + error.message);
     }
@@ -77,11 +87,17 @@ export default function WorkflowBuilder({ lessonId, onWorkflowSave }: WorkflowBu
     try {
       const response = await fetch(`/api/lessons/${lessonId}/workflows/execute`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ steps }),
       });
 
-      if (!response.ok) throw new Error('Failed to execute workflow');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to execute workflow');
+      }
       const result = await response.json();
       alert('Quy trình đã được thực thi thành công!');
       console.log('Workflow result:', result);
