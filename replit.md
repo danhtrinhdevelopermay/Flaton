@@ -99,7 +99,12 @@ Uses the official KIE AI API endpoints:
 - `/api/v1/jobs/createTask` - For Grok Imagenia, Seedream, Sora 2
 - `/api/v1/jobs/recordInfo` - Poll Grok, Seedream, Sora 2 task status
 
-## Recent Changes (Dec 24, 2024)
+## Recent Changes (Dec 24, 2025)
+
+### Workflow Builder System (FIXED)
+- **Fixed Database Schema**: lesson_id now uses BIGINT to match lessons.id type
+- Workflows can now be saved and executed successfully
+- All 4 step types fully operational
 
 ### Workflow Builder System (NEW)
 - **Custom Workflow Creation**: Teachers can create automated workflows with up to 4 types of steps:

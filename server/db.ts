@@ -151,7 +151,7 @@ export async function initDatabase() {
     // Create lessons table
     await client.query(`
       CREATE TABLE IF NOT EXISTS lessons (
-        id SERIAL PRIMARY KEY,
+        id BIGINT PRIMARY KEY,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         title VARCHAR(255) NOT NULL,
         subject VARCHAR(100),
@@ -171,7 +171,7 @@ export async function initDatabase() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS workflows (
         id SERIAL PRIMARY KEY,
-        lesson_id INTEGER REFERENCES lessons(id) ON DELETE CASCADE,
+        lesson_id BIGINT REFERENCES lessons(id) ON DELETE CASCADE,
         name VARCHAR(255) NOT NULL,
         description TEXT,
         workflow_json JSONB,
