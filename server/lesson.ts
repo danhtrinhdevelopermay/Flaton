@@ -295,13 +295,17 @@ export async function executeWorkflow(
   ai?: any
 ): Promise<any> {
   console.log('[Workflow] Starting execution for lesson:', lessonId);
+  console.log('[Workflow] Steps received:', JSON.stringify(steps, null, 2));
+  
   const lesson = await getLessonById(lessonId);
+  console.log('[Workflow] Lesson retrieved:', lesson?.id);
   
   if (!lesson) {
     throw new Error('Lesson not found');
   }
 
   const results: Record<string, any> = {};
+  console.log('[Workflow] Steps array length:', steps.length);
   
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];

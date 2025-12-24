@@ -1536,7 +1536,9 @@ app.post('/api/lessons/:id/workflows/execute', authMiddleware, async (req: AuthR
     }
 
     console.log('[Execute Workflow] Starting for lesson:', lessonId);
+    console.log('[Execute Workflow] Steps:', JSON.stringify(steps, null, 2));
     const results = await lessonService.executeWorkflow(lessonId, steps, {}, ai);
+    console.log('[Execute Workflow] Completed, results:', JSON.stringify(results, null, 2));
     
     res.json({ success: true, results });
   } catch (error: any) {
