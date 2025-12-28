@@ -1688,18 +1688,42 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
       }
     }
 
+    // If imageSource is Internet, we can fetch from Pexels
+    let pexelsImages: string[] = [];
+    if (imageSource === 'internet') {
+      try {
+        console.log('[PPTX Gen] Fetching images from Pexels for topic:', prompt);
+        const PEXELS_API_KEY = '5CMiTYU623YlebMZTUMXniZNDoe3rHP1HNwWhMJC2VLXqOtOIws7WZCx';
+        const pexelsResponse = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(prompt)}&per_page=5`, {
+          headers: {
+            'Authorization': PEXELS_API_KEY
+          }
+        });
+        const pexelsData = await pexelsResponse.json();
+        if (pexelsData.photos && pexelsData.photos.length > 0) {
+          pexelsImages = pexelsData.photos.map((p: any) => p.src.large);
+          console.log(`[PPTX Gen] Found ${pexelsImages.length} images from Pexels`);
+        }
+      } catch (err) {
+        console.error('[PPTX Gen] Pexels API failed:', err);
+      }
+    }
+
     const aiPrompt = `Generate Python code using python-pptx library to create a highly visual and professional PowerPoint presentation.
 Topic: ${prompt}
 Style: ${style || 'Professional and clean'}
 Image Source: ${imageSource}
 ${aiGeneratedImages.length > 0 ? `AI Images to use: ${JSON.stringify(aiGeneratedImages)}` : ''}
+${pexelsImages.length > 0 ? `Pexels Images to use: ${JSON.stringify(pexelsImages)}` : ''}
 
 Requirements for the Python code:
 1. Use professional layouts: Each slide should have a distinct layout (title, bullet points with image, image only, etc.)
 2. Visual Richness: 
    ${imageSource === 'ai' && aiGeneratedImages.length > 0 
      ? `Use the provided AI Image URLs sequentially in the slides.` 
-     : `Include at least 3 high-quality images from Unsplash. Use: https://source.unsplash.com/featured/?{keyword} or random professional photo URLs.`}
+     : pexelsImages.length > 0
+       ? `Use the provided Pexels Image URLs sequentially in the slides.`
+       : `Include at least 3 high-quality images from Unsplash. Use: https://source.unsplash.com/featured/?{keyword} or random professional photo URLs.`}
 3. Typography & Styling:
    - Use 'Arial' or 'Calibri' as safe fonts.
    - Set font sizes: Titles (36-44pt), Body (20-24pt).
