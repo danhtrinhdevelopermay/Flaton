@@ -141,15 +141,15 @@ export default function PowerPointGeneratorPage() {
             <ul className="space-y-3 text-sm text-slate-400">
               <li className="flex gap-2">
                 <span className="text-orange-500 font-bold">1.</span>
-                Nhập mô đề hoặc dán nội dung kịch bản bạn muốn chuyển thành slide.
+                Nhập chủ đề hoặc dán nội dung kịch bản bạn muốn chuyển thành slide.
               </li>
               <li className="flex gap-2">
                 <span className="text-orange-500 font-bold">2.</span>
-                Chọn phong cách phù hợp với đối tượng khán giả.
+                AI sẽ tự động tìm kiếm hình ảnh minh họa từ Unsplash và chèn vào slide.
               </li>
               <li className="flex gap-2">
                 <span className="text-orange-500 font-bold">3.</span>
-                Hệ thống sẽ dùng Gemini để biên soạn nội dung và tự động tạo file PowerPoint.
+                Giao diện, phông chữ và bố cục sẽ được tối ưu hóa theo phong cách bạn chọn.
               </li>
             </ul>
           </div>

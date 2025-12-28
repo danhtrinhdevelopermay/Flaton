@@ -1625,18 +1625,35 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
 
     console.log('[PPTX Gen] Generating content for:', prompt, 'with style:', style);
     
-    const aiPrompt = `Generate Python code using python-pptx library to create a professional PowerPoint presentation.
+    const aiPrompt = `Generate Python code using python-pptx library to create a highly visual and professional PowerPoint presentation.
 Topic: ${prompt}
 Style: ${style || 'Professional and clean'}
 
-Requirements:
-1. Title slide with topic and a subtitle
-2. At least 5 content slides with detailed points
-3. Professional formatting
-4. Save to file: /tmp/generated_presentation.pptx
+Requirements for the Python code:
+1. Use professional layouts: Each slide should have a distinct layout (title, bullet points with image, image only, etc.)
+2. Visual Richness: Include at least 3 high-quality images from Unsplash placeholder (https://images.unsplash.com/photo-...) related to the content.
+3. Typography & Styling:
+   - Use 'Arial' or 'Calibri' as safe fonts.
+   - Set font sizes: Titles (36-44pt), Body (20-24pt).
+   - Set background colors or use professional themes.
+4. Content:
+   - At least 6 slides (Title, Overview, 3 Detailed Points, Conclusion).
+   - Each slide should have a clear hierarchy.
+5. Image Handling:
+   - Use urllib.request to download images from Unsplash.
+   - Use BytesIO to handle image data without saving extra files.
+   - Add images using slide.shapes.add_picture().
 
 Return ONLY the Python code, no explanations or markdown formatting.
-Start with: from pptx import Presentation`;
+Start with:
+import urllib.request
+from io import BytesIO
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.enum.text import PP_ALIGN
+from pptx.dml.color import RGBColor
+
+Save final presentation to: /tmp/generated_presentation.pptx`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
@@ -1647,7 +1664,12 @@ Start with: from pptx import Presentation`;
     // Clean up code if Gemini adds markdown
     pythonCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
     
-    console.log('[PPTX Gen] Executing Python code...');
+    // Add necessary safety wrappers if missing
+    if (!pythonCode.includes('import urllib.request')) {
+      pythonCode = 'import urllib.request\nfrom io import BytesIO\n' + pythonCode;
+    }
+    
+    console.log('[PPTX Gen] Executing Python code with visual enhancements...');
     const tempFile = path.join('/tmp', `pptx_${Date.now()}.py`);
     const outputFile = '/tmp/generated_presentation.pptx';
     
