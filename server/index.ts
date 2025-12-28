@@ -1696,18 +1696,24 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
       Conversion ratio: 1 unit in canvas = (10/800) inches or (5.625/450) inches.
       
       Requirements:
-      1. For each slide, create elements based on the "elements" array.
-      2. Elements are objects with: type (string), x (number), y (number), width (number), height (number), content (string), fontSize (number, for text), fontWeight (string, for text).
-      3. If a slide has an "imageUrl" property at the slide level, use it as a background.
-      4. For elements where type is "image", use element.content as the image URL.
-      5. Save the final presentation to: /tmp/export_${lessonId}.pptx
+      1. For each slide, iterate through the "elements" array.
+      2. For each element:
+         - If element['type'] == 'text':
+           Add a text box at (x, y) with specified width and height. Use element['content'] for text.
+         - If element['type'] == 'image':
+           This is CRITICAL: element['content'] contains a URL to an image. 
+           You MUST download this image to a temporary file first using urllib.request.
+           Then add the image to the slide at (x, y) with specified width and height.
+      3. Save the final presentation to: /tmp/export_${lessonId}.pptx
       
-      IMPORTANT:
+      CRITICAL TECHNICAL GUIDELINES:
       - Do NOT use any imports from "pptx.enum.text" (e.g., MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN).
-      - Ensure you check if keys exist in elements before accessing them (e.g., 'content' in element).
-      - Handle image elements by downloading the URL from element['content']. 
-      - If the "requests" library is not available, use "urllib.request" to download images.
-      - Handle potential download errors gracefully (e.g., using a try-except block).
+      - Use 'import urllib.request' and 'import os' to download images.
+      - Example image download: 
+        img_path = "/tmp/img_" + str(hash(url)) + ".jpg"
+        urllib.request.urlretrieve(url, img_path)
+        slide.shapes.add_picture(img_path, left, top, width, height)
+      - Wrap image downloading in a try-except block to prevent the whole script from failing if one image fails.
       
       Return ONLY the Python code.
     `;
