@@ -1645,6 +1645,8 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
       Style: ${style}
       Number of slides: 5-8.
 
+      IMPORTANT: The content of the slides (title and bullets) MUST be in the SAME LANGUAGE as the user's prompt: "${prompt}".
+
       Return ONLY a JSON array of slide objects.
       Each object must have:
       - title: string
