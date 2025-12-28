@@ -1615,6 +1615,106 @@ app.delete('/api/workflows/:id', authMiddleware, async (req: AuthRequest, res: R
 });
 
 // PowerPoint generation endpoint
+app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { prompt, style, imageSource } = req.body;
+    console.log('[PowerPoint] Generating content with Gemini...');
+
+    const geminiPrompt = `
+      Create a professional PowerPoint presentation structure for: "${prompt}".
+      Style: ${style}
+      Number of slides: 5-8.
+
+      Return ONLY a JSON array of slide objects.
+      Each object must have:
+      - title: string
+      - bullets: string[] (3-5 key points)
+      - imagePrompt: string (detailed prompt for Unsplash or AI)
+
+      Format as: [{"title": "...", "bullets": ["...", "..."], "imagePrompt": "..."}]
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: geminiPrompt }] }],
+    });
+
+    const text = response.text || '[]';
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    const slides = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+
+    res.json({ slides });
+  } catch (error: any) {
+    console.error('[PowerPoint] Content generation failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { slides, style } = req.body;
+    const { execSync } = require('child_process');
+    const fs = require('fs');
+    const path = require('path');
+    const lessonId = Date.now();
+
+    console.log('[PowerPoint] Exporting slides to PPTX...');
+
+    const pythonCodePrompt = `
+      Generate Python code using python-pptx library.
+      Create a presentation with these slides: ${JSON.stringify(slides)}
+      Theme style hint: ${style}
+      
+      Requirements:
+      1. First slide is Title Slide
+      2. Following slides use bullet points. For each slide, split the content string by newline character to create separate bullet points.
+      3. Use a clean, professional layout
+      4. Save to: /tmp/export_${lessonId}.pptx
+      
+      Return ONLY the Python code.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: pythonCodePrompt }] }],
+    });
+
+    const pythonCode = response.text || '';
+    const cleanPythonCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
+    
+    const tmpFile = `/tmp/gen_${lessonId}.py`;
+    fs.writeFileSync(tmpFile, cleanPythonCode);
+
+    try {
+      execSync(`python3 ${tmpFile}`, { stdio: 'pipe' });
+    } catch (execErr: any) {
+      console.error('[PowerPoint] Python execution error:', execErr.stderr?.toString());
+      throw new Error(`Python execution failed: ${execErr.message}`);
+    }
+    
+    const outputFile = `/tmp/export_${lessonId}.pptx`;
+    const fileBuffer = fs.readFileSync(outputFile);
+    const base64File = fileBuffer.toString('base64');
+
+    res.json({
+      file: base64File,
+      fileName: `presentation_${lessonId}.pptx`
+    });
+
+    // Cleanup
+    setTimeout(() => {
+      try {
+        fs.unlinkSync(tmpFile);
+        fs.unlinkSync(outputFile);
+      } catch (e) {}
+    }, 5000);
+
+  } catch (error: any) {
+    console.error('[PowerPoint] Export failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { prompt, style, imageSource = 'internet' } = req.body;

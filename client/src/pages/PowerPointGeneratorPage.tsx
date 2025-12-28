@@ -8,15 +8,17 @@ export default function PowerPointGeneratorPage() {
   const [imageSource, setImageSource] = useState('internet');
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [slides, setSlides] = useState<any[]>([]);
   const { token } = useAuth();
 
   const handleGenerate = async () => {
     if (!prompt) return;
     setGenerating(true);
     setResult(null);
+    setSlides([]);
 
     try {
-      const response = await fetch('/api/generate-pptx', {
+      const response = await fetch('/api/generate-pptx-content', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -27,7 +29,8 @@ export default function PowerPointGeneratorPage() {
 
       const data = await response.json();
       if (response.ok) {
-        setResult(data);
+        setSlides(data.slides);
+        setResult({ slides: data.slides });
       } else {
         alert(data.error || 'Lỗi khi tạo slide');
       }
@@ -39,14 +42,45 @@ export default function PowerPointGeneratorPage() {
     }
   };
 
+  const handleSlideChange = (index: number, field: string, value: string) => {
+    const newSlides = [...slides];
+    newSlides[index] = { ...newSlides[index], [field]: value };
+    setSlides(newSlides);
+  };
+
+  const generateFinalPPTX = async () => {
+    setGenerating(true);
+    try {
+      const response = await fetch('/api/export-pptx', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ slides, style, imageSource }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        const link = document.createElement('a');
+        link.href = `data:application/vnd.openxmlformats-officedocument.presentationml.presentation;base64,${data.file}`;
+        link.download = data.fileName || 'presentation.pptx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        alert(data.error || 'Lỗi khi xuất file');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Đã xảy ra lỗi kết nối');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const downloadFile = () => {
-    if (!result?.file) return;
-    const link = document.createElement('a');
-    link.href = `data:application/vnd.openxmlformats-officedocument.presentationml.presentation;base64,${result.file}`;
-    link.download = result.fileName || 'presentation.pptx';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    generateFinalPPTX();
   };
 
   return (
@@ -122,24 +156,58 @@ export default function PowerPointGeneratorPage() {
             </div>
           </div>
 
-          {result && (
-            <div className="glass border-green-500/30 rounded-2xl p-6 flex items-center justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
-                  <Presentation className="w-6 h-6 text-green-400" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg">Hoàn tất!</h3>
-                  <p className="text-slate-400 text-sm">File PowerPoint của bạn đã sẵn sàng</p>
-                </div>
+          {slides.length > 0 && (
+            <div className="space-y-6 mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <Layout className="w-6 h-6 text-orange-500" />
+                Chỉnh sửa Slide
+              </h2>
+              <div className="space-y-4">
+                {slides.map((slide, index) => (
+                  <div key={index} className="glass rounded-2xl p-6 space-y-4 border-slate-700 hover:border-orange-500/50 transition-colors">
+                    <div className="flex items-center justify-between border-b border-slate-700 pb-3 mb-4">
+                      <span className="bg-orange-500/10 text-orange-500 px-3 py-1 rounded-full text-xs font-bold">Slide {index + 1}</span>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">Tiêu đề Slide</label>
+                      <input
+                        type="text"
+                        value={slide.title}
+                        onChange={(e) => handleSlideChange(index, 'title', e.target.value)}
+                        className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500/50 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">Nội dung (Phân cách bằng dấu xuống dòng)</label>
+                      <textarea
+                        value={Array.isArray(slide.bullets) ? slide.bullets.join('\n') : slide.bullets}
+                        onChange={(e) => handleSlideChange(index, 'bullets', e.target.value)}
+                        className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500/50 min-h-[100px] text-sm leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-              <button
-                onClick={downloadFile}
-                className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition-colors shadow-lg"
-              >
-                <Download className="w-5 h-5" />
-                Tải xuống .pptx
-              </button>
+
+              <div className="glass border-green-500/30 rounded-2xl p-6 flex items-center justify-between sticky bottom-4 z-10 shadow-2xl backdrop-blur-xl">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                    <Presentation className="w-6 h-6 text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Xong rồi!</h3>
+                    <p className="text-slate-400 text-sm">Tải bản PowerPoint đã chỉnh sửa</p>
+                  </div>
+                </div>
+                <button
+                  onClick={generateFinalPPTX}
+                  disabled={generating}
+                  className="flex items-center gap-2 px-8 py-4 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 text-white rounded-xl font-bold transition-all shadow-lg hover:scale-105 active:scale-95"
+                >
+                  {generating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                  Xuất & Tải PPTX
+                </button>
+              </div>
             </div>
           )}
         </div>
