@@ -1617,25 +1617,68 @@ app.delete('/api/workflows/:id', authMiddleware, async (req: AuthRequest, res: R
 // PowerPoint generation endpoint
 app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { prompt, style } = req.body;
+    const { prompt, style, imageSource = 'internet' } = req.body;
     
     if (!prompt) {
       return res.status(400).json({ error: 'Prompt is required' });
     }
 
-    console.log('[PPTX Gen] Generating content for:', prompt, 'with style:', style);
+    console.log('[PPTX Gen] Generating content for:', prompt, 'with style:', style, 'Image source:', imageSource);
     
+    // If imageSource is AI, we need to generate images first
+    let aiGeneratedImages: string[] = [];
+    if (imageSource === 'ai') {
+      try {
+        console.log('[PPTX Gen] Generating AI images via Flaton Image V1...');
+        // Request image prompts from Gemini first to make them relevant
+        const imagePromptRequest = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: [{ role: 'user', parts: [{ text: `Based on the PowerPoint topic "${prompt}", suggest 3 short, highly descriptive image prompts for an AI image generator. Return ONLY a JSON array of strings.` }] }],
+        });
+        
+        const promptsText = imagePromptRequest.text || '[]';
+        const prompts = JSON.parse(promptsText.replace(/```json/g, '').replace(/```/g, '').trim());
+        
+        // Use Flaton Image V1 (Nano Banana) logic
+        // We'll call the internal service logic or callKieApi directly
+        for (const imgPrompt of prompts.slice(0, 3)) {
+          const result = await callKieApi('/playground/createTask', {
+            model: 'nano-banana',
+            prompt: imgPrompt,
+          });
+          
+          if (result.data?.taskId) {
+            // Polling for image (simplified for brevity, in production use a more robust polling)
+            let attempts = 0;
+            while (attempts < 10) {
+              await new Promise(r => setTimeout(r, 3000));
+              const status = await checkTaskStatus(result.data.taskId, 'playground');
+              if (status.data?.status === 'success' && status.data?.result) {
+                aiGeneratedImages.push(status.data.result);
+                break;
+              }
+              attempts++;
+            }
+          }
+        }
+        console.log(`[PPTX Gen] Generated ${aiGeneratedImages.length} AI images`);
+      } catch (aiErr) {
+        console.error('[PPTX Gen] AI Image generation failed, falling back to internet:', aiErr);
+      }
+    }
+
     const aiPrompt = `Generate Python code using python-pptx library to create a highly visual and professional PowerPoint presentation.
 Topic: ${prompt}
 Style: ${style || 'Professional and clean'}
+Image Source: ${imageSource}
+${aiGeneratedImages.length > 0 ? `AI Images to use: ${JSON.stringify(aiGeneratedImages)}` : ''}
 
 Requirements for the Python code:
 1. Use professional layouts: Each slide should have a distinct layout (title, bullet points with image, image only, etc.)
-2. Visual Richness: Include at least 3 high-quality images from Unsplash. Use these SPECIFIC formats for random images:
-   - https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&w=800&q=80 (General tech/edu)
-   - https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80 (Office/Professional)
-   - https://images.unsplash.com/photo-1454165833767-02750849220b?auto=format&fit=crop&w=800&q=80 (Strategy/Planning)
-   Or use: https://source.unsplash.com/featured/?{keyword}
+2. Visual Richness: 
+   ${imageSource === 'ai' && aiGeneratedImages.length > 0 
+     ? `Use the provided AI Image URLs sequentially in the slides.` 
+     : `Include at least 3 high-quality images from Unsplash. Use: https://source.unsplash.com/featured/?{keyword} or random professional photo URLs.`}
 3. Typography & Styling:
    - Use 'Arial' or 'Calibri' as safe fonts.
    - Set font sizes: Titles (36-44pt), Body (20-24pt).

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 export default function PowerPointGeneratorPage() {
   const [prompt, setPrompt] = useState('');
   const [style, setStyle] = useState('Professional');
+  const [imageSource, setImageSource] = useState('internet');
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
   const { token } = useAuth();
@@ -21,7 +22,7 @@ export default function PowerPointGeneratorPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ prompt, style }),
+        body: JSON.stringify({ prompt, style, imageSource }),
       });
 
       const data = await response.json();
@@ -88,7 +89,18 @@ export default function PowerPointGeneratorPage() {
                   <option value="Modern Corporate">Doanh nghiệp hiện đại</option>
                 </select>
               </div>
-              <div className="flex items-end">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Nguồn ảnh</label>
+                <select
+                  value={imageSource}
+                  onChange={(e) => setImageSource(e.target.value)}
+                  className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                >
+                  <option value="internet">Ảnh trên Internet (Unsplash)</option>
+                  <option value="ai">Ảnh tạo bởi AI (Flaton Image V1)</option>
+                </select>
+              </div>
+              <div className="flex items-end md:col-span-2">
                 <button
                   onClick={handleGenerate}
                   disabled={generating || !prompt}
