@@ -1699,6 +1699,7 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
       3. For text elements, use element.content, element.fontSize, and element.fontWeight.
       4. Use a professional layout for each slide.
       5. Save to: /tmp/export_${lessonId}.pptx
+      6. IMPORTANT: Do not use "MsoBulletType" in imports, it is not available in some versions. Use standard shapes and text frames.
       
       Return ONLY the Python code.
     `;
