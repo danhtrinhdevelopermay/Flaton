@@ -1697,11 +1697,15 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
       
       Requirements:
       1. For each slide, create elements based on the "elements" array.
-      2. If a slide has an "imageUrl", add it as a background or a large image element.
-      3. For text elements, use element.content, element.fontSize, and element.fontWeight.
-      4. Use a professional layout for each slide.
-      5. Save to: /tmp/export_${lessonId}.pptx
-      6. IMPORTANT: Do not use any imports from "pptx.enum.text" like "MSO_ANCHOR", "MSO_AUTO_SIZE", "MSO_VERTICAL_ALIGNMENT", or "PP_ALIGN". These are missing in the current environment. Just use basic slide creation, text frames, and pictures.
+      2. Elements are objects with: type (string), x (number), y (number), width (number), height (number), content (string), fontSize (number, for text), fontWeight (string, for text).
+      3. If a slide has an "imageUrl" property at the slide level, use it as a background.
+      4. For elements where type is "image", use element.content as the image URL.
+      5. Save the final presentation to: /tmp/export_${lessonId}.pptx
+      
+      IMPORTANT:
+      - Do NOT use any imports from "pptx.enum.text" (e.g., MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN).
+      - Ensure you check if keys exist in elements before accessing them (e.g., 'content' in element).
+      - Handle image elements by downloading the URL from element['content'] or using a placeholder if download fails.
       
       Return ONLY the Python code.
     `;
