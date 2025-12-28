@@ -1705,7 +1705,9 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
       IMPORTANT:
       - Do NOT use any imports from "pptx.enum.text" (e.g., MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN).
       - Ensure you check if keys exist in elements before accessing them (e.g., 'content' in element).
-      - Handle image elements by downloading the URL from element['content'] or using a placeholder if download fails.
+      - Handle image elements by downloading the URL from element['content']. 
+      - If the "requests" library is not available, use "urllib.request" to download images.
+      - Handle potential download errors gracefully (e.g., using a try-except block).
       
       Return ONLY the Python code.
     `;
