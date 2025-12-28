@@ -1689,42 +1689,37 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
     console.log('[PowerPoint] Exporting slides to PPTX with layout and images...');
 
     const pythonCodePrompt = `
-      Generate Python code using python-pptx library to create a STUNNING and DYNAMIC presentation.
+      Generate Python code using python-pptx library to create a STUNNING presentation.
       Slides data: ${JSON.stringify(slides)}
       Style choice: ${style}
       
       Canvas is 800x450. PPTX is 10x5.625 inches. 
       Ratio: x_pptx = x_canvas * (10/800) inches, y_pptx = y_canvas * (5.625/450) inches.
 
-      CRITICAL STYLE DEFINITIONS for "${style}":
-      1. Background: 
-         - Creative: RGBColor(43, 45, 66) (Dark Navy) or RGBColor(29, 53, 87) (Deep Blue).
-         - Professional: RGBColor(248, 249, 250) (Off-white) or RGBColor(233, 236, 239) (Light Gray).
-         - Minimalist: RGBColor(255, 255, 255) (Pure White).
-      2. Text Color:
-         - Creative: Title: RGBColor(255, 209, 102) (Yellow), Body: RGBColor(237, 242, 244) (White).
-         - Professional: Title: RGBColor(30, 60, 88) (Navy), Body: RGBColor(51, 51, 51) (Dark Gray).
-         - Minimalist: Title: RGBColor(0, 0, 0) (Black), Body: RGBColor(73, 80, 87) (Gray).
+      STYLE DEFINITIONS for "${style}":
+      - Creative: BG RGBColor(43, 45, 66), Title RGBColor(255, 209, 102), Body RGBColor(237, 242, 244).
+      - Professional: BG RGBColor(248, 249, 250), Title RGBColor(30, 60, 88), Body RGBColor(51, 51, 51).
+      - Minimalist: BG RGBColor(255, 255, 255), Title RGBColor(0, 0, 0), Body RGBColor(73, 80, 87).
 
       REQUIREMENTS:
       1. For each slide:
-         - MANDATORY: Set the slide background color using slide.background.fill.solid() and fore_color.rgb.
-         - ADD DESIGN ELEMENT: Draw a thin rectangle (shape) at the top or side to act as a design accent (e.g., a header bar).
-         - TITLE: Create a text box for the title. Set font.name to 'Arial' or 'Verdana', font.bold = True, and set the color based on the style.
-         - ELEMENTS: Iterate through "elements". 
-           * If 'text': Create a text box at converted (x, y, w, h). Set font size, name, and color.
-           * If 'image': Download the URL from element['content'] using urllib.request. If successful, add as a picture.
+         - Set background color based on style.
+         - Add a design accent shape (rectangle) at the top.
+         - Iterate through "elements":
+           * If element['type'] == 'text':
+             Create a text box at (element['x'] * ratio_x, element['y'] * ratio_y, element['width'] * ratio_x, element['height'] * ratio_y).
+             Set text, font size, and color based on style.
+           * If element['type'] == 'image':
+             IMPORTANT: The image URL is in element['content'].
+             You MUST download the image from element['content'] to a temporary file using urllib.request.
+             Then add it as a picture at (element['x'] * ratio_x, element['y'] * ratio_y, element['width'] * ratio_x, element['height'] * ratio_y).
       
-      2. DYNAMIC POSITIONING:
-         - Use the x, y, width, height from each element in the JSON. Convert them using the ratio provided.
-
-      CRITICAL TECHNICAL GUIDELINES:
-      - SAVE TO: /tmp/export_${lessonId}.pptx
-      - DO NOT use any imports from 'pptx.enum.text'.
-      - Use: from pptx.dml.color import RGBColor; from pptx.util import Inches, Pt; from pptx.enum.shapes import MSO_SHAPE.
-      - Use: import urllib.request; import os.
-      - Wrap EVERYTHING in a try-except block so it never fails.
-
+      2. CRITICAL TECHNICAL GUIDELINES:
+         - SAVE TO: /tmp/export_${lessonId}.pptx
+         - Use: from pptx.dml.color import RGBColor; from pptx.util import Inches, Pt; from pptx.enum.shapes import MSO_SHAPE.
+         - Use: import urllib.request; import os.
+         - Wrap image download in try-except. If download fails, just skip that image shape.
+      
       Return ONLY the Python code.
     `;
 
