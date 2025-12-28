@@ -1637,10 +1637,22 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
         });
         
         const promptsText = imagePromptRequest.text || '[]';
-        const prompts = JSON.parse(promptsText.replace(/```json/g, '').replace(/```/g, '').trim());
+        // Improved parsing for prompt JSON
+        let prompts: string[] = [];
+        try {
+          const cleanedText = promptsText.replace(/```json/g, '').replace(/```/g, '').trim();
+          prompts = JSON.parse(cleanedText);
+          if (!Array.isArray(prompts)) prompts = [promptsText];
+        } catch (e) {
+          console.log('[PPTX Gen] Fallback parsing for prompts');
+          const matches = promptsText.match(/"([^"]+)"/g);
+          if (matches) prompts = matches.map(m => m.replace(/"/g, ''));
+          else prompts = [prompt];
+        }
         
         // Use Flaton Image V1 (Nano Banana) logic
         for (const imgPrompt of prompts.slice(0, 3)) {
+          console.log(`[PPTX Gen] Creating task for prompt: ${imgPrompt}`);
           const result: any = await callKieApi('/playground/createTask', {
             model: 'nano-banana',
             prompt: imgPrompt,
@@ -1654,7 +1666,10 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
             while (attempts < 15) {
               await new Promise(r => setTimeout(r, 4000));
               const status: any = await checkTaskStatus(taskId, 'playground');
-              if (status.status === 'success' && status.imageUrl) {
+              if (status.status === 'completed' && status.imageUrl) {
+                aiGeneratedImages.push(status.imageUrl);
+                break;
+              } else if (status.status === 'success' && status.imageUrl) {
                 aiGeneratedImages.push(status.imageUrl);
                 break;
               } else if (status.data?.status === 'success' && (status.data?.result || status.data?.imageUrl)) {
@@ -1715,6 +1730,9 @@ Save final presentation to: /tmp/generated_presentation.pptx`;
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts: [{ text: aiPrompt }] }],
+      generationConfig: {
+        temperature: 0.1, // Lower temperature for more consistent code generation
+      }
     });
 
     let pythonCode = response.text || '';
