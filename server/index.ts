@@ -1691,29 +1691,29 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
     const pythonCodePrompt = `
       Generate Python code using python-pptx library.
       Create a presentation with these slides and their exact layouts: ${JSON.stringify(slides)}
+      User requested style: ${style}
       
       Canvas Size is 800x450. PPTX default slide size is 10x5.625 inches.
       Conversion ratio: 1 unit in canvas = (10/800) inches or (5.625/450) inches.
       
       Requirements:
       1. For each slide, iterate through the "elements" array.
-      2. For each element:
+      2. APPLY STYLING BASED ON THE STYLE: "${style}".
+         - For "Creative": Use bold colors like Orange, Blue, or dark backgrounds. Use modern fonts like 'Arial' or 'Verdana'.
+         - For "Professional": Use clean white/light gray backgrounds, dark navy/black text. Use 'Calibri' or 'Arial'.
+         - For "Minimalist": Lots of white space, thin fonts, very simple.
+      3. For each element:
          - If element['type'] == 'text':
-           Add a text box at (x, y) with specified width and height. Use element['content'] for text.
+           Add a text box. Set font size, color (hex), and name based on style.
          - If element['type'] == 'image':
-           This is CRITICAL: element['content'] contains a URL to an image. 
-           You MUST download this image to a temporary file first using urllib.request.
-           Then add the image to the slide at (x, y) with specified width and height.
-      3. Save the final presentation to: /tmp/export_${lessonId}.pptx
+           Download the URL from element['content'] using urllib.request and add it.
+      4. Save the final presentation to: /tmp/export_${lessonId}.pptx
       
       CRITICAL TECHNICAL GUIDELINES:
       - Do NOT use any imports from "pptx.enum.text" (e.g., MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN).
-      - Use 'import urllib.request' and 'import os' to download images.
-      - Example image download: 
-        img_path = "/tmp/img_" + str(hash(url)) + ".jpg"
-        urllib.request.urlretrieve(url, img_path)
-        slide.shapes.add_picture(img_path, left, top, width, height)
-      - Wrap image downloading in a try-except block to prevent the whole script from failing if one image fails.
+      - Use RGBColor from pptx.dml.color for setting colors.
+      - Use Pt from pptx.util for font sizes.
+      - Wrap image downloading in a try-except block.
       
       Return ONLY the Python code.
     `;
