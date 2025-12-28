@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift, Compass, BookOpen } from 'lucide-react'
+import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift, Compass, BookOpen, Presentation } from 'lucide-react'
 import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { PageTransition } from './animations'

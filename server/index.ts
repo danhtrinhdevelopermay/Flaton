@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import os from 'os';
-import path from 'path';
 import { fileURLToPath } from 'url';
 import { initDatabase } from './db';
 import pool from './db';
@@ -13,6 +12,13 @@ import * as cloudinaryUtil from './cloudinaryUtil';
 import jwt from 'jsonwebtoken';
 import * as lessonService from './lesson';
 import { ai } from './replit_integrations/image/client';
+
+import fs from 'fs';
+import path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execPromise = promisify(exec);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1608,13 +1614,6 @@ app.delete('/api/workflows/:id', authMiddleware, async (req: AuthRequest, res: R
   }
 });
 
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import fs from 'fs';
-import path from 'path';
-
-const execPromise = promisify(exec);
-
 // PowerPoint generation endpoint
 app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -1662,8 +1661,7 @@ Start with: from pptx import Presentation`;
         const base64Content = fileContent.toString('base64');
         
         // Cleanup
-        fs.unlinkSync(tempFile);
-        // fs.unlinkSync(outputFile); // Keep it for a bit or handle differently
+        if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
         
         res.json({ 
           success: true, 
