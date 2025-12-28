@@ -1631,18 +1631,26 @@ Style: ${style || 'Professional and clean'}
 
 Requirements for the Python code:
 1. Use professional layouts: Each slide should have a distinct layout (title, bullet points with image, image only, etc.)
-2. Visual Richness: Include at least 3 high-quality images from Unsplash placeholder (https://images.unsplash.com/photo-...) related to the content.
+2. Visual Richness: Include at least 3 high-quality images from Unsplash. Use these SPECIFIC formats for random images:
+   - https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&w=800&q=80 (General tech/edu)
+   - https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80 (Office/Professional)
+   - https://images.unsplash.com/photo-1454165833767-02750849220b?auto=format&fit=crop&w=800&q=80 (Strategy/Planning)
+   Or use: https://source.unsplash.com/featured/?{keyword}
 3. Typography & Styling:
    - Use 'Arial' or 'Calibri' as safe fonts.
    - Set font sizes: Titles (36-44pt), Body (20-24pt).
-   - Set background colors or use professional themes.
 4. Content:
-   - At least 6 slides (Title, Overview, 3 Detailed Points, Conclusion).
-   - Each slide should have a clear hierarchy.
-5. Image Handling:
-   - Use urllib.request to download images from Unsplash.
-   - Use BytesIO to handle image data without saving extra files.
-   - Add images using slide.shapes.add_picture().
+   - At least 6 slides.
+5. Image Handling (CRITICAL):
+   - Use a try-except block when downloading and adding each image. If an image fails, skip it and continue.
+   - Import: import urllib.request, from io import BytesIO
+   - Use:
+     try:
+       with urllib.request.urlopen(img_url) as url:
+         img_data = BytesIO(url.read())
+         slide.shapes.add_picture(img_data, Inches(1), Inches(1), width=Inches(4))
+     except Exception as e:
+       print(f"Failed to add image: {e}")
 
 Return ONLY the Python code, no explanations or markdown formatting.
 Start with:
