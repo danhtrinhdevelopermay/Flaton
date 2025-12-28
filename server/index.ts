@@ -1717,7 +1717,7 @@ ${aiGeneratedImages.length > 0 ? `AI Images to use: ${JSON.stringify(aiGenerated
 ${pexelsImages.length > 0 ? `Pexels Images to use: ${JSON.stringify(pexelsImages)}` : ''}
 
 Requirements for the Python code:
-1. Use professional layouts: Each slide should have a distinct layout (title, bullet points with image, image only, etc.)
+1. Use professional layouts: Only use standard layout indices (0-6) to avoid "index out of range" errors. (0: Title, 1: Title and Content, 2: Section Header, 3: Two Content, 4: Comparison, 5: Title Only, 6: Blank).
 2. Visual Richness: 
    ${imageSource === 'ai' && aiGeneratedImages.length > 0 
      ? `Use the provided AI Image URLs sequentially in the slides.` 
@@ -1732,14 +1732,16 @@ Requirements for the Python code:
    - At least 6 slides.
 5. Image Handling (CRITICAL):
    - Use a try-except block when downloading and adding each image. If an image fails, skip it and continue.
+   - For images from Pexels, set a User-Agent header to avoid 403 Forbidden errors.
    - Import: import urllib.request, from io import BytesIO
    - Use:
      try:
-       with urllib.request.urlopen(img_url) as url:
+       req = urllib.request.Request(img_url, headers={'User-Agent': 'Mozilla/5.0'})
+       with urllib.request.urlopen(req) as url:
          img_data = BytesIO(url.read())
          slide.shapes.add_picture(img_data, Inches(1), Inches(1), width=Inches(4))
      except Exception as e:
-       print(f"Failed to add image: {e}")
+       print(f"Failed to add image from {img_url}: {e}")
 
 Return ONLY the Python code, no explanations or markdown formatting.
 Start with:
