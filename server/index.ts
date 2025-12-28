@@ -1658,17 +1658,19 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
     const path = require('path');
     const lessonId = Date.now();
 
-    console.log('[PowerPoint] Exporting slides to PPTX...');
+    console.log('[PowerPoint] Exporting slides to PPTX with layout...');
 
     const pythonCodePrompt = `
       Generate Python code using python-pptx library.
-      Create a presentation with these slides: ${JSON.stringify(slides)}
-      Theme style hint: ${style}
+      Create a presentation with these slides and their exact layouts: ${JSON.stringify(slides)}
+      
+      Canvas Size is 800x450. PPTX default slide size is 10x5.625 inches.
+      Conversion ratio: 1 unit in canvas = (10/800) inches or (5.625/450) inches.
       
       Requirements:
-      1. First slide is Title Slide
-      2. Following slides use bullet points. For each slide, split the content string by newline character to create separate bullet points.
-      3. Use a clean, professional layout
+      1. For each slide, create elements based on the "elements" array in the slide object.
+      2. For each element, use its x, y, width, height (convert from canvas units to Inches).
+      3. For text elements, use element.content, element.fontSize, and element.fontWeight.
       4. Save to: /tmp/export_${lessonId}.pptx
       
       Return ONLY the Python code.
