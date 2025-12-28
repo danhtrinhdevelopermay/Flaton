@@ -1727,6 +1727,7 @@ Requirements for the Python code:
 3. Typography & Styling:
    - Use 'Arial' or 'Calibri' as safe fonts.
    - Set font sizes: Titles (36-44pt), Body (20-24pt).
+   - Use MSO_ANCHOR.TOP instead of PP_ALIGN.TOP for vertical anchoring of text frames.
 4. Content:
    - At least 6 slides.
 5. Image Handling (CRITICAL):
@@ -1746,7 +1747,7 @@ import urllib.request
 from io import BytesIO
 from pptx import Presentation
 from pptx.util import Inches, Pt
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.dml.color import RGBColor
 
 Save final presentation to: /tmp/generated_presentation.pptx`;
