@@ -1617,7 +1617,7 @@ app.delete('/api/workflows/:id', authMiddleware, async (req: AuthRequest, res: R
 // PowerPoint generation endpoint
 // Pexels API Integration
 async function searchPexelsImage(query: string): Promise<string | null> {
-  const PEXELS_API_KEY = process.env.PEXELS_API_KEY || '563492ad6f9170000100000174092497645d4756852c50769359e9a4'; // Demo key or env
+  const PEXELS_API_KEY = '5CMiTYU623YlebMZTUMXniZNDoe3rHP1HNwWhMJC2VLXqOtOIws7WZCx';
   try {
     const response = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1`, {
       headers: {
