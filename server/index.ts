@@ -1689,32 +1689,37 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
     console.log('[PowerPoint] Exporting slides to PPTX with layout and images...');
 
     const pythonCodePrompt = `
-      Generate Python code using python-pptx library.
-      Create a presentation with these slides and their exact layouts: ${JSON.stringify(slides)}
-      User requested style: ${style}
+      Generate Python code using python-pptx library to create a STUNNING and DYNAMIC presentation.
+      Slides data: ${JSON.stringify(slides)}
+      Style choice: ${style}
       
-      Canvas Size is 800x450. PPTX default slide size is 10x5.625 inches.
-      Conversion ratio: 1 unit in canvas = (10/800) inches or (5.625/450) inches.
+      Canvas is 800x450. PPTX is 10x5.625 inches. 
+      Ratio: x_pptx = x_canvas * (10/800) inches, y_pptx = y_canvas * (5.625/450) inches.
+
+      DESIGN GUIDELINES for Style "${style}":
+      - Creative: Backgrounds should be bold. Use 'shapes.add_shape' to add colorful rectangles or triangles as background accents. Use White or Bright Yellow text on Dark Blue/Purple backgrounds.
+      - Professional: Use clean 'Layout 1' or 'Layout 6'. Add a thin blue/gray header bar shape. Use navy blue text for titles.
+      - Minimalist: Very simple, center everything. Use light gray text for subtitles.
+
+      REQUIREMENTS:
+      1. For each slide:
+         - SET BACKGROUND COLOR: slide.background.fill.solid(); slide.background.fill.fore_color.rgb = RGBColor(r, g, b)
+         - ACCENT SHAPES: Add 1-2 decorative shapes (rectangles/lines) to make the slide look "designed".
+         - ELEMENTS: Iterate through "elements". 
+           * If 'text': Create text_frame. Set 'word_wrap = True'. Set 'font.color.rgb', 'font.size', 'font.name'.
+           * If 'image': Download URL from element['content'] using urllib.request. If successful, add as picture.
       
-      Requirements:
-      1. For each slide, iterate through the "elements" array.
-      2. APPLY STYLING BASED ON THE STYLE: "${style}".
-         - For "Creative": Use bold colors like Orange, Blue, or dark backgrounds. Use modern fonts like 'Arial' or 'Verdana'.
-         - For "Professional": Use clean white/light gray backgrounds, dark navy/black text. Use 'Calibri' or 'Arial'.
-         - For "Minimalist": Lots of white space, thin fonts, very simple.
-      3. For each element:
-         - If element['type'] == 'text':
-           Add a text box. Set font size, color (hex), and name based on style.
-         - If element['type'] == 'image':
-           Download the URL from element['content'] using urllib.request and add it.
-      4. Save the final presentation to: /tmp/export_${lessonId}.pptx
-      
-      CRITICAL TECHNICAL GUIDELINES:
-      - Do NOT use any imports from "pptx.enum.text" (e.g., MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN).
-      - Use RGBColor from pptx.dml.color for setting colors.
-      - Use Pt from pptx.util for font sizes.
-      - Wrap image downloading in a try-except block.
-      
+      2. DYNAMIC LAYOUT:
+         - Do not just put text on the left and image on the right. 
+         - Vary the positions based on the 'elements' coordinates which were set during the visual design phase.
+
+      CRITICAL:
+      - SAVE TO: /tmp/export_${lessonId}.pptx
+      - NO IMPORTS from 'pptx.enum.text'.
+      - Use 'from pptx.dml.color import RGBColor', 'from pptx.util import Inches, Pt', 'from pptx.enum.shapes import MSO_SHAPE'.
+      - Use 'import urllib.request' and 'import os'.
+      - Wrap image download in try-except. If it fails, skip the image.
+
       Return ONLY the Python code.
     `;
 
