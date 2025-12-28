@@ -1733,13 +1733,19 @@ Requirements for the Python code:
 5. Image Handling (CRITICAL):
    - Use a try-except block when downloading and adding each image. If an image fails, skip it and continue.
    - For images from Pexels, set a User-Agent header to avoid 403 Forbidden errors.
+   - Use a timeout for urllib.request.urlopen to prevent hanging. (timeout=10)
+   - Ensure the image exists before adding it (check length of downloaded data).
+   - IMPORTANT: Do NOT use any external files or special characters in filenames.
+   - Use slide.shapes.add_picture(img_data, Inches(0.5), Inches(1.5), width=Inches(5)) for standard placement.
    - Import: import urllib.request, from io import BytesIO
    - Use:
      try:
        req = urllib.request.Request(img_url, headers={'User-Agent': 'Mozilla/5.0'})
-       with urllib.request.urlopen(req) as url:
+       with urllib.request.urlopen(req, timeout=10) as url:
          img_data = BytesIO(url.read())
-         slide.shapes.add_picture(img_data, Inches(1), Inches(1), width=Inches(4))
+         if len(img_data.getvalue()) > 100:
+           # Check if it's a title slide (index 0) to avoid overlapping
+           slide.shapes.add_picture(img_data, Inches(0.5), Inches(1.5), width=Inches(5))
      except Exception as e:
        print(f"Failed to add image from {img_url}: {e}")
 
