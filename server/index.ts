@@ -1652,9 +1652,12 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
             let attempts = 0;
             while (attempts < 10) {
               await new Promise(r => setTimeout(r, 3000));
-              const status = await checkTaskStatus(result.data.taskId, 'playground');
-              if (status.data?.status === 'success' && status.data?.result) {
-                aiGeneratedImages.push(status.data.result);
+              const status: any = await checkTaskStatus(result.data.taskId, 'playground');
+              if (status.status === 'success' && status.imageUrl) {
+                aiGeneratedImages.push(status.imageUrl);
+                break;
+              } else if (status.data?.status === 'success' && (status.data?.result || status.data?.imageUrl)) {
+                aiGeneratedImages.push(status.data.result || status.data.imageUrl);
                 break;
               }
               attempts++;
