@@ -1696,29 +1696,34 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
       Canvas is 800x450. PPTX is 10x5.625 inches. 
       Ratio: x_pptx = x_canvas * (10/800) inches, y_pptx = y_canvas * (5.625/450) inches.
 
-      DESIGN GUIDELINES for Style "${style}":
-      - Creative: Backgrounds should be bold. Use 'shapes.add_shape' to add colorful rectangles or triangles as background accents. Use White or Bright Yellow text on Dark Blue/Purple backgrounds.
-      - Professional: Use clean 'Layout 1' or 'Layout 6'. Add a thin blue/gray header bar shape. Use navy blue text for titles.
-      - Minimalist: Very simple, center everything. Use light gray text for subtitles.
+      CRITICAL STYLE DEFINITIONS for "${style}":
+      1. Background: 
+         - Creative: RGBColor(43, 45, 66) (Dark Navy) or RGBColor(29, 53, 87) (Deep Blue).
+         - Professional: RGBColor(248, 249, 250) (Off-white) or RGBColor(233, 236, 239) (Light Gray).
+         - Minimalist: RGBColor(255, 255, 255) (Pure White).
+      2. Text Color:
+         - Creative: Title: RGBColor(255, 209, 102) (Yellow), Body: RGBColor(237, 242, 244) (White).
+         - Professional: Title: RGBColor(30, 60, 88) (Navy), Body: RGBColor(51, 51, 51) (Dark Gray).
+         - Minimalist: Title: RGBColor(0, 0, 0) (Black), Body: RGBColor(73, 80, 87) (Gray).
 
       REQUIREMENTS:
       1. For each slide:
-         - SET BACKGROUND COLOR: slide.background.fill.solid(); slide.background.fill.fore_color.rgb = RGBColor(r, g, b)
-         - ACCENT SHAPES: Add 1-2 decorative shapes (rectangles/lines) to make the slide look "designed".
+         - MANDATORY: Set the slide background color using slide.background.fill.solid() and fore_color.rgb.
+         - ADD DESIGN ELEMENT: Draw a thin rectangle (shape) at the top or side to act as a design accent (e.g., a header bar).
+         - TITLE: Create a text box for the title. Set font.name to 'Arial' or 'Verdana', font.bold = True, and set the color based on the style.
          - ELEMENTS: Iterate through "elements". 
-           * If 'text': Create text_frame. Set 'word_wrap = True'. Set 'font.color.rgb', 'font.size', 'font.name'.
-           * If 'image': Download URL from element['content'] using urllib.request. If successful, add as picture.
+           * If 'text': Create a text box at converted (x, y, w, h). Set font size, name, and color.
+           * If 'image': Download the URL from element['content'] using urllib.request. If successful, add as a picture.
       
-      2. DYNAMIC LAYOUT:
-         - Do not just put text on the left and image on the right. 
-         - Vary the positions based on the 'elements' coordinates which were set during the visual design phase.
+      2. DYNAMIC POSITIONING:
+         - Use the x, y, width, height from each element in the JSON. Convert them using the ratio provided.
 
-      CRITICAL:
+      CRITICAL TECHNICAL GUIDELINES:
       - SAVE TO: /tmp/export_${lessonId}.pptx
-      - NO IMPORTS from 'pptx.enum.text'.
-      - Use 'from pptx.dml.color import RGBColor', 'from pptx.util import Inches, Pt', 'from pptx.enum.shapes import MSO_SHAPE'.
-      - Use 'import urllib.request' and 'import os'.
-      - Wrap image download in try-except. If it fails, skip the image.
+      - DO NOT use any imports from 'pptx.enum.text'.
+      - Use: from pptx.dml.color import RGBColor; from pptx.util import Inches, Pt; from pptx.enum.shapes import MSO_SHAPE.
+      - Use: import urllib.request; import os.
+      - Wrap EVERYTHING in a try-except block so it never fails.
 
       Return ONLY the Python code.
     `;
