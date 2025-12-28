@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Plus, Loader2 } from 'lucide-react';
+import { BookOpen, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function LessonsListPage() {
   const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { token, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -30,6 +31,35 @@ export default function LessonsListPage() {
       console.error('Error fetching lessons:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteLesson = async (e: React.MouseEvent, lessonId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!confirm('Bạn có chắc chắn muốn xóa bài giảng này? Tất cả nội dung và quy trình liên quan sẽ bị xóa.')) {
+      return;
+    }
+
+    setDeletingId(lessonId);
+    try {
+      const response = await fetch(`/api/lessons/${lessonId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        setLessons(lessons.filter(l => l.id !== lessonId));
+      } else {
+        const data = await response.json();
+        alert(`Lỗi: ${data.error || 'Không thể xóa bài giảng'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting lesson:', error);
+      alert('Đã xảy ra lỗi khi xóa bài giảng');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -85,9 +115,23 @@ export default function LessonsListPage() {
                 <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
                   <BookOpen className="w-6 h-6 text-blue-400" />
                 </div>
-                <span className="px-2 py-1 rounded-full bg-slate-700 text-xs font-medium text-slate-300">
-                  {lesson.status}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 rounded-full bg-slate-700 text-xs font-medium text-slate-300">
+                    {lesson.status}
+                  </span>
+                  <button
+                    onClick={(e) => handleDeleteLesson(e, lesson.id)}
+                    disabled={deletingId === lesson.id}
+                    className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
+                    title="Xóa bài giảng"
+                  >
+                    {deletingId === lesson.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
               <h3 className="font-semibold text-lg mb-2 group-hover:text-blue-400 transition-colors">{lesson.title}</h3>
               <p className="text-sm text-slate-400 mb-3">{lesson.subject}</p>

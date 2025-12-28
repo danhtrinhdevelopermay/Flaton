@@ -1608,6 +1608,27 @@ app.delete('/api/workflows/:id', authMiddleware, async (req: AuthRequest, res: R
   }
 });
 
+// Delete lesson
+app.delete('/api/lessons/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const lessonId = req.params.id;
+    const lesson = await lessonService.getLessonById(lessonId);
+    
+    if (!lesson || lesson.user_id !== req.userId) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    await pool.query('DELETE FROM lesson_content WHERE lesson_id = $1', [lessonId]);
+    await pool.query('DELETE FROM workflows WHERE lesson_id = $1', [lessonId]);
+    await pool.query('DELETE FROM lessons WHERE id = $1', [lessonId]);
+
+    res.json({ success: true, message: 'Lesson deleted successfully' });
+  } catch (error: any) {
+    console.error('Delete lesson error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 let cpuHistory: { time: string; cpu: number }[] = [];
 let latencyHistory: { time: string; latency: number }[] = [];
 const serverStartTime = Date.now();
