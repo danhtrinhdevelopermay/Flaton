@@ -1640,19 +1640,20 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
         const prompts = JSON.parse(promptsText.replace(/```json/g, '').replace(/```/g, '').trim());
         
         // Use Flaton Image V1 (Nano Banana) logic
-        // We'll call the internal service logic or callKieApi directly
         for (const imgPrompt of prompts.slice(0, 3)) {
-          const result = await callKieApi('/playground/createTask', {
+          const result: any = await callKieApi('/playground/createTask', {
             model: 'nano-banana',
             prompt: imgPrompt,
           });
           
-          if (result.data?.taskId) {
-            // Polling for image (simplified for brevity, in production use a more robust polling)
+          if (result && (result.taskId || (result.data && result.data.taskId))) {
+            const taskId = result.taskId || result.data.taskId;
+            console.log(`[PPTX Gen] Task created for image: ${taskId}`);
+            // Polling for image
             let attempts = 0;
-            while (attempts < 10) {
-              await new Promise(r => setTimeout(r, 3000));
-              const status: any = await checkTaskStatus(result.data.taskId, 'playground');
+            while (attempts < 15) {
+              await new Promise(r => setTimeout(r, 4000));
+              const status: any = await checkTaskStatus(taskId, 'playground');
               if (status.status === 'success' && status.imageUrl) {
                 aiGeneratedImages.push(status.imageUrl);
                 break;
@@ -1662,9 +1663,11 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
               }
               attempts++;
             }
+          } else {
+            console.error('[PPTX Gen] Task creation failed or taskId missing:', result);
           }
         }
-        console.log(`[PPTX Gen] Generated ${aiGeneratedImages.length} AI images`);
+        console.log(`[PPTX Gen] Successfully generated ${aiGeneratedImages.length} AI images`);
       } catch (aiErr) {
         console.error('[PPTX Gen] AI Image generation failed, falling back to internet:', aiErr);
       }
