@@ -30,13 +30,29 @@ export default function PowerPointGeneratorPage() {
 
       const data = await response.json();
       if (response.ok) {
-        const layoutSlides = data.slides.map((s: any) => ({
-          ...s,
-          elements: [
+        const layoutSlides = data.slides.map((s: any) => {
+          const slideElements = [
             { id: 'title', type: 'text', content: s.title, x: 50, y: 50, width: 700, height: 60, fontSize: 32, fontWeight: 'bold' },
-            { id: 'content', type: 'text', content: Array.isArray(s.bullets) ? s.bullets.join('\n') : s.bullets, x: 50, y: 150, width: 700, height: 250, fontSize: 18, fontWeight: 'normal' }
-          ]
-        }));
+            { id: 'content', type: 'text', content: Array.isArray(s.bullets) ? s.bullets.join('\n') : s.bullets, x: 50, y: 150, width: 400, height: 250, fontSize: 18, fontWeight: 'normal' }
+          ];
+
+          if (s.imageUrl) {
+            slideElements.push({
+              id: 'image',
+              type: 'image',
+              content: s.imageUrl,
+              x: 480,
+              y: 120,
+              width: 280,
+              height: 280
+            });
+          }
+
+          return {
+            ...s,
+            elements: slideElements
+          };
+        });
         setSlides(layoutSlides);
       } else {
         alert(data.error || 'Lỗi khi tạo slide');
@@ -216,8 +232,15 @@ export default function PowerPointGeneratorPage() {
                           style={{ fontSize: `${el.fontSize}px`, fontWeight: el.fontWeight }}
                         />
                       ) : (
-                        <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                          <ImageIcon className="w-10 h-10 text-slate-300" />
+                        <div className="w-full h-full overflow-hidden rounded-lg shadow-inner bg-slate-100 border border-slate-200">
+                          <img 
+                            src={el.content} 
+                            alt="Slide element" 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as any).src = 'https://placehold.co/600x400?text=Image+Load+Error';
+                            }}
+                          />
                         </div>
                       )}
                     </div>

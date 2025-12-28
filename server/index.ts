@@ -1615,6 +1615,26 @@ app.delete('/api/workflows/:id', authMiddleware, async (req: AuthRequest, res: R
 });
 
 // PowerPoint generation endpoint
+// Pexels API Integration
+async function searchPexelsImage(query: string): Promise<string | null> {
+  const PEXELS_API_KEY = process.env.PEXELS_API_KEY || '563492ad6f9170000100000174092497645d4756852c50769359e9a4'; // Demo key or env
+  try {
+    const response = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1`, {
+      headers: {
+        Authorization: PEXELS_API_KEY
+      }
+    });
+    const data = await response.json();
+    if (data.photos && data.photos.length > 0) {
+      return data.photos[0].src.large2x || data.photos[0].src.original;
+    }
+    return null;
+  } catch (error) {
+    console.error('[Pexels] Search failed:', error);
+    return null;
+  }
+}
+
 app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { prompt, style, imageSource } = req.body;
@@ -1629,9 +1649,9 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
       Each object must have:
       - title: string
       - bullets: string[] (3-5 key points)
-      - imagePrompt: string (detailed prompt for Unsplash or AI)
+      - imageSearchQuery: string (short English keyword for searching a relevant photo on Pexels/Unsplash)
 
-      Format as: [{"title": "...", "bullets": ["...", "..."], "imagePrompt": "..."}]
+      Format as: [{"title": "...", "bullets": ["...", "..."], "imageSearchQuery": "..."}]
     `;
 
     const response = await ai.models.generateContent({
@@ -1641,9 +1661,15 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
 
     const text = response.text || '[]';
     const jsonMatch = text.match(/\[[\s\S]*\]/);
-    const slides = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    const rawSlides = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
 
-    res.json({ slides });
+    // Fetch images from Pexels in parallel
+    const slidesWithImages = await Promise.all(rawSlides.map(async (s: any) => {
+      const imageUrl = await searchPexelsImage(s.imageSearchQuery);
+      return { ...s, imageUrl };
+    }));
+
+    res.json({ slides: slidesWithImages });
   } catch (error: any) {
     console.error('[PowerPoint] Content generation failed:', error);
     res.status(500).json({ error: error.message });
@@ -1658,7 +1684,7 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
     const path = require('path');
     const lessonId = Date.now();
 
-    console.log('[PowerPoint] Exporting slides to PPTX with layout...');
+    console.log('[PowerPoint] Exporting slides to PPTX with layout and images...');
 
     const pythonCodePrompt = `
       Generate Python code using python-pptx library.
@@ -1668,10 +1694,11 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
       Conversion ratio: 1 unit in canvas = (10/800) inches or (5.625/450) inches.
       
       Requirements:
-      1. For each slide, create elements based on the "elements" array in the slide object.
-      2. For each element, use its x, y, width, height (convert from canvas units to Inches).
+      1. For each slide, create elements based on the "elements" array.
+      2. If a slide has an "imageUrl", add it as a background or a large image element.
       3. For text elements, use element.content, element.fontSize, and element.fontWeight.
-      4. Save to: /tmp/export_${lessonId}.pptx
+      4. Use a professional layout for each slide.
+      5. Save to: /tmp/export_${lessonId}.pptx
       
       Return ONLY the Python code.
     `;
