@@ -1608,6 +1608,82 @@ app.delete('/api/workflows/:id', authMiddleware, async (req: AuthRequest, res: R
   }
 });
 
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import fs from 'fs';
+import path from 'path';
+
+const execPromise = promisify(exec);
+
+// PowerPoint generation endpoint
+app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { prompt, style } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
+    }
+
+    console.log('[PPTX Gen] Generating content for:', prompt, 'with style:', style);
+    
+    const aiPrompt = `Generate Python code using python-pptx library to create a professional PowerPoint presentation.
+Topic: ${prompt}
+Style: ${style || 'Professional and clean'}
+
+Requirements:
+1. Title slide with topic and a subtitle
+2. At least 5 content slides with detailed points
+3. Professional formatting
+4. Save to file: /tmp/generated_presentation.pptx
+
+Return ONLY the Python code, no explanations or markdown formatting.
+Start with: from pptx import Presentation`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: aiPrompt }] }],
+    });
+
+    let pythonCode = response.text || '';
+    // Clean up code if Gemini adds markdown
+    pythonCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
+    
+    console.log('[PPTX Gen] Executing Python code...');
+    const tempFile = path.join('/tmp', `pptx_${Date.now()}.py`);
+    const outputFile = '/tmp/generated_presentation.pptx';
+    
+    fs.writeFileSync(tempFile, pythonCode);
+    
+    try {
+      await execPromise(`python3 ${tempFile}`);
+      
+      if (fs.existsSync(outputFile)) {
+        const fileContent = fs.readFileSync(outputFile);
+        const base64Content = fileContent.toString('base64');
+        
+        // Cleanup
+        fs.unlinkSync(tempFile);
+        // fs.unlinkSync(outputFile); // Keep it for a bit or handle differently
+        
+        res.json({ 
+          success: true, 
+          message: 'PowerPoint generated successfully',
+          file: base64Content,
+          fileName: 'presentation.pptx'
+        });
+      } else {
+        throw new Error('Failed to generate PPTX file');
+      }
+    } catch (execError: any) {
+      console.error('[PPTX Gen] Execution error:', execError);
+      res.status(500).json({ error: 'Failed to execute Python code', details: execError.message });
+    }
+  } catch (error: any) {
+    console.error('PPTX generation error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Delete lesson
 app.delete('/api/lessons/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {

@@ -64,6 +64,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/image-generator', label: 'Tạo hình ảnh', icon: Image },
     { path: '/video-generator', label: 'Tạo video', icon: Video },
     { path: '/music-generator', label: 'Tạo nhạc', icon: Music },
+    { path: '/pptx-generator', label: 'Tạo PowerPoint', icon: Presentation },
     { path: '/lessons', label: 'Bài Giảng', icon: BookOpen },
     { path: '/explorer', label: 'Explorer', icon: Compass },
     { path: '/status', label: 'Trạng thái dịch vụ', icon: Activity },
