@@ -7,6 +7,10 @@ export default function PowerPointGeneratorPage() {
   const [prompt, setPrompt] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('Professional');
   const [imageSource, setImageSource] = useState('internet');
+  const [generating, setGenerating] = useState(false);
+  const [slides, setSlides] = useState<any[]>([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const { token } = useAuth();
 
   const templates = [
     {
@@ -64,7 +68,9 @@ export default function PowerPointGeneratorPage() {
               x: 480,
               y: 120,
               width: 280,
-              height: 280
+              height: 280,
+              fontSize: 0,
+              fontWeight: 'normal'
             });
           }
 
@@ -106,7 +112,7 @@ export default function PowerPointGeneratorPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ slides, style, imageSource }),
+        body: JSON.stringify({ slides, style: selectedTemplate, imageSource }),
       });
 
       const data = await response.json();
