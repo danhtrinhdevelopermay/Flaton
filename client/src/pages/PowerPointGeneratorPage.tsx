@@ -33,6 +33,13 @@ export default function PowerPointGeneratorPage() {
       description: 'Sạch sẽ, tinh tế tập trung tối đa vào nội dung.',
       preview: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?q=80&w=2067&auto=format&fit=crop',
       color: '#ffffff'
+    },
+    {
+      id: 'FloralPink',
+      name: 'Hồng Nhẹ Nhàng',
+      description: 'Phong cách sơ yếu lý lịch, tươi mới với họa tiết hoa anh đào.',
+      preview: 'https://png.pngtree.com/thumb_back/fh260/back_pic/04/16/32/495826f01a37c04.jpg',
+      color: '#ffb7c5'
     }
   ];
 

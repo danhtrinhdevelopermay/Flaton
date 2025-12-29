@@ -1700,8 +1700,10 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
       - Creative: BG RGBColor(43, 45, 66), Title RGBColor(255, 209, 102), Body RGBColor(237, 242, 244).
       - Professional: BG RGBColor(248, 249, 250), Title RGBColor(30, 60, 88), Body RGBColor(51, 51, 51).
       - Minimalist: BG RGBColor(255, 255, 255), Title RGBColor(0, 0, 0), Body RGBColor(73, 80, 87).
+      - FloralPink: BG RGBColor(255, 255, 255), Title RGBColor(255, 105, 180), Body RGBColor(100, 100, 100), Border RGBColor(255, 182, 193).
 
       LAYOUT RULES:
+      - If style is "FloralPink", use a thick pink border (shape) around the slide and add small decorative rectangles in corners to mimic floral patterns.
       - If style is "Creative", use bold layouts with overlapping elements.
       - If style is "Professional", use clean grid layouts.
       - If style is "Minimalist", use centered layouts with lots of white space.
