@@ -131,6 +131,14 @@ Uses the official KIE AI API endpoints:
   - Swipe up/down to navigate seamlessly (mobile-friendly)
   - Click buttons or indicators to jump to specific posts
   - Smooth vertical animations between items
+- **Word Generator Page** (NEW):
+  - New page at `/word-generator` for creating Word documents with AI
+  - Two input modes: Direct content input or URL/link input
+  - Uses Gemini 2.5-flash to summarize and structure content
+  - Python-docx backend to generate professional Word files
+  - Features: Auto-structured documents with title, introduction, sections, conclusion
+  - URL support: Automatically fetches and extracts content from web links
+  - Added to navigation menu with FileText icon
 
 ## Previous Changes (Dec 24, 2025)
 
