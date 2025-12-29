@@ -1,22 +1,26 @@
 import { useState, useEffect } from 'react';
-import { Compass, Image, Video, Music, Loader2, Share2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Compass, Music, Loader2, Share2, ChevronUp, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 
-interface ExplorerData {
-  images: any[];
-  videos: any[];
-  music: any[];
+interface ExplorerItem {
+  id: string;
+  type: 'image' | 'video' | 'music';
+  image_url?: string;
+  video_url?: string;
+  audio_url?: string;
+  prompt: string;
+  model: string;
+  title?: string;
+  created_at: string;
 }
 
 export default function ExplorerPage() {
   const { theme } = useTheme();
-  const [data, setData] = useState<ExplorerData | null>(null);
+  const [allItems, setAllItems] = useState<ExplorerItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'images' | 'videos' | 'music'>('images');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragStart, setDragStart] = useState(0);
-  const [isVerticalDrag, setIsVerticalDrag] = useState(false);
 
   useEffect(() => {
     fetchExplore();
@@ -27,7 +31,47 @@ export default function ExplorerPage() {
       const response = await fetch('/api/products/explore');
       if (response.ok) {
         const data = await response.json();
-        setData(data);
+        // Gộp tất cả media vào một mảng duy nhất
+        const mixed: ExplorerItem[] = [];
+        
+        // Thêm images
+        data.images?.forEach((img: any) => {
+          mixed.push({
+            id: `img-${img.id || Math.random()}`,
+            type: 'image',
+            image_url: img.image_url,
+            prompt: img.prompt,
+            model: img.model,
+            created_at: img.created_at
+          });
+        });
+        
+        // Thêm videos
+        data.videos?.forEach((vid: any) => {
+          mixed.push({
+            id: `vid-${vid.id || Math.random()}`,
+            type: 'video',
+            video_url: vid.video_url,
+            prompt: vid.prompt,
+            model: vid.model,
+            created_at: vid.created_at
+          });
+        });
+        
+        // Thêm music
+        data.music?.forEach((mus: any) => {
+          mixed.push({
+            id: `mus-${mus.id || Math.random()}`,
+            type: 'music',
+            audio_url: mus.audio_url,
+            prompt: mus.prompt,
+            model: mus.model,
+            title: mus.title,
+            created_at: mus.created_at
+          });
+        });
+        
+        setAllItems(mixed);
       }
     } catch (error) {
       console.error('Failed to fetch explore data:', error);
@@ -36,7 +80,8 @@ export default function ExplorerPage() {
     }
   };
 
-  const handleShare = (url: string) => {
+  const handleShare = (url: string | undefined) => {
+    if (!url) return;
     if (navigator.share) {
       navigator.share({
         title: 'Sản phẩm được tạo bởi AI',
@@ -49,34 +94,17 @@ export default function ExplorerPage() {
     }
   };
 
-  const getItems = () => {
-    switch (activeTab) {
-      case 'images':
-        return data?.images || [];
-      case 'videos':
-        return data?.videos || [];
-      case 'music':
-        return data?.music || [];
-      default:
-        return [];
-    }
-  };
-
-  const items = getItems();
-  const maxIndex = Math.max(0, items.length - 1);
-
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : Math.max(0, allItems.length - 1)));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
+    setCurrentIndex((prev) => (prev < allItems.length - 1 ? prev + 1 : 0));
   };
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
     setDragStart(clientY);
-    setIsVerticalDrag(true);
   };
 
   const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
@@ -92,12 +120,11 @@ export default function ExplorerPage() {
         handlePrev();
       }
     }
-    setIsVerticalDrag(false);
   };
 
-  const renderItem = (item: any) => {
-    switch (activeTab) {
-      case 'images':
+  const renderItem = (item: ExplorerItem) => {
+    switch (item.type) {
+      case 'image':
         return (
           <div className="w-full h-full flex flex-col">
             <div className="flex-1 flex items-center justify-center overflow-hidden bg-black/20 rounded-xl">
@@ -105,6 +132,11 @@ export default function ExplorerPage() {
             </div>
             <div className="p-6 flex flex-col justify-between">
               <div>
+                <div className={`inline-block px-2 py-1 rounded-full text-xs mb-2 ${
+                  theme === 'dark' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-100 text-indigo-700'
+                }`}>
+                  🖼️ Hình ảnh
+                </div>
                 <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{item.model}</p>
                 <p className={`text-lg font-semibold mb-3 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{item.prompt}</p>
               </div>
@@ -121,7 +153,7 @@ export default function ExplorerPage() {
             </div>
           </div>
         );
-      case 'videos':
+      case 'video':
         return (
           <div className="w-full h-full flex flex-col">
             <div className="flex-1 flex items-center justify-center overflow-hidden rounded-xl bg-black">
@@ -129,6 +161,11 @@ export default function ExplorerPage() {
             </div>
             <div className="p-6 flex flex-col justify-between">
               <div>
+                <div className={`inline-block px-2 py-1 rounded-full text-xs mb-2 ${
+                  theme === 'dark' ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-700'
+                }`}>
+                  🎬 Video
+                </div>
                 <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{item.model}</p>
                 <p className={`text-lg font-semibold mb-3 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{item.prompt}</p>
               </div>
@@ -153,6 +190,11 @@ export default function ExplorerPage() {
             </div>
             <div className="p-6 flex flex-col justify-between">
               <div>
+                <div className={`inline-block px-2 py-1 rounded-full text-xs mb-2 ${
+                  theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
+                }`}>
+                  🎵 Nhạc
+                </div>
                 <h3 className={`text-2xl font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{item.title || 'Untitled'}</h3>
                 <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{item.model}</p>
                 <p className={`text-lg mb-4 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>{item.prompt}</p>
@@ -182,12 +224,6 @@ export default function ExplorerPage() {
     );
   }
 
-  const emptyMessage = {
-    images: 'Chưa có hình ảnh công khai nào',
-    videos: 'Chưa có video công khai nào',
-    music: 'Chưa có nhạc công khai nào'
-  };
-
   return (
     <div className="fade-in">
       {/* Header */}
@@ -201,66 +237,14 @@ export default function ExplorerPage() {
         </div>
       </div>
 
-      {/* Tab Buttons */}
-      <div className="flex gap-2 mb-6">
-        <button
-          onClick={() => {
-            setActiveTab('images');
-            setCurrentIndex(0);
-          }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-            activeTab === 'images'
-              ? 'bg-indigo-500 text-white'
-              : theme === 'dark'
-                ? 'glass hover:bg-slate-700/50'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-          }`}
-        >
-          <Image className="w-5 h-5" />
-          Hình ảnh ({data?.images.length || 0})
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('videos');
-            setCurrentIndex(0);
-          }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-            activeTab === 'videos'
-              ? 'bg-purple-500 text-white'
-              : theme === 'dark'
-                ? 'glass hover:bg-slate-700/50'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-          }`}
-        >
-          <Video className="w-5 h-5" />
-          Video ({data?.videos.length || 0})
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('music');
-            setCurrentIndex(0);
-          }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-            activeTab === 'music'
-              ? 'bg-green-500 text-white'
-              : theme === 'dark'
-                ? 'glass hover:bg-slate-700/50'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-          }`}
-        >
-          <Music className="w-5 h-5" />
-          Nhạc ({data?.music.length || 0})
-        </button>
-      </div>
-
-      {/* TikTok-style Vertical Swipe Viewer */}
-      {items.length === 0 ? (
+      {/* Main Content */}
+      {allItems.length === 0 ? (
         <div className={`rounded-xl p-12 text-center ${
           theme === 'dark'
             ? 'glass'
             : 'bg-slate-100 border border-slate-200'
         }`}>
-          <p className={`text-lg ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{emptyMessage[activeTab]}</p>
+          <p className={`text-lg ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Chưa có sản phẩm công khai nào</p>
         </div>
       ) : (
         <div className={`rounded-xl overflow-hidden transition-colors ${
@@ -285,7 +269,7 @@ export default function ExplorerPage() {
                 transition={{ duration: 0.3 }}
                 className="h-full"
               >
-                {renderItem(items[currentIndex])}
+                {renderItem(allItems[currentIndex])}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -311,10 +295,10 @@ export default function ExplorerPage() {
               {/* Indicators */}
               <div className="flex items-center gap-3">
                 <span className={`text-sm font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                  {currentIndex + 1} / {items.length}
+                  {currentIndex + 1} / {allItems.length}
                 </span>
                 <div className="flex gap-1">
-                  {items.map((_, idx) => (
+                  {allItems.map((_, idx) => (
                     <button
                       key={idx}
                       onClick={() => setCurrentIndex(idx)}
@@ -348,7 +332,7 @@ export default function ExplorerPage() {
             <div className={`text-center text-xs mt-4 ${
               theme === 'dark' ? 'text-slate-500' : 'text-slate-500'
             }`}>
-              👆 Vuốt lên/xuống hoặc nhấn nút để xem tiếp theo
+              👆 Vuốt lên/xuống để xem tiếp theo (tất cả media)
             </div>
           </div>
         </div>

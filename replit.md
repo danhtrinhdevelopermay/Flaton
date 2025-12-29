@@ -125,10 +125,12 @@ Uses the official KIE AI API endpoints:
     - CTA section with theme-aware container styling
 - **Explorer Page Enhancement**: 
   - Converted to TikTok-style vertical swipe viewer
-  - Each item now displays in full container with vertical animations
-  - Swipe up/down to navigate (mobile-friendly gestures)
+  - Merged ALL media types (images, videos, music) into single unified feed
+  - No tabs needed - continuous swiping through all content types
+  - Each item displays full-screen with type badge (🖼️ Hình ảnh, 🎬 Video, 🎵 Nhạc)
+  - Swipe up/down to navigate seamlessly (mobile-friendly)
   - Click buttons or indicators to jump to specific posts
-  - Smooth transitions between items with proper animations
+  - Smooth vertical animations between items
 
 ## Previous Changes (Dec 24, 2025)
 
