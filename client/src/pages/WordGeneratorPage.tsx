@@ -39,14 +39,25 @@ export default function WordGeneratorPage() {
         })
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.downloadUrl) {
-        setDownloadUrl(data.downloadUrl);
-        alert('Tạo file Word thành công!');
-      } else {
-        alert(data.error || 'Lỗi tạo file Word');
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(errorData.error || 'Lỗi tạo file Word');
+        return;
       }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      setDownloadUrl(url);
+      
+      // Auto-download the file
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `document_${Date.now()}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      alert('Tạo file Word thành công!');
     } catch (error) {
       console.error('Error:', error);
       alert('Đã xảy ra lỗi');
