@@ -9,10 +9,10 @@ Usage: Include httpOptions with baseUrl and empty apiVersion when using AI Integ
 
 // This is using Replit's AI Integrations service, which provides Gemini-compatible API access without requiring your own Gemini API key.
 const ai = new GoogleGenAI({
-  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
+  apiKey: '_DUMMY_API_KEY_',
   httpOptions: {
     apiVersion: "",
-    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL,
+    baseUrl: 'http://localhost:1106/modelfarm/gemini',
   },
 });
 
