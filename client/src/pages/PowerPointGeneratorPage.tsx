@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Presentation, Loader2, Download, Wand2, Type, Image as ImageIcon, Move, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { Rnd } from 'react-rnd';
 
 export default function PowerPointGeneratorPage() {
   const [prompt, setPrompt] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('Professional');
   const [imageSource, setImageSource] = useState('internet');
+  const { theme } = useTheme();
   const [generating, setGenerating] = useState(false);
   const [slides, setSlides] = useState<any[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -149,8 +151,8 @@ export default function PowerPointGeneratorPage() {
             <Presentation className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Trình thiết kế Slide AI</h1>
-            <p className="text-slate-400">Thiết kế và chỉnh sửa slide trực quan</p>
+            <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Trình thiết kế Slide AI</h1>
+            <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>Thiết kế và chỉnh sửa slide trực quan</p>
           </div>
         </div>
         
@@ -167,19 +169,23 @@ export default function PowerPointGeneratorPage() {
       </div>
 
       {!slides.length ? (
-        <div className="glass rounded-2xl p-8 max-w-2xl mx-auto space-y-6">
+        <div className={`glass rounded-2xl p-8 max-w-2xl mx-auto space-y-6 ${theme === 'dark' ? '' : 'bg-white shadow-xl border-slate-100'}`}>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Chủ đề bài thuyết trình</label>
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Chủ đề bài thuyết trình</label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Ví dụ: Tương lai của AI trong giáo dục..."
-              className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500/50 min-h-[120px]"
+              className={`w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500/50 min-h-[120px] transition-colors ${
+                theme === 'dark'
+                  ? 'bg-slate-800/50 border-slate-700 text-slate-100 placeholder-slate-400'
+                  : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+              }`}
             />
           </div>
 
           <div className="space-y-4">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Chọn mẫu Slide có sẵn</label>
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Chọn mẫu Slide có sẵn</label>
             <div className="grid grid-cols-3 gap-4">
               {templates.map((t) => (
                 <button
@@ -188,15 +194,17 @@ export default function PowerPointGeneratorPage() {
                   className={`group relative flex flex-col gap-2 p-2 rounded-xl border-2 transition-all ${
                     selectedTemplate === t.id 
                     ? 'border-orange-500 bg-orange-500/10' 
-                    : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                    : theme === 'dark'
+                      ? 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                      : 'border-slate-100 bg-slate-50 hover:border-slate-200'
                   }`}
                 >
                   <div className="aspect-video w-full rounded-lg overflow-hidden bg-slate-900 border border-slate-700">
                     <img src={t.preview} alt={t.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="text-sm font-bold text-slate-100">{t.name}</span>
-                    <span className="text-[10px] text-slate-400 line-clamp-1">{t.description}</span>
+                    <span className={`text-sm font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>{t.name}</span>
+                    <span className={`text-[10px] line-clamp-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{t.description}</span>
                   </div>
                   {selectedTemplate === t.id && (
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">

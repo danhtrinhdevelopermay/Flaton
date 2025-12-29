@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { Image, Loader2, Download, Zap, Check, RefreshCw, LogIn, Rocket, Sparkles, Palette } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 
 const imageTools = [
   { id: 'nano-banana', name: 'Flaton Image V1', credits: 4, provider: 'Nhanh, tiết kiệm', icon: Rocket, color: 'text-blue-400' },
@@ -30,6 +31,7 @@ interface GenerationResult {
 export default function ImageGeneratorPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { theme } = useTheme()
   const { token, isAuthenticated, loading: authLoading } = useAuth()
   const [selectedTool, setSelectedTool] = useState(searchParams.get('tool') || 'nano-banana')
   const [prompt, setPrompt] = useState('')
@@ -224,17 +226,17 @@ export default function ImageGeneratorPage() {
           <Image className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Tạo hình ảnh AI</h1>
-          <p className="text-slate-400">Biến ý tưởng thành hình ảnh với AI</p>
+          <h1 className={`text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Tạo hình ảnh AI</h1>
+          <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>Biến ý tưởng thành hình ảnh với AI</p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="glass rounded-2xl p-6">
-          <h2 className="font-semibold text-lg mb-4">Cấu hình</h2>
+        <div className={`glass rounded-2xl p-6 ${theme === 'dark' ? '' : 'bg-white shadow-xl border-slate-100'}`}>
+          <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Cấu hình</h2>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Chọn mô hình AI</label>
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Chọn mô hình AI</label>
             <div className="grid grid-cols-1 gap-3">
               {imageTools.map((tool) => {
                 const IconComponent = tool.icon;
@@ -245,22 +247,24 @@ export default function ImageGeneratorPage() {
                     className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
                       selectedTool === tool.id
                         ? 'border-indigo-500 bg-indigo-500/10'
-                        : 'border-slate-600 hover:border-slate-500'
+                        : theme === 'dark' 
+                          ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50' 
+                          : 'border-slate-200 hover:border-slate-300 bg-white shadow-sm'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center ${tool.color}`}>
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-100'} ${tool.color}`}>
                         <IconComponent className="w-5 h-5" />
                       </div>
                       <div className="text-left">
-                        <div className="font-medium flex items-center gap-2">
+                        <div className={`font-medium flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                           {tool.name}
                           {selectedTool === tool.id && <Check className="w-4 h-4 text-indigo-400" />}
                         </div>
-                        <div className="text-sm text-slate-400">{tool.provider}</div>
+                        <div className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{tool.provider}</div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-yellow-400">
+                    <div className="flex items-center gap-1 text-yellow-500">
                       <Zap className="w-4 h-4" />
                       <span className="font-semibold">{tool.credits}</span>
                     </div>
@@ -271,7 +275,7 @@ export default function ImageGeneratorPage() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Tỷ lệ khung hình</label>
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Tỷ lệ khung hình</label>
             <div className="grid grid-cols-3 gap-2">
               {aspectRatios.map((ratio) => (
                 <button
@@ -279,8 +283,10 @@ export default function ImageGeneratorPage() {
                   onClick={() => setAspectRatio(ratio.value)}
                   className={`p-3 rounded-xl border text-sm transition-all ${
                     aspectRatio === ratio.value
-                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                      : 'border-slate-600 hover:border-slate-500'
+                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 font-bold'
+                      : theme === 'dark'
+                        ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                        : 'border-slate-200 hover:border-slate-300 bg-white text-slate-600 shadow-sm'
                   }`}
                 >
                   {ratio.label}
@@ -290,12 +296,16 @@ export default function ImageGeneratorPage() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Mô tả hình ảnh (Prompt)</label>
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Mô tả hình ảnh (Prompt)</label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Mô tả chi tiết hình ảnh bạn muốn tạo... Ví dụ: A cute cat sitting on a window, soft afternoon light, watercolor style"
-              className="w-full h-32 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 resize-none"
+              className={`w-full h-32 p-4 border rounded-xl focus:outline-none focus:border-indigo-500 resize-none transition-colors ${
+                theme === 'dark'
+                  ? 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-400'
+                  : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 shadow-sm'
+              }`}
             />
           </div>
 
@@ -318,11 +328,11 @@ export default function ImageGeneratorPage() {
           </button>
         </div>
 
-        <div className="glass rounded-2xl p-6">
-          <h2 className="font-semibold text-lg mb-4">Kết quả</h2>
+        <div className={`glass rounded-2xl p-6 ${theme === 'dark' ? '' : 'bg-white shadow-xl border-slate-100'}`}>
+          <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Kết quả</h2>
 
           {!result && !loading && (
-            <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+            <div className={`flex flex-col items-center justify-center h-64 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-300'}`}>
               <Image className="w-16 h-16 mb-4 opacity-50" />
               <p>Nhập mô tả và nhấn "Tạo hình ảnh"</p>
             </div>

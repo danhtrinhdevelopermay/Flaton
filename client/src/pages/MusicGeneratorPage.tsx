@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { Music, Loader2, Zap, RefreshCw, Mic, Piano, LogIn, Rocket, Sparkles, Crown } from 'lucide-react'
 import MusicPlayer from '../components/MusicPlayer'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 
 const sunoModels = [
   { value: 'V4', label: 'Flaton Music V1', desc: 'Ổn định, nhanh', icon: Rocket, color: 'text-blue-400' },
@@ -21,6 +22,7 @@ interface GenerationResult {
 
 export default function MusicGeneratorPage() {
   const navigate = useNavigate()
+  const { theme } = useTheme()
   const { token, isAuthenticated, loading: authLoading } = useAuth()
   const [prompt, setPrompt] = useState('')
   const [songDescription, setSongDescription] = useState('')
@@ -226,17 +228,17 @@ export default function MusicGeneratorPage() {
           <Music className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Tạo nhạc AI</h1>
-          <p className="text-slate-400">Tạo nhạc với Flaton Music</p>
+          <h1 className={`text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Tạo nhạc AI</h1>
+          <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>Tạo nhạc với Flaton Music</p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="glass rounded-2xl p-6">
-          <h2 className="font-semibold text-lg mb-4">Cấu hình</h2>
+        <div className={`glass rounded-2xl p-6 ${theme === 'dark' ? '' : 'bg-white shadow-xl border-slate-100'}`}>
+          <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Cấu hình</h2>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Chọn phiên bản</label>
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Chọn phiên bản</label>
             <div className="grid grid-cols-3 gap-2">
               {sunoModels.map((m) => {
                 const IconComponent = m.icon;
@@ -246,15 +248,17 @@ export default function MusicGeneratorPage() {
                     onClick={() => setModel(m.value)}
                     className={`p-3 rounded-xl border text-sm transition-all ${
                       model === m.value
-                        ? 'border-green-500 bg-green-500/10 text-green-400'
-                        : 'border-slate-600 hover:border-slate-500'
+                        ? 'border-green-500 bg-green-500/10 text-green-600 font-bold'
+                        : theme === 'dark'
+                          ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                          : 'border-slate-200 hover:border-slate-300 bg-white text-slate-600 shadow-sm'
                     }`}
                   >
-                    <div className={`w-8 h-8 mx-auto mb-2 rounded-lg bg-slate-700/50 flex items-center justify-center ${m.color}`}>
+                    <div className={`w-8 h-8 mx-auto mb-2 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-100'} ${m.color}`}>
                       <IconComponent className="w-4 h-4" />
                     </div>
                     <div className="font-medium">{m.label}</div>
-                    <div className="text-xs text-slate-400 mt-1">{m.desc}</div>
+                    <div className={`text-xs mt-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{m.desc}</div>
                   </button>
                 );
               })}

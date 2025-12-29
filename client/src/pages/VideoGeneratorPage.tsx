@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { Video, Loader2, Zap, Check, RefreshCw, Sparkles, LogIn, Rocket, Crown, Image } from 'lucide-react'
 import VideoPlayer from '../components/VideoPlayer'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 
 const videoTools = [
   { id: 'veo3-fast', name: 'Flaton Video V1', credits: 60, provider: 'Flaton', type: 'text', description: 'Text to Video, 720P', icon: Rocket, color: 'text-blue-400' },
@@ -35,6 +36,7 @@ interface GenerationResult {
 export default function VideoGeneratorPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { theme } = useTheme()
   const { token, isAuthenticated, loading: authLoading } = useAuth()
   const [selectedTool, setSelectedTool] = useState(searchParams.get('tool') || 'veo3-fast')
   const [prompt, setPrompt] = useState('')
@@ -287,17 +289,17 @@ export default function VideoGeneratorPage() {
           <Video className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Tạo video AI</h1>
-          <p className="text-slate-400">Tạo video từ văn bản hoặc hình ảnh</p>
+          <h1 className={`text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Tạo video AI</h1>
+          <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>Tạo video từ văn bản hoặc hình ảnh</p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="glass rounded-2xl p-6">
-          <h2 className="font-semibold text-lg mb-4">Cấu hình</h2>
+        <div className={`glass rounded-2xl p-6 ${theme === 'dark' ? '' : 'bg-white shadow-xl border-slate-100'}`}>
+          <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Cấu hình</h2>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Chọn mô hình AI</label>
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Chọn mô hình AI</label>
             <div className="grid grid-cols-1 gap-3">
               {videoTools.map((tool) => {
                 const IconComponent = tool.icon;
@@ -308,24 +310,26 @@ export default function VideoGeneratorPage() {
                     className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
                       selectedTool === tool.id
                         ? 'border-indigo-500 bg-indigo-500/10'
-                        : 'border-slate-600 hover:border-slate-500'
+                        : theme === 'dark' 
+                          ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50' 
+                          : 'border-slate-200 hover:border-slate-300 bg-white shadow-sm'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center ${tool.color}`}>
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-100'} ${tool.color}`}>
                         <IconComponent className="w-5 h-5" />
                       </div>
                       <div className="text-left">
-                        <div className="font-medium flex items-center gap-2">
+                        <div className={`font-medium flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                           {tool.name}
                           {selectedTool === tool.id && <Check className="w-4 h-4 text-indigo-400" />}
                         </div>
-                        <div className="text-sm text-slate-400">
+                        <div className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                           {tool.description} • {tool.type === 'text' ? 'V.Ima' : 'V.Vid'}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-yellow-400">
+                    <div className="flex items-center gap-1 text-yellow-500">
                       <Zap className="w-4 h-4" />
                       <span className="font-semibold">{tool.credits}</span>
                     </div>
