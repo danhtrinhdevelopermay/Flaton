@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import ImageGeneratorPage from './pages/ImageGeneratorPage'
@@ -18,9 +19,10 @@ import PowerPointGeneratorPage from './pages/PowerPointGeneratorPage'
 
 function App() {
   return (
-    <AuthProvider>
-      <Layout>
-        <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+        <Layout>
+          <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/image-generator" element={<ImageGeneratorPage />} />
           <Route path="/video-generator" element={<VideoGeneratorPage />} />
@@ -38,7 +40,8 @@ function App() {
         </Routes>
       </Layout>
     </AuthProvider>
-  )
+  </ThemeProvider>
+)
 }
 
 export default App

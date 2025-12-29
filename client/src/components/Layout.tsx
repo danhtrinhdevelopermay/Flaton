@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift, Compass, BookOpen, Presentation } from 'lucide-react'
+import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift, Compass, BookOpen, Presentation, Sun, Moon } from 'lucide-react'
 import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { PageTransition } from './animations'
 
 interface LayoutProps {
@@ -11,6 +12,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
   const { user, logout, isAuthenticated } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNavModal, setShowNavModal] = useState(false)
   const [credits, setCredits] = useState<number | null>(null)
@@ -71,8 +73,8 @@ export default function Layout({ children }: LayoutProps) {
   ]
 
   return (
-    <div className="min-h-screen">
-      <header className="glass fixed top-[7px] left-[7px] right-[7px] z-50 rounded-full shadow-2xl shadow-indigo-500/20">
+    <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0f172a] text-white' : 'bg-slate-50 text-slate-900'}`}>
+      <header className={`glass fixed top-[7px] left-[7px] right-[7px] z-50 rounded-full shadow-2xl ${theme === 'dark' ? 'shadow-indigo-500/20' : 'shadow-slate-200'}`}>
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-4">
@@ -83,6 +85,14 @@ export default function Layout({ children }: LayoutProps) {
             </div>
 
             <div className="flex items-center gap-3">
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-full bg-slate-700/50 hover:bg-slate-700 transition-all text-slate-300 hover:text-white"
+                title={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
+              >
+                {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              </button>
+
               {isAuthenticated && credits !== null && (
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-400">
@@ -222,7 +232,9 @@ export default function Layout({ children }: LayoutProps) {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <PageTransition>
-          {children}
+          <div className={`${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+            {children}
+          </div>
         </PageTransition>
       </main>
 
