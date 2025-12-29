@@ -17,7 +17,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { Document, Packer, Paragraph, HeadingLevel, AlignmentType } from 'docx';
+import { Document, Packer, Paragraph, HeadingLevel, AlignmentType, TextRun } from 'docx';
 
 const execPromise = promisify(exec);
 
@@ -2127,14 +2127,25 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
       conclusion: 'Cảm ơn bạn đã đọc'
     };
 
-    // Create Word document using docx library
+    // Create Word document using docx library with Times New Roman font
     const sections = (structuredContent.sections || []).slice(0, 5).map((s: any) => [
       new Paragraph({
-        text: s.heading || 'Mục',
+        children: [
+          new TextRun({
+            text: s.heading || 'Mục',
+            bold: true,
+            font: 'Times New Roman',
+          }),
+        ],
         heading: HeadingLevel.HEADING_2,
       }),
       new Paragraph({
-        text: (s.content || '').substring(0, 1000),
+        children: [
+          new TextRun({
+            text: (s.content || '').substring(0, 1000),
+            font: 'Times New Roman',
+          }),
+        ],
         spacing: { after: 400 },
       }),
     ]).flat();
@@ -2143,26 +2154,54 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
       sections: [{
         children: [
           new Paragraph({
-            text: structuredContent.title || 'Tài Liệu',
+            children: [
+              new TextRun({
+                text: structuredContent.title || 'Tài Liệu',
+                bold: true,
+                font: 'Times New Roman',
+              }),
+            ],
             heading: HeadingLevel.HEADING_1,
             alignment: AlignmentType.CENTER,
             spacing: { after: 600 },
           }),
           new Paragraph({
-            text: 'Giới Thiệu',
+            children: [
+              new TextRun({
+                text: 'Giới Thiệu',
+                bold: true,
+                font: 'Times New Roman',
+              }),
+            ],
             heading: HeadingLevel.HEADING_1,
           }),
           new Paragraph({
-            text: (structuredContent.introduction || '').substring(0, 500),
+            children: [
+              new TextRun({
+                text: (structuredContent.introduction || '').substring(0, 500),
+                font: 'Times New Roman',
+              }),
+            ],
             spacing: { after: 400 },
           }),
           ...sections,
           new Paragraph({
-            text: 'Kết Luận',
+            children: [
+              new TextRun({
+                text: 'Kết Luận',
+                bold: true,
+                font: 'Times New Roman',
+              }),
+            ],
             heading: HeadingLevel.HEADING_1,
           }),
           new Paragraph({
-            text: (structuredContent.conclusion || '').substring(0, 500),
+            children: [
+              new TextRun({
+                text: (structuredContent.conclusion || '').substring(0, 500),
+                font: 'Times New Roman',
+              }),
+            ],
             spacing: { after: 400 },
           }),
         ],
