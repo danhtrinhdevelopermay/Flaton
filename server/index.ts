@@ -17,6 +17,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { Document, Packer, Paragraph, HeadingLevel, AlignmentType } from 'docx';
 
 const execPromise = promisify(exec);
 
@@ -1913,9 +1914,6 @@ Save final presentation to: /tmp/generated_presentation.pptx`;
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts: [{ text: aiPrompt }] }],
-      generationConfig: {
-        temperature: 0.1, // Lower temperature for more consistent code generation
-      }
     });
 
     let pythonCode = response.text || '';
@@ -2129,53 +2127,55 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
       conclusion: 'Cảm ơn bạn đã đọc'
     };
 
-    // Generate Python script to create Word document
-    const pythonScript = `
-import sys
-sys.path.insert(0, '/usr/local/lib/python3.11/dist-packages')
+    // Create Word document using docx library
+    const sections = (structuredContent.sections || []).slice(0, 5).map((s: any) => [
+      new Paragraph({
+        text: s.heading || 'Mục',
+        heading: HeadingLevel.HEADING_2,
+      }),
+      new Paragraph({
+        text: (s.content || '').substring(0, 1000),
+        spacing: { after: 400 },
+      }),
+    ]).flat();
 
-from docx import Document
-from docx.shared import Pt, RGBColor, Inches
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-import json
+    const doc = new Document({
+      sections: [{
+        children: [
+          new Paragraph({
+            text: structuredContent.title || 'Tài Liệu',
+            heading: HeadingLevel.HEADING_1,
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 600 },
+          }),
+          new Paragraph({
+            text: 'Giới Thiệu',
+            heading: HeadingLevel.HEADING_1,
+          }),
+          new Paragraph({
+            text: (structuredContent.introduction || '').substring(0, 500),
+            spacing: { after: 400 },
+          }),
+          ...sections,
+          new Paragraph({
+            text: 'Kết Luận',
+            heading: HeadingLevel.HEADING_1,
+          }),
+          new Paragraph({
+            text: (structuredContent.conclusion || '').substring(0, 500),
+            spacing: { after: 400 },
+          }),
+        ],
+      }],
+    });
 
-doc = Document()
-
-# Add title
-title = doc.add_heading('${(structuredContent.title || 'Tài Liệu').replace(/'/g, "\\'")}', 0)
-title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
-# Add introduction
-intro = doc.add_heading('Giới Thiệu', level=1)
-intro_text = doc.add_paragraph('${(structuredContent.introduction || '').replace(/'/g, "\\'").substring(0, 500)}')
-
-# Add sections
-${(structuredContent.sections || []).slice(0, 5).map((s: any) => `
-doc.add_heading('${(s.heading || '').replace(/'/g, "\\'")}', level=2)
-doc.add_paragraph('${(s.content || '').replace(/'/g, "\\'").substring(0, 1000)}')
-`).join('\n')}
-
-# Add conclusion
-doc.add_heading('Kết Luận', level=1)
-doc.add_paragraph('${(structuredContent.conclusion || '').replace(/'/g, "\\'").substring(0, 500)}')
-
-# Save document
-doc.save('/tmp/generated_document.docx')
-print('/tmp/generated_document.docx')
-`;
-
-    const { stdout } = await execPromise(`python3 -c "${pythonScript.replace(/"/g, '\\"')}"`, { maxBuffer: 10 * 1024 * 1024 });
-    const outputPath = stdout.trim();
-
-    if (!fs.existsSync(outputPath)) {
-      throw new Error('Failed to generate Word document');
-    }
-
-    // Return download URL
-    const downloadFilename = `document_${Date.now()}.docx`;
-    const downloadPath = `/downloads/${downloadFilename}`;
+    const outputPath = `/tmp/generated_document_${Date.now()}.docx`;
+    
+    const buffer = await Packer.toBuffer(doc);
+    fs.writeFileSync(outputPath, buffer);
 
     // Send file as download
+    const downloadFilename = `document_${Date.now()}.docx`;
     res.download(outputPath, downloadFilename, (err) => {
       if (err) console.error('Download error:', err);
       try {
