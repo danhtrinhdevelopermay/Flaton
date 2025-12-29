@@ -234,7 +234,7 @@ export default function MusicGeneratorPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className={`glass rounded-2xl p-6 ${theme === 'dark' ? '' : 'bg-white shadow-xl border-slate-100'}`}>
+        <div className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
           <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Cấu hình</h2>
 
           <div className="mb-6">
@@ -242,19 +242,20 @@ export default function MusicGeneratorPage() {
             <div className="grid grid-cols-3 gap-2">
               {sunoModels.map((m) => {
                 const IconComponent = m.icon;
+                const isSelected = model === m.value;
                 return (
                   <button
                     key={m.value}
                     onClick={() => setModel(m.value)}
                     className={`p-3 rounded-xl border text-sm transition-all ${
-                      model === m.value
+                      isSelected
                         ? 'border-green-500 bg-green-500/10 text-green-600 font-bold'
                         : theme === 'dark'
                           ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
-                          : 'border-slate-200 hover:border-slate-300 bg-white text-slate-600 shadow-sm'
+                          : 'border-slate-300 hover:border-slate-400 bg-slate-100 text-slate-700 shadow-sm'
                     }`}
                   >
-                    <div className={`w-8 h-8 mx-auto mb-2 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-100'} ${m.color}`}>
+                    <div className={`w-8 h-8 mx-auto mb-2 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-white shadow-inner'} ${m.color}`}>
                       <IconComponent className="w-4 h-4" />
                     </div>
                     <div className="font-medium">{m.label}</div>
@@ -270,8 +271,10 @@ export default function MusicGeneratorPage() {
               onClick={() => setCustomMode(false)}
               className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-xl border transition-all ${
                 !customMode
-                  ? 'border-green-500 bg-green-500/10 text-green-400'
-                  : 'border-slate-600 hover:border-slate-500'
+                  ? 'border-green-500 bg-green-500/10 text-green-600 font-bold'
+                  : theme === 'dark'
+                    ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                    : 'border-slate-300 hover:border-slate-400 bg-slate-100 text-slate-700 shadow-sm'
               }`}
             >
               <Zap className="w-5 h-5" />
@@ -281,8 +284,10 @@ export default function MusicGeneratorPage() {
               onClick={() => setCustomMode(true)}
               className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-xl border transition-all ${
                 customMode
-                  ? 'border-green-500 bg-green-500/10 text-green-400'
-                  : 'border-slate-600 hover:border-slate-500'
+                  ? 'border-green-500 bg-green-500/10 text-green-600 font-bold'
+                  : theme === 'dark'
+                    ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                    : 'border-slate-300 hover:border-slate-400 bg-slate-100 text-slate-700 shadow-sm'
               }`}
             >
               <Piano className="w-5 h-5" />
@@ -295,8 +300,10 @@ export default function MusicGeneratorPage() {
               onClick={() => setInstrumental(false)}
               className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${
                 !instrumental
-                  ? 'border-green-500 bg-green-500/10 text-green-400'
-                  : 'border-slate-600 hover:border-slate-500'
+                  ? 'border-green-500 bg-green-500/10 text-green-600 font-bold'
+                  : theme === 'dark'
+                    ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                    : 'border-slate-200 hover:border-slate-300 bg-white text-slate-600 shadow-sm'
               }`}
             >
               <Mic className="w-5 h-5" />
@@ -306,8 +313,10 @@ export default function MusicGeneratorPage() {
               onClick={() => setInstrumental(true)}
               className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${
                 instrumental
-                  ? 'border-green-500 bg-green-500/10 text-green-400'
-                  : 'border-slate-600 hover:border-slate-500'
+                  ? 'border-green-500 bg-green-500/10 text-green-600 font-bold'
+                  : theme === 'dark'
+                    ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                    : 'border-slate-200 hover:border-slate-300 bg-white text-slate-600 shadow-sm'
               }`}
             >
               <Piano className="w-5 h-5" />
@@ -318,38 +327,48 @@ export default function MusicGeneratorPage() {
           {customMode && (
             <>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Tiêu đề bài hát *</label>
+                <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Tiêu đề bài hát *</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Ví dụ: Summer Vibes"
                   maxLength={80}
-                  className="w-full p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-500"
+                  className={`w-full p-4 border rounded-xl focus:outline-none focus:border-green-500 transition-colors ${
+                    theme === 'dark'
+                      ? 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-400'
+                      : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 shadow-sm'
+                  }`}
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Phong cách nhạc *</label>
+                <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Phong cách nhạc *</label>
                 <input
                   type="text"
                   value={style}
                   onChange={(e) => setStyle(e.target.value)}
                   placeholder="Ví dụ: Pop, Upbeat, Electronic"
-                  className="w-full p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-500"
+                  className={`w-full p-4 border rounded-xl focus:outline-none focus:border-green-500 transition-colors ${
+                    theme === 'dark'
+                      ? 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-400'
+                      : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 shadow-sm'
+                  }`}
                 />
               </div>
 
               {!instrumental && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Giọng hát</label>
+                  <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Giọng hát</label>
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       onClick={() => setVocalGender('')}
                       className={`p-3 rounded-xl border text-sm transition-all ${
                         vocalGender === ''
-                          ? 'border-green-500 bg-green-500/10 text-green-400'
-                          : 'border-slate-600 hover:border-slate-500'
+                          ? 'border-green-500 bg-green-500/10 text-green-600 font-bold'
+                          : theme === 'dark'
+                            ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                            : 'border-slate-200 hover:border-slate-300 bg-white text-slate-600 shadow-sm'
                       }`}
                     >
                       Tự động
@@ -358,8 +377,10 @@ export default function MusicGeneratorPage() {
                       onClick={() => setVocalGender('m')}
                       className={`p-3 rounded-xl border text-sm transition-all ${
                         vocalGender === 'm'
-                          ? 'border-green-500 bg-green-500/10 text-green-400'
-                          : 'border-slate-600 hover:border-slate-500'
+                          ? 'border-green-500 bg-green-500/10 text-green-600 font-bold'
+                          : theme === 'dark'
+                            ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                            : 'border-slate-200 hover:border-slate-300 bg-white text-slate-600 shadow-sm'
                       }`}
                     >
                       Nam
@@ -368,8 +389,10 @@ export default function MusicGeneratorPage() {
                       onClick={() => setVocalGender('f')}
                       className={`p-3 rounded-xl border text-sm transition-all ${
                         vocalGender === 'f'
-                          ? 'border-green-500 bg-green-500/10 text-green-400'
-                          : 'border-slate-600 hover:border-slate-500'
+                          ? 'border-green-500 bg-green-500/10 text-green-600 font-bold'
+                          : theme === 'dark'
+                            ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                            : 'border-slate-200 hover:border-slate-300 bg-white text-slate-600 shadow-sm'
                       }`}
                     >
                       Nữ
@@ -381,43 +404,55 @@ export default function MusicGeneratorPage() {
           )}
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Mô tả bài nhạc</label>
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Mô tả bài nhạc</label>
             <textarea
               value={songDescription}
               onChange={(e) => setSongDescription(e.target.value)}
               placeholder="Mô tả chung về bài nhạc... Ví dụ: A happy upbeat song about summer vacation"
               maxLength={500}
-              className="w-full h-24 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-500 resize-none"
+              className={`w-full h-24 p-4 border rounded-xl focus:outline-none focus:border-green-500 resize-none transition-colors ${
+                theme === 'dark'
+                  ? 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-400'
+                  : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 shadow-sm'
+              }`}
             />
-            <p className="text-xs text-slate-400 mt-1">
+            <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
               {songDescription.length}/500 ký tự
             </p>
           </div>
 
           {customMode && !instrumental && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Lời bài hát (Prompt)</label>
+              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Lời bài hát (Prompt)</label>
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Nhập lời bài hát của bạn..."
                 maxLength={5000}
-                className="w-full h-32 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-500 resize-none"
+                className={`w-full h-32 p-4 border rounded-xl focus:outline-none focus:border-green-500 resize-none transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-400'
+                    : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 shadow-sm'
+                }`}
               />
-              <p className="text-xs text-slate-400 mt-1">
+              <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                 {prompt.length}/5000 ký tự
               </p>
             </div>
           )}
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Loại trừ phong cách (tùy chọn)</label>
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Loại trừ phong cách (tùy chọn)</label>
             <input
               type="text"
               value={negativeTags}
               onChange={(e) => setNegativeTags(e.target.value)}
               placeholder="Ví dụ: Heavy Metal, Loud Drums"
-              className="w-full p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-500"
+              className={`w-full p-4 border rounded-xl focus:outline-none focus:border-green-500 transition-colors ${
+                theme === 'dark'
+                  ? 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-400'
+                  : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 shadow-sm'
+              }`}
             />
           </div>
 
@@ -444,11 +479,11 @@ export default function MusicGeneratorPage() {
           </p>
         </div>
 
-        <div className="glass rounded-2xl p-6">
-          <h2 className="font-semibold text-lg mb-4">Kết quả</h2>
+        <div className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
+          <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Kết quả</h2>
 
           {!result && !loading && (
-            <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+            <div className={`flex flex-col items-center justify-center h-64 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-300'}`}>
               <Music className="w-16 h-16 mb-4 opacity-50" />
               <p>Nhập thông tin và nhấn "Tạo nhạc"</p>
             </div>

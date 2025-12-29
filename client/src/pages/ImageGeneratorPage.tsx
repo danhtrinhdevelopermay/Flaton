@@ -232,7 +232,7 @@ export default function ImageGeneratorPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className={`glass rounded-2xl p-6 ${theme === 'dark' ? '' : 'bg-white shadow-xl border-slate-100'}`}>
+        <div className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
           <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Cấu hình</h2>
 
           <div className="mb-6">
@@ -240,26 +240,27 @@ export default function ImageGeneratorPage() {
             <div className="grid grid-cols-1 gap-3">
               {imageTools.map((tool) => {
                 const IconComponent = tool.icon;
+                const isSelected = selectedTool === tool.id;
                 return (
                   <button
                     key={tool.id}
                     onClick={() => setSelectedTool(tool.id)}
                     className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
-                      selectedTool === tool.id
+                      isSelected
                         ? 'border-indigo-500 bg-indigo-500/10'
                         : theme === 'dark' 
                           ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50' 
-                          : 'border-slate-200 hover:border-slate-300 bg-white shadow-sm'
+                          : 'border-slate-300 hover:border-slate-400 bg-slate-100 shadow-sm'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-100'} ${tool.color}`}>
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-white shadow-inner'} ${tool.color}`}>
                         <IconComponent className="w-5 h-5" />
                       </div>
                       <div className="text-left">
                         <div className={`font-medium flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                           {tool.name}
-                          {selectedTool === tool.id && <Check className="w-4 h-4 text-indigo-400" />}
+                          {isSelected && <Check className="w-4 h-4 text-indigo-400" />}
                         </div>
                         <div className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{tool.provider}</div>
                       </div>
@@ -286,7 +287,7 @@ export default function ImageGeneratorPage() {
                       ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 font-bold'
                       : theme === 'dark'
                         ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
-                        : 'border-slate-200 hover:border-slate-300 bg-white text-slate-600 shadow-sm'
+                        : 'border-slate-300 hover:border-slate-400 bg-slate-100 text-slate-700 shadow-sm'
                   }`}
                 >
                   {ratio.label}
@@ -328,7 +329,7 @@ export default function ImageGeneratorPage() {
           </button>
         </div>
 
-        <div className={`glass rounded-2xl p-6 ${theme === 'dark' ? '' : 'bg-white shadow-xl border-slate-100'}`}>
+        <div className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
           <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Kết quả</h2>
 
           {!result && !loading && (

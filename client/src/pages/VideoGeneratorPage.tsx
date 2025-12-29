@@ -295,7 +295,7 @@ export default function VideoGeneratorPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className={`glass rounded-2xl p-6 ${theme === 'dark' ? '' : 'bg-white shadow-xl border-slate-100'}`}>
+        <div className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
           <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Cấu hình</h2>
 
           <div className="mb-6">
@@ -303,26 +303,27 @@ export default function VideoGeneratorPage() {
             <div className="grid grid-cols-1 gap-3">
               {videoTools.map((tool) => {
                 const IconComponent = tool.icon;
+                const isSelected = selectedTool === tool.id;
                 return (
                   <button
                     key={tool.id}
                     onClick={() => setSelectedTool(tool.id)}
                     className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
-                      selectedTool === tool.id
+                      isSelected
                         ? 'border-indigo-500 bg-indigo-500/10'
                         : theme === 'dark' 
                           ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50' 
-                          : 'border-slate-200 hover:border-slate-300 bg-white shadow-sm'
+                          : 'border-slate-300 hover:border-slate-400 bg-slate-100 shadow-sm'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-100'} ${tool.color}`}>
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-white shadow-inner'} ${tool.color}`}>
                         <IconComponent className="w-5 h-5" />
                       </div>
                       <div className="text-left">
                         <div className={`font-medium flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                           {tool.name}
-                          {selectedTool === tool.id && <Check className="w-4 h-4 text-indigo-400" />}
+                          {isSelected && <Check className="w-4 h-4 text-indigo-400" />}
                         </div>
                         <div className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                           {tool.description} • {tool.type === 'text' ? 'V.Ima' : 'V.Vid'}
@@ -340,7 +341,7 @@ export default function VideoGeneratorPage() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Tỷ lệ khung hình</label>
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Tỷ lệ khung hình</label>
             <div className="grid grid-cols-2 gap-2">
               {selectedTool.startsWith('sora2') ? (
                 sora2AspectRatios.map((ratio) => (
@@ -349,8 +350,10 @@ export default function VideoGeneratorPage() {
                     onClick={() => setSora2Ratio(ratio.value)}
                     className={`p-3 rounded-xl border text-sm transition-all ${
                       sora2Ratio === ratio.value
-                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                        : 'border-slate-600 hover:border-slate-500'
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 font-bold'
+                        : theme === 'dark'
+                          ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                          : 'border-slate-300 hover:border-slate-400 bg-slate-100 text-slate-700 shadow-sm'
                     }`}
                   >
                     {ratio.label}
@@ -363,8 +366,10 @@ export default function VideoGeneratorPage() {
                     onClick={() => setAspectRatio(ratio.value)}
                     className={`p-3 rounded-xl border text-sm transition-all ${
                       aspectRatio === ratio.value
-                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                        : 'border-slate-600 hover:border-slate-500'
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 font-bold'
+                        : theme === 'dark'
+                          ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                          : 'border-slate-300 hover:border-slate-400 bg-slate-100 text-slate-700 shadow-sm'
                     }`}
                   >
                     {ratio.label}
@@ -376,7 +381,7 @@ export default function VideoGeneratorPage() {
 
           {selectedTool.startsWith('sora2') && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Thời lượng video</label>
+              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Thời lượng video</label>
               <div className="grid grid-cols-2 gap-2">
                 {sora2Durations.map((d) => (
                   <button
@@ -384,8 +389,10 @@ export default function VideoGeneratorPage() {
                     onClick={() => setDuration(d.value)}
                     className={`p-3 rounded-xl border text-sm transition-all ${
                       duration === d.value
-                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                        : 'border-slate-600 hover:border-slate-500'
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 font-bold'
+                        : theme === 'dark'
+                          ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                          : 'border-slate-200 hover:border-slate-300 bg-white text-slate-600 shadow-sm'
                     }`}
                   >
                     {d.label}
@@ -397,14 +404,16 @@ export default function VideoGeneratorPage() {
 
           {selectedTool === 'sora2' && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Loại tạo video</label>
+              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Loại tạo video</label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setSora2Type('text')}
                   className={`p-3 rounded-xl border text-sm transition-all ${
                     sora2Type === 'text'
-                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                      : 'border-slate-600 hover:border-slate-500'
+                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 font-bold'
+                      : theme === 'dark'
+                        ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                        : 'border-slate-200 hover:border-slate-300 bg-white text-slate-600 shadow-sm'
                   }`}
                 >
                   Văn bản → Video
@@ -413,8 +422,10 @@ export default function VideoGeneratorPage() {
                   onClick={() => setSora2Type('image')}
                   className={`p-3 rounded-xl border text-sm transition-all ${
                     sora2Type === 'image'
-                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                      : 'border-slate-600 hover:border-slate-500'
+                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 font-bold'
+                      : theme === 'dark'
+                        ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
+                        : 'border-slate-200 hover:border-slate-300 bg-white text-slate-600 shadow-sm'
                   }`}
                 >
                   Hình ảnh → Video
@@ -425,25 +436,33 @@ export default function VideoGeneratorPage() {
 
           {selectedTool === 'sora2' && sora2Type === 'image' && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">URL hình ảnh</label>
+              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>URL hình ảnh</label>
               <input
                 type="url"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
                 placeholder="https://example.com/image.jpg"
-                className="w-full p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                className={`w-full p-4 border rounded-xl focus:outline-none focus:border-indigo-500 transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-400'
+                    : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 shadow-sm'
+                }`}
               />
-              <p className="text-xs text-slate-400 mt-2">Hỗ trợ: JPEG, PNG, WebP (tối đa 10MB)</p>
+              <p className={`text-xs mt-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Hỗ trợ: JPEG, PNG, WebP (tối đa 10MB)</p>
             </div>
           )}
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Mô tả video (Prompt)</label>
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Mô tả video (Prompt)</label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Mô tả chi tiết video bạn muốn tạo... Ví dụ: A majestic eagle soaring through mountain peaks at sunset, cinematic lighting"
-              className="w-full h-32 p-4 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 resize-none"
+              className={`w-full h-32 p-4 border rounded-xl focus:outline-none focus:border-indigo-500 resize-none transition-colors ${
+                theme === 'dark'
+                  ? 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-400'
+                  : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 shadow-sm'
+              }`}
             />
           </div>
 
@@ -470,11 +489,11 @@ export default function VideoGeneratorPage() {
           </p>
         </div>
 
-        <div className="glass rounded-2xl p-6">
-          <h2 className="font-semibold text-lg mb-4">Kết quả</h2>
+        <div className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
+          <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Kết quả</h2>
 
           {!result && !loading && (
-            <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+            <div className={`flex flex-col items-center justify-center h-64 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-300'}`}>
               <Video className="w-16 h-16 mb-4 opacity-50" />
               <p>Nhập thông tin và nhấn "Tạo video"</p>
             </div>
