@@ -2064,6 +2064,133 @@ if ('production' === 'production') {
   });
 }
 
+// Word Generator Endpoint
+app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { content, isLink } = req.body;
+    
+    if (!content) {
+      return res.status(400).json({ error: 'Nội dung hoặc link là bắt buộc' });
+    }
+
+    console.log('[Word Gen] Generating document from:', isLink ? 'Link' : 'Content');
+
+    let textContent = content;
+    
+    // If link, fetch content from URL
+    if (isLink) {
+      try {
+        const response = await fetch(content, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        });
+        const html = await response.text();
+        // Simple HTML to text extraction
+        textContent = html
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .substring(0, 3000); // Limit content
+      } catch (err) {
+        console.error('[Word Gen] Failed to fetch URL:', err);
+        return res.status(400).json({ error: 'Không thể tải nội dung từ link' });
+      }
+    }
+
+    // Use Gemini to summarize and structure content
+    const geminiPrompt = `
+      Bạn là một chuyên gia viết tài liệu. Hãy tổng hợp nội dung dưới đây thành một tài liệu Word chuyên nghiệp.
+      Bao gồm: Tiêu đề, giới thiệu, các phần chính, kết luận.
+      
+      Nội dung gốc:
+      "${textContent.substring(0, 2000)}"
+      
+      Trả về một JSON object với các key:
+      - title: string (tiêu đề tài liệu)
+      - introduction: string (đoạn giới thiệu)
+      - sections: Array<{ heading: string, content: string }> (các phần chính, tối đa 5 phần)
+      - conclusion: string (kết luận)
+    `;
+
+    const geminiResponse = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: geminiPrompt }] }],
+    });
+
+    const responseText = geminiResponse.text || '{}';
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    const structuredContent = jsonMatch ? JSON.parse(jsonMatch[0]) : {
+      title: 'Tài Liệu',
+      introduction: 'Tài liệu được tạo bởi AI',
+      sections: [{ heading: 'Nội Dung', content: textContent }],
+      conclusion: 'Cảm ơn bạn đã đọc'
+    };
+
+    // Generate Python script to create Word document
+    const pythonScript = `
+import sys
+sys.path.insert(0, '/usr/local/lib/python3.11/dist-packages')
+
+from docx import Document
+from docx.shared import Pt, RGBColor, Inches
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+import json
+
+doc = Document()
+
+# Add title
+title = doc.add_heading('${(structuredContent.title || 'Tài Liệu').replace(/'/g, "\\'")}', 0)
+title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+# Add introduction
+intro = doc.add_heading('Giới Thiệu', level=1)
+intro_text = doc.add_paragraph('${(structuredContent.introduction || '').replace(/'/g, "\\'").substring(0, 500)}')
+
+# Add sections
+${(structuredContent.sections || []).slice(0, 5).map((s: any) => `
+doc.add_heading('${(s.heading || '').replace(/'/g, "\\'")}', level=2)
+doc.add_paragraph('${(s.content || '').replace(/'/g, "\\'").substring(0, 1000)}')
+`).join('\n')}
+
+# Add conclusion
+doc.add_heading('Kết Luận', level=1)
+doc.add_paragraph('${(structuredContent.conclusion || '').replace(/'/g, "\\'").substring(0, 500)}')
+
+# Save document
+doc.save('/tmp/generated_document.docx')
+print('/tmp/generated_document.docx')
+`;
+
+    const { stdout } = await execPromise(`python3 -c "${pythonScript.replace(/"/g, '\\"')}"`, { maxBuffer: 10 * 1024 * 1024 });
+    const outputPath = stdout.trim();
+
+    if (!fs.existsSync(outputPath)) {
+      throw new Error('Failed to generate Word document');
+    }
+
+    // Return download URL
+    const downloadFilename = `document_${Date.now()}.docx`;
+    const downloadPath = `/downloads/${downloadFilename}`;
+
+    // Send file as download
+    res.download(outputPath, downloadFilename, (err) => {
+      if (err) console.error('Download error:', err);
+      try {
+        fs.unlinkSync(outputPath);
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+    });
+
+  } catch (error: any) {
+    console.error('[Word Gen] Error:', error);
+    res.status(500).json({ error: error.message || 'Lỗi tạo tài liệu Word' });
+  }
+});
+
 function startKeepAlive() {
   const RENDER_URL = 'https://flaton.onrender.com';
   if (!RENDER_URL) {

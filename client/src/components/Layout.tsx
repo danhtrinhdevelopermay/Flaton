@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift, Compass, BookOpen, Presentation, Sun, Moon } from 'lucide-react'
+import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift, Compass, BookOpen, Presentation, FileText, Sun, Moon } from 'lucide-react'
 import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -67,6 +67,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/video-generator', label: 'Tạo video', icon: Video },
     { path: '/music-generator', label: 'Tạo nhạc', icon: Music },
     { path: '/pptx-generator', label: 'Tạo PowerPoint', icon: Presentation },
+    { path: '/word-generator', label: 'Tạo Word', icon: FileText },
     { path: '/explorer', label: 'Explorer', icon: Compass },
     { path: '/status', label: 'Trạng thái dịch vụ', icon: Activity },
   ]

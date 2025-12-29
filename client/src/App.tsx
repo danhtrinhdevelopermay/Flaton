@@ -15,6 +15,7 @@ import ExplorerPage from './pages/ExplorerPage'
 import LessonDetailPage from './pages/LessonDetailPage'
 import LessonsListPage from './pages/LessonsListPage'
 import PowerPointGeneratorPage from './pages/PowerPointGeneratorPage'
+import WordGeneratorPage from './pages/WordGeneratorPage'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           <Route path="/video-generator" element={<VideoGeneratorPage />} />
           <Route path="/music-generator" element={<MusicGeneratorPage />} />
           <Route path="/pptx-generator" element={<PowerPointGeneratorPage />} />
+          <Route path="/word-generator" element={<WordGeneratorPage />} />
           <Route path="/lessons" element={<LessonsListPage />} />
           <Route path="/lessons/:id" element={<LessonDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
