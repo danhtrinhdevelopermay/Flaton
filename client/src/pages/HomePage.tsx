@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Image, Video, Zap, Sparkles, ArrowRight, Star, Music, Play, CheckCircle } from 'lucide-react'
 import { useEffect, useState, useRef } from 'react'
+import { useTheme } from '../contexts/ThemeContext'
 import Hero3D from '../components/Hero3D'
 
 const tools = [
@@ -107,6 +108,7 @@ function FeatureCard({ icon: Icon, title, description, gradient, delay }: {
   gradient: string
   delay: number
 }) {
+  const { theme } = useTheme()
   const [isVisible, setIsVisible] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   
@@ -133,21 +135,24 @@ function FeatureCard({ icon: Icon, title, description, gradient, delay }: {
           : 'opacity-0 translate-y-12 scale-95'
       }`}
     >
-      <div className="glass rounded-2xl p-8 h-full group hover:scale-105 transition-transform duration-300 relative overflow-hidden">
+      <div className={`rounded-2xl p-8 h-full group hover:scale-105 transition-transform duration-300 relative overflow-hidden ${
+        theme === 'dark' ? 'glass' : 'bg-white border border-slate-200'
+      }`}>
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
           <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-10`} />
         </div>
         <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
           <Icon className="w-8 h-8 text-white" />
         </div>
-        <h3 className="text-xl font-bold mb-3">{title}</h3>
-        <p className="text-slate-400 leading-relaxed">{description}</p>
+        <h3 className={`text-xl font-bold mb-3 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
+        <p className={`leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{description}</p>
       </div>
     </div>
   )
 }
 
 function ToolCard({ tool, index, type }: { tool: typeof tools[0], index: number, type: 'image' | 'video' }) {
+  const { theme } = useTheme()
   const [isVisible, setIsVisible] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   
@@ -181,8 +186,12 @@ function ToolCard({ tool, index, type }: { tool: typeof tools[0], index: number,
       }`}
     >
       <Link to={`/${type}-generator?tool=${tool.id}`}>
-        <div className="glass rounded-2xl p-6 group hover:scale-[1.02] transition-all duration-300 relative overflow-hidden h-full">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className={`rounded-2xl p-6 group hover:scale-[1.02] transition-all duration-300 relative overflow-hidden h-full ${
+          theme === 'dark' ? 'glass' : 'bg-white border border-slate-200'
+        }`}>
+          <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+            theme === 'dark' ? 'bg-gradient-to-br from-white/5 to-transparent' : 'bg-gradient-to-br from-slate-100 to-transparent'
+          }`} />
           
           {tool.featured && (
             <div className="absolute top-4 right-4 flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/30">
@@ -196,12 +205,16 @@ function ToolCard({ tool, index, type }: { tool: typeof tools[0], index: number,
               <Icon className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-lg mb-1 group-hover:text-white transition-colors">{tool.name}</h3>
-              <p className="text-sm text-slate-400">{tool.provider}</p>
+              <h3 className={`font-bold text-lg mb-1 transition-colors ${
+                theme === 'dark'
+                  ? 'text-white group-hover:text-white'
+                  : 'text-slate-900 group-hover:text-indigo-600'
+              }`}>{tool.name}</h3>
+              <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{tool.provider}</p>
             </div>
           </div>
           
-          <p className="text-slate-300 mb-6 leading-relaxed">{tool.description}</p>
+          <p className={`mb-6 leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>{tool.description}</p>
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20">
@@ -209,7 +222,11 @@ function ToolCard({ tool, index, type }: { tool: typeof tools[0], index: number,
               <span className="text-yellow-400 font-bold">{tool.credits}</span>
               <span className="text-yellow-400/70 text-sm">credits</span>
             </div>
-            <div className="flex items-center gap-2 text-slate-400 group-hover:text-white transition-colors">
+            <div className={`flex items-center gap-2 transition-colors ${
+              theme === 'dark'
+                ? 'text-slate-400 group-hover:text-white'
+                : 'text-slate-600 group-hover:text-indigo-600'
+            }`}>
               <span className="text-sm font-medium">Dùng ngay</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -269,6 +286,7 @@ function StatsCounter({ value, label, suffix = '' }: { value: number, label: str
 }
 
 export default function HomePage() {
+  const { theme } = useTheme()
   const scrollProgress = useScrollProgress()
   const imageTools = tools.filter(t => t.category === 'image')
   const videoTools = tools.filter(t => t.category === 'video')
@@ -292,12 +310,14 @@ export default function HomePage() {
                 Sáng tạo không giới hạn
               </span>
               <br />
-              <span className="text-white">với AI</span>
+              <span className={theme === 'dark' ? 'text-white' : 'text-slate-900'}>với AI</span>
             </h1>
           </AnimatedText>
           
           <AnimatedText delay={0.4}>
-            <p className="text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed">
+            <p className={`text-xl md:text-2xl max-w-2xl mx-auto mb-12 leading-relaxed ${
+              theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+            }`}>
               Tạo hình ảnh, video và nhạc chất lượng cao chỉ với vài cú nhấp chuột. 
               Đơn giản, nhanh chóng và tiết kiệm.
             </p>
@@ -313,14 +333,22 @@ export default function HomePage() {
                 </button>
               </Link>
               <Link to="/video-generator">
-                <button className="group px-8 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold text-lg hover:bg-white/10 hover:border-white/20 hover:scale-105 transition-all duration-300 flex items-center gap-3 backdrop-blur-sm">
+                <button className={`group px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 flex items-center gap-3 backdrop-blur-sm ${
+                  theme === 'dark'
+                    ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20'
+                    : 'bg-slate-100 border border-slate-200 hover:bg-slate-200 hover:border-slate-300 text-slate-900'
+                }`}>
                   <Video className="w-5 h-5" />
                   Tạo video
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </Link>
               <Link to="/music-generator">
-                <button className="group px-8 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold text-lg hover:bg-white/10 hover:border-white/20 hover:scale-105 transition-all duration-300 flex items-center gap-3 backdrop-blur-sm">
+                <button className={`group px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 flex items-center gap-3 backdrop-blur-sm ${
+                  theme === 'dark'
+                    ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20'
+                    : 'bg-slate-100 border border-slate-200 hover:bg-slate-200 hover:border-slate-300 text-slate-900'
+                }`}>
                   <Music className="w-5 h-5" />
                   Tạo nhạc
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -330,7 +358,9 @@ export default function HomePage() {
           </AnimatedText>
           
           <AnimatedText delay={0.8}>
-            <div className="mt-16 flex items-center justify-center gap-8 text-slate-500">
+            <div className={`mt-16 flex items-center justify-center gap-8 ${
+              theme === 'dark' ? 'text-slate-500' : 'text-slate-600'
+            }`}>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400" />
                 <span>Không cần cài đặt</span>
@@ -348,8 +378,12 @@ export default function HomePage() {
         </div>
         
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 rounded-full border-2 border-slate-500 flex items-start justify-center p-2">
-            <div className="w-1 h-2 bg-slate-400 rounded-full animate-scroll" />
+          <div className={`w-6 h-10 rounded-full border-2 flex items-start justify-center p-2 ${
+            theme === 'dark' ? 'border-slate-500' : 'border-slate-400'
+          }`}>
+            <div className={`w-1 h-2 rounded-full animate-scroll ${
+              theme === 'dark' ? 'bg-slate-400' : 'bg-slate-500'
+            }`} />
           </div>
         </div>
       </section>
@@ -358,10 +392,14 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4">
           <AnimatedText>
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${
+                theme === 'dark' ? 'text-white' : 'text-slate-900'
+              }`}>
                 Tại sao chọn <span className="gradient-text">Flaton</span>?
               </h2>
-              <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+              <p className={`text-lg max-w-2xl mx-auto ${
+                theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+              }`}>
                 Nền tảng AI toàn diện với đầy đủ công cụ sáng tạo nội dung
               </p>
             </div>
@@ -401,8 +439,10 @@ export default function HomePage() {
                 <Image className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold">Tạo hình ảnh AI</h2>
-                <p className="text-slate-400">Chọn mô hình phù hợp với nhu cầu của bạn</p>
+                <h2 className={`text-2xl md:text-3xl font-bold ${
+                  theme === 'dark' ? 'text-white' : 'text-slate-900'
+                }`}>Tạo hình ảnh AI</h2>
+                <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>Chọn mô hình phù hợp với nhu cầu của bạn</p>
               </div>
             </div>
           </AnimatedText>
@@ -423,8 +463,10 @@ export default function HomePage() {
                 <Video className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold">Tạo video AI</h2>
-                <p className="text-slate-400">Video chất lượng cao trong vài phút</p>
+                <h2 className={`text-2xl md:text-3xl font-bold ${
+                  theme === 'dark' ? 'text-white' : 'text-slate-900'
+                }`}>Tạo video AI</h2>
+                <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>Video chất lượng cao trong vài phút</p>
               </div>
             </div>
           </AnimatedText>
@@ -440,13 +482,21 @@ export default function HomePage() {
       <section className="py-24 relative z-10">
         <div className="max-w-4xl mx-auto px-4">
           <AnimatedText>
-            <div className="glass rounded-3xl p-12 text-center relative overflow-hidden">
+            <div className={`rounded-3xl p-12 text-center relative overflow-hidden ${
+              theme === 'dark'
+                ? 'glass'
+                : 'bg-white border border-slate-200'
+            }`}>
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-pink-500/10" />
               <div className="relative z-10">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${
+                  theme === 'dark' ? 'text-white' : 'text-slate-900'
+                }`}>
                   Sẵn sàng sáng tạo?
                 </h2>
-                <p className="text-slate-400 text-lg mb-8 max-w-xl mx-auto">
+                <p className={`text-lg mb-8 max-w-xl mx-auto ${
+                  theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+                }`}>
                   Đăng ký ngay hôm nay và bắt đầu tạo nội dung AI chuyên nghiệp
                 </p>
                 <Link to="/register">
