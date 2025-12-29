@@ -144,7 +144,7 @@ export default function PowerPointGeneratorPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4 fade-in">
+    <div className={`max-w-6xl mx-auto py-8 px-4 fade-in ${theme === 'light' ? 'bg-white/50' : ''}`}>
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg">
@@ -152,7 +152,7 @@ export default function PowerPointGeneratorPage() {
           </div>
           <div>
             <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Trình thiết kế Slide AI</h1>
-            <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>Thiết kế và chỉnh sửa slide trực quan</p>
+            <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>Thiết kế và chỉnh sửa slide trực quan</p>
           </div>
         </div>
         
@@ -169,7 +169,7 @@ export default function PowerPointGeneratorPage() {
       </div>
 
       {!slides.length ? (
-        <div className={`glass rounded-2xl p-8 max-w-2xl mx-auto space-y-6 ${theme === 'dark' ? '' : 'bg-white shadow-xl border-slate-100'}`}>
+        <div className={`rounded-2xl p-8 max-w-2xl mx-auto space-y-6 ${theme === 'dark' ? 'glass' : 'bg-white shadow-lg border border-slate-200'}`}>
           <div>
             <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Chủ đề bài thuyết trình</label>
             <textarea
@@ -179,7 +179,7 @@ export default function PowerPointGeneratorPage() {
               className={`w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500/50 min-h-[120px] transition-colors ${
                 theme === 'dark'
                   ? 'bg-slate-800/50 border-slate-700 text-slate-100 placeholder-slate-400'
-                  : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                  : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-500 focus:bg-white'
               }`}
             />
           </div>
@@ -196,7 +196,7 @@ export default function PowerPointGeneratorPage() {
                     ? 'border-orange-500 bg-orange-500/10' 
                     : theme === 'dark'
                       ? 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
-                      : 'border-slate-100 bg-slate-50 hover:border-slate-200'
+                      : 'border-slate-200 bg-slate-100 hover:border-slate-300'
                   }`}
                 >
                   <div className="aspect-video w-full rounded-lg overflow-hidden bg-slate-900 border border-slate-700">
@@ -230,33 +230,57 @@ export default function PowerPointGeneratorPage() {
       ) : (
         <div className="grid lg:grid-cols-[1fr_300px] gap-8 h-[700px]">
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between px-4 py-2 glass rounded-xl">
+            <div className={`flex items-center justify-between px-4 py-2 rounded-xl ${
+              theme === 'dark' 
+                ? 'glass' 
+                : 'bg-slate-100 border border-slate-200'
+            }`}>
               <div className="flex gap-2">
-                <button className="p-2 hover:bg-slate-700 rounded-lg text-slate-300" title="Thêm Text"><Type className="w-5 h-5" /></button>
-                <button className="p-2 hover:bg-slate-700 rounded-lg text-slate-300" title="Thêm Ảnh"><ImageIcon className="w-5 h-5" /></button>
+                <button className={`p-2 rounded-lg ${
+                  theme === 'dark'
+                    ? 'hover:bg-slate-700 text-slate-300'
+                    : 'hover:bg-slate-200 text-slate-600'
+                }`} title="Thêm Text"><Type className="w-5 h-5" /></button>
+                <button className={`p-2 rounded-lg ${
+                  theme === 'dark'
+                    ? 'hover:bg-slate-700 text-slate-300'
+                    : 'hover:bg-slate-200 text-slate-600'
+                }`} title="Thêm Ảnh"><ImageIcon className="w-5 h-5" /></button>
               </div>
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1))}
                   disabled={currentSlideIndex === 0}
-                  className="p-1 hover:bg-slate-700 rounded disabled:opacity-30"
+                  className={`p-1 rounded disabled:opacity-30 ${
+                    theme === 'dark'
+                      ? 'hover:bg-slate-700'
+                      : 'hover:bg-slate-200'
+                  }`}
                 >
-                  <ChevronLeft className="w-5 h-5 text-white" />
+                  <ChevronLeft className={`w-5 h-5 ${theme === 'dark' ? 'text-white' : 'text-slate-600'}`} />
                 </button>
-                <div className="text-sm font-medium text-slate-400">
+                <div className={`text-sm font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
                   Slide {currentSlideIndex + 1} / {slides.length}
                 </div>
                 <button 
                   onClick={() => setCurrentSlideIndex(Math.min(slides.length - 1, currentSlideIndex + 1))}
                   disabled={currentSlideIndex === slides.length - 1}
-                  className="p-1 hover:bg-slate-700 rounded disabled:opacity-30"
+                  className={`p-1 rounded disabled:opacity-30 ${
+                    theme === 'dark'
+                      ? 'hover:bg-slate-700'
+                      : 'hover:bg-slate-200'
+                  }`}
                 >
-                  <ChevronRight className="w-5 h-5 text-white" />
+                  <ChevronRight className={`w-5 h-5 ${theme === 'dark' ? 'text-white' : 'text-slate-600'}`} />
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 bg-slate-900 border border-slate-700 rounded-2xl relative shadow-2xl overflow-auto p-12 flex justify-center items-start">
+            <div className={`flex-1 border rounded-2xl relative shadow-2xl overflow-auto p-12 flex justify-center items-start ${
+              theme === 'dark'
+                ? 'bg-slate-900 border-slate-700'
+                : 'bg-slate-50 border-slate-300'
+            }`}>
               <div 
                 className="bg-white rounded shadow-2xl relative shrink-0" 
                 style={{ width: '800px', height: '450px' }}
@@ -307,15 +331,23 @@ export default function PowerPointGeneratorPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 overflow-hidden bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
-            <h3 className="font-bold text-slate-300 px-2 uppercase tracking-widest text-xs">Danh sách Slide</h3>
+          <div className={`flex flex-col gap-4 overflow-hidden p-4 rounded-2xl border ${
+            theme === 'dark'
+              ? 'bg-slate-800/50 border-slate-700'
+              : 'bg-slate-100 border-slate-200'
+          }`}>
+            <h3 className={`font-bold px-2 uppercase tracking-widest text-xs ${
+              theme === 'dark' ? 'text-slate-300' : 'text-slate-600'
+            }`}>Danh sách Slide</h3>
             <div className="flex-1 overflow-y-auto pr-2 space-y-4">
               {slides.map((slide, idx) => (
                 <button
                   key={idx}
                   onClick={() => setCurrentSlideIndex(idx)}
-                  className={`w-full aspect-video rounded-xl border-2 transition-all overflow-hidden relative group bg-slate-900 ${
-                    currentSlideIndex === idx ? 'border-orange-500 ring-2 ring-orange-500/20' : 'border-slate-700 hover:border-slate-600'
+                  className={`w-full aspect-video rounded-xl border-2 transition-all overflow-hidden relative group ${
+                    theme === 'dark' ? 'bg-slate-900' : 'bg-white'
+                  } ${
+                    currentSlideIndex === idx ? 'border-orange-500 ring-2 ring-orange-500/20' : theme === 'dark' ? 'border-slate-700 hover:border-slate-600' : 'border-slate-300 hover:border-slate-400'
                   }`}
                 >
                   <div className="absolute inset-0 bg-white origin-top-left scale-[0.25] pointer-events-none opacity-80">
@@ -334,7 +366,11 @@ export default function PowerPointGeneratorPage() {
                        />
                      ))}
                   </div>
-                  <div className="absolute bottom-2 right-2 bg-slate-900/80 text-[10px] px-2 py-0.5 rounded text-white z-10">
+                  <div className={`absolute bottom-2 right-2 text-[10px] px-2 py-0.5 rounded z-10 ${
+                    theme === 'dark'
+                      ? 'bg-slate-900/80 text-white'
+                      : 'bg-slate-800 text-white'
+                  }`}>
                     {idx + 1}
                   </div>
                 </button>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Compass, Image, Video, Music, Loader2, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ExplorerData {
   images: any[];
@@ -9,6 +10,7 @@ interface ExplorerData {
 }
 
 export default function ExplorerPage() {
+  const { theme } = useTheme();
   const [data, setData] = useState<ExplorerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'images' | 'videos' | 'music'>('images');
@@ -198,7 +200,9 @@ export default function ExplorerPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
             activeTab === 'images'
               ? 'bg-indigo-500 text-white'
-              : 'glass hover:bg-slate-700/50'
+              : theme === 'dark'
+                ? 'glass hover:bg-slate-700/50'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
           }`}
         >
           <Image className="w-5 h-5" />
@@ -212,7 +216,9 @@ export default function ExplorerPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
             activeTab === 'videos'
               ? 'bg-purple-500 text-white'
-              : 'glass hover:bg-slate-700/50'
+              : theme === 'dark'
+                ? 'glass hover:bg-slate-700/50'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
           }`}
         >
           <Video className="w-5 h-5" />
@@ -226,7 +232,9 @@ export default function ExplorerPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
             activeTab === 'music'
               ? 'bg-green-500 text-white'
-              : 'glass hover:bg-slate-700/50'
+              : theme === 'dark'
+                ? 'glass hover:bg-slate-700/50'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
           }`}
         >
           <Music className="w-5 h-5" />
@@ -235,11 +243,19 @@ export default function ExplorerPage() {
       </div>
 
       {items.length === 0 ? (
-        <div className="glass rounded-xl p-12 text-center">
-          <p className="text-slate-400 text-lg">{emptyMessage[activeTab]}</p>
+        <div className={`rounded-xl p-12 text-center ${
+          theme === 'dark'
+            ? 'glass'
+            : 'bg-slate-100 border border-slate-200'
+        }`}>
+          <p className={`text-lg ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{emptyMessage[activeTab]}</p>
         </div>
       ) : (
-        <div className="glass rounded-xl p-6 overflow-hidden">
+        <div className={`rounded-xl p-6 overflow-hidden ${
+          theme === 'dark'
+            ? 'glass'
+            : 'bg-white border border-slate-200 shadow-sm'
+        }`}>
           <div
             className="relative touch-pan-y"
             onMouseDown={handleDragStart}
@@ -262,17 +278,23 @@ export default function ExplorerPage() {
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-700">
+          <div className={`flex items-center justify-between mt-6 pt-6 border-t ${
+            theme === 'dark' ? 'border-slate-700' : 'border-slate-200'
+          }`}>
             <button
               onClick={handlePrev}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg glass hover:bg-slate-700/50 transition-colors"
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                theme === 'dark'
+                  ? 'glass hover:bg-slate-700/50'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
             >
               <ChevronLeft className="w-5 h-5" />
               Trước
             </button>
 
             <div className="flex items-center gap-2">
-              <span className="text-slate-400">
+              <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>
                 {currentIndex + 1} / {items.length}
               </span>
               <div className="flex gap-1">
@@ -281,7 +303,7 @@ export default function ExplorerPage() {
                     key={idx}
                     onClick={() => setCurrentIndex(idx)}
                     className={`w-2 h-2 rounded-full transition-all ${
-                      idx === currentIndex ? 'bg-indigo-500 w-6' : 'bg-slate-600'
+                      idx === currentIndex ? 'bg-indigo-500 w-6' : theme === 'dark' ? 'bg-slate-600' : 'bg-slate-300'
                     }`}
                   />
                 ))}
@@ -290,7 +312,11 @@ export default function ExplorerPage() {
 
             <button
               onClick={handleNext}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg glass hover:bg-slate-700/50 transition-colors"
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                theme === 'dark'
+                  ? 'glass hover:bg-slate-700/50'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
             >
               Sau
               <ChevronRight className="w-5 h-5" />
