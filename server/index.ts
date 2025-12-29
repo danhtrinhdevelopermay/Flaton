@@ -1701,24 +1701,23 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
       - Professional: BG RGBColor(248, 249, 250), Title RGBColor(30, 60, 88), Body RGBColor(51, 51, 51).
       - Minimalist: BG RGBColor(255, 255, 255), Title RGBColor(0, 0, 0), Body RGBColor(73, 80, 87).
 
+      LAYOUT RULES:
+      - If style is "Creative", use bold layouts with overlapping elements.
+      - If style is "Professional", use clean grid layouts.
+      - If style is "Minimalist", use centered layouts with lots of white space.
+
       REQUIREMENTS:
       1. For each slide:
          - Set background color based on style.
-         - Add a design accent shape (rectangle) at the top.
-         - Iterate through "elements":
-           * If element['type'] == 'text':
-             Create a text box at (element['x'] * ratio_x, element['y'] * ratio_y, element['width'] * ratio_x, element['height'] * ratio_y).
-             Set text, font size, and color based on style.
-           * If element['type'] == 'image':
-             IMPORTANT: The image URL is in element['content'].
-             You MUST download the image from element['content'] to a temporary file using urllib.request.
-             Then add it as a picture at (element['x'] * ratio_x, element['y'] * ratio_y, element['width'] * ratio_x, element['height'] * ratio_y).
+         - Add a design accent shape (rectangle) at the top or side based on the style.
+         - For elements:
+           * If 'text': Create a text box at converted (x, y, w, h). Set font size, and color.
+           * If 'image': Download the URL from element['content'] using urllib.request. If successful, add as a picture at (x, y, w, h).
       
-      2. CRITICAL TECHNICAL GUIDELINES:
+      2. TECHNICAL:
          - SAVE TO: /tmp/export_${lessonId}.pptx
          - Use: from pptx.dml.color import RGBColor; from pptx.util import Inches, Pt; from pptx.enum.shapes import MSO_SHAPE.
-         - Use: import urllib.request; import os.
-         - Wrap image download in try-except. If download fails, just skip that image shape.
+         - Use: import urllib.request; import os; import time.
       
       Return ONLY the Python code.
     `;

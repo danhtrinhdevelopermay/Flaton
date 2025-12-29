@@ -5,12 +5,32 @@ import { Rnd } from 'react-rnd';
 
 export default function PowerPointGeneratorPage() {
   const [prompt, setPrompt] = useState('');
-  const [style, setStyle] = useState('Professional');
+  const [selectedTemplate, setSelectedTemplate] = useState('Professional');
   const [imageSource, setImageSource] = useState('internet');
-  const [generating, setGenerating] = useState(false);
-  const [slides, setSlides] = useState<any[]>([]);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const { token } = useAuth();
+
+  const templates = [
+    {
+      id: 'Professional',
+      name: 'Chuyên nghiệp',
+      description: 'Lịch lãm, tin cậy với tông màu xanh navy và xám.',
+      preview: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2426&auto=format&fit=crop',
+      color: '#1e3c58'
+    },
+    {
+      id: 'Creative',
+      name: 'Sáng tạo',
+      description: 'Năng động, nổi bật với nền tối và điểm nhấn vàng.',
+      preview: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop',
+      color: '#ffd166'
+    },
+    {
+      id: 'Minimalist',
+      name: 'Tối giản',
+      description: 'Sạch sẽ, tinh tế tập trung tối đa vào nội dung.',
+      preview: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?q=80&w=2067&auto=format&fit=crop',
+      color: '#ffffff'
+    }
+  ];
 
   const handleGenerate = async () => {
     if (!prompt) return;
@@ -25,7 +45,7 @@ export default function PowerPointGeneratorPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ prompt, style, imageSource }),
+        body: JSON.stringify({ prompt, style: selectedTemplate, imageSource }),
       });
 
       const data = await response.json();
@@ -145,29 +165,45 @@ export default function PowerPointGeneratorPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Phong cách</label>
-              <select
-                value={style}
-                onChange={(e) => setStyle(e.target.value)}
-                className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-              >
-                <option value="Professional">Chuyên nghiệp</option>
-                <option value="Creative">Sáng tạo</option>
-                <option value="Minimalist">Tối giản</option>
-              </select>
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-slate-300 mb-2">Chọn mẫu Slide có sẵn</label>
+            <div className="grid grid-cols-3 gap-4">
+              {templates.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setSelectedTemplate(t.id)}
+                  className={`group relative flex flex-col gap-2 p-2 rounded-xl border-2 transition-all ${
+                    selectedTemplate === t.id 
+                    ? 'border-orange-500 bg-orange-500/10' 
+                    : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                  }`}
+                >
+                  <div className="aspect-video w-full rounded-lg overflow-hidden bg-slate-900 border border-slate-700">
+                    <img src={t.preview} alt={t.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-sm font-bold text-slate-100">{t.name}</span>
+                    <span className="text-[10px] text-slate-400 line-clamp-1">{t.description}</span>
+                  </div>
+                  {selectedTemplate === t.id && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                      <Wand2 className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </button>
+              ))}
             </div>
-            <div className="flex items-end">
-              <button
-                onClick={handleGenerate}
-                disabled={generating || !prompt}
-                className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 disabled:from-slate-700 disabled:to-slate-800 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
-              >
-                {generating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
-                Thiết kế Slide
-              </button>
-            </div>
+          </div>
+
+          <div className="flex items-center justify-center pt-4">
+            <button
+              onClick={handleGenerate}
+              disabled={generating || !prompt}
+              className="w-full max-w-xs bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 disabled:from-slate-700 disabled:to-slate-800 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3 transform hover:scale-105 active:scale-95"
+            >
+              {generating ? <Loader2 className="w-6 h-6 animate-spin" /> : <Wand2 className="w-6 h-6" />}
+              Bắt đầu thiết kế ngay
+            </button>
           </div>
         </div>
       ) : (
