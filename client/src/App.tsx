@@ -12,7 +12,6 @@ import HistoryPage from './pages/HistoryPage'
 import StatusPage from './pages/StatusPage'
 import AdminPage from './pages/AdminPage'
 import ExplorerPage from './pages/ExplorerPage'
-import LessonBuilderPage from './pages/LessonBuilderPage'
 import LessonDetailPage from './pages/LessonDetailPage'
 import LessonsListPage from './pages/LessonsListPage'
 import PowerPointGeneratorPage from './pages/PowerPointGeneratorPage'
@@ -28,7 +27,6 @@ function App() {
           <Route path="/video-generator" element={<VideoGeneratorPage />} />
           <Route path="/music-generator" element={<MusicGeneratorPage />} />
           <Route path="/pptx-generator" element={<PowerPointGeneratorPage />} />
-          <Route path="/lesson-builder" element={<LessonBuilderPage />} />
           <Route path="/lessons" element={<LessonsListPage />} />
           <Route path="/lessons/:id" element={<LessonDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
