@@ -101,10 +101,20 @@ Uses the official KIE AI API endpoints:
 
 ## Recent Changes (Dec 29, 2025)
 
-### UI Improvements
-- **Theme Consistency**: Fixed light/dark theme styling in ExplorerPage and PowerPointGeneratorPage for consistent UI
+### UI Improvements & Theme Consistency
+- **Navbar Styling**: Fixed header navbar to support light/dark theme properly:
+  - Light mode: White background with backdrop blur and slate border
+  - Dark mode: Glass morphism with indigo shadow
+- **Menu & Buttons**: Updated all navigation and button elements for theme consistency:
+  - Theme toggle button with proper light/dark colors
+  - User menu button and dropdown with theme-aware styling
+  - Login/Register buttons with proper light mode colors
+- **Navigation Modal**: Fixed full-screen menu to display white background in light mode, black in dark mode
+- **Footer**: Added theme-aware styling for footer background
+- **Overall Consistency**: All navbar and menu elements now have matching light/dark theme colors
 - **Menu Cleanup**: Removed "Bài Giảng" (Lessons) from main navigation menu and user dropdown menu
 - **Removed**: Deleted LessonBuilderPage component and `/lesson-builder` route from App.tsx
+- **Page Theme Fixes**: Fixed light/dark theme styling in ExplorerPage and PowerPointGeneratorPage
 
 ## Previous Changes (Dec 24, 2025)
 

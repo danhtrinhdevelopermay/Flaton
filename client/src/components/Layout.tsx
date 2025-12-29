@@ -73,7 +73,11 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0f172a] text-white' : 'bg-slate-50 text-slate-900'}`}>
-      <header className={`glass fixed top-[7px] left-[7px] right-[7px] z-50 rounded-full shadow-2xl ${theme === 'dark' ? 'shadow-indigo-500/20' : 'shadow-slate-200'}`}>
+      <header className={`fixed top-[7px] left-[7px] right-[7px] z-50 rounded-full shadow-2xl transition-colors duration-300 ${
+        theme === 'dark'
+          ? 'glass shadow-indigo-500/20'
+          : 'bg-white/80 backdrop-blur-md border border-slate-200 shadow-slate-300'
+      }`}>
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-4">
@@ -86,7 +90,11 @@ export default function Layout({ children }: LayoutProps) {
             <div className="flex items-center gap-3">
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-full bg-slate-700/50 hover:bg-slate-700 transition-all text-slate-300 hover:text-white"
+                className={`p-2 rounded-full transition-all ${
+                  theme === 'dark'
+                    ? 'bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900'
+                }`}
                 title={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
               >
                 {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
@@ -114,18 +122,30 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-700/50 hover:bg-slate-700 transition-all"
+                    className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all ${
+                      theme === 'dark'
+                        ? 'bg-slate-700/50 hover:bg-slate-700'
+                        : 'bg-slate-100 hover:bg-slate-200'
+                    }`}
                   >
-                    <User className="w-5 h-5" />
-                    <span className="hidden md:block">{user?.email}</span>
+                    <User className={`w-5 h-5 ${theme === 'dark' ? 'text-white' : 'text-slate-600'}`} />
+                    <span className={`hidden md:block ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{user?.email}</span>
                   </button>
                   
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 glass rounded-xl overflow-hidden shadow-xl">
+                    <div className={`absolute right-0 mt-2 w-48 rounded-xl overflow-hidden shadow-xl transition-colors ${
+                      theme === 'dark'
+                        ? 'glass'
+                        : 'bg-white border border-slate-200'
+                    }`}>
                       <Link
                         to="/history"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-2 px-4 py-3 hover:bg-slate-700/50 transition-all"
+                        className={`flex items-center gap-2 px-4 py-3 transition-all ${
+                          theme === 'dark'
+                            ? 'hover:bg-slate-700/50 text-white'
+                            : 'hover:bg-slate-100 text-slate-900'
+                        }`}
                       >
                         <History className="w-4 h-4" />
                         Lịch sử tạo
@@ -133,7 +153,11 @@ export default function Layout({ children }: LayoutProps) {
                       <Link
                         to="/explorer"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-2 px-4 py-3 hover:bg-slate-700/50 transition-all"
+                        className={`flex items-center gap-2 px-4 py-3 transition-all ${
+                          theme === 'dark'
+                            ? 'hover:bg-slate-700/50 text-white'
+                            : 'hover:bg-slate-100 text-slate-900'
+                        }`}
                       >
                         <Compass className="w-4 h-4" />
                         Explorer
@@ -143,7 +167,11 @@ export default function Layout({ children }: LayoutProps) {
                           logout();
                           setShowUserMenu(false);
                         }}
-                        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-700/50 transition-all text-red-400"
+                        className={`w-full flex items-center gap-2 px-4 py-3 transition-all ${
+                          theme === 'dark'
+                            ? 'hover:bg-slate-700/50 text-red-400'
+                            : 'hover:bg-slate-100 text-red-600'
+                        }`}
                       >
                         <LogOut className="w-4 h-4" />
                         Đăng xuất
@@ -155,7 +183,11 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="flex items-center gap-2">
                   <Link
                     to="/login"
-                    className="flex items-center gap-2 px-3 py-2 rounded-full text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all"
+                    className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all ${
+                      theme === 'dark'
+                        ? 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
                   >
                     <LogIn className="w-4 h-4" />
                     <span className="hidden md:block">Đăng nhập</span>
@@ -183,7 +215,9 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       <div 
-        className={`fixed inset-0 z-[60] bg-black flex flex-col transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+        className={`fixed inset-0 z-[60] flex flex-col transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          theme === 'dark' ? 'bg-black' : 'bg-white'
+        } ${
           showNavModal 
             ? 'opacity-100 translate-y-0 pointer-events-auto' 
             : 'opacity-0 -translate-y-full pointer-events-none'
@@ -192,7 +226,11 @@ export default function Layout({ children }: LayoutProps) {
         <div className="flex justify-end p-4">
           <button
             onClick={() => setShowNavModal(false)}
-            className="p-2 text-gray-400 hover:text-white transition-all duration-300"
+            className={`p-2 transition-all duration-300 ${
+              theme === 'dark'
+                ? 'text-gray-400 hover:text-white'
+                : 'text-gray-600 hover:text-slate-900'
+            }`}
           >
             <X className="w-6 h-6" />
           </button>
@@ -207,7 +245,9 @@ export default function Layout({ children }: LayoutProps) {
               className={`py-3 text-2xl font-medium transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                 location.pathname === item.path
                   ? 'text-indigo-400'
-                  : 'text-white hover:text-indigo-400'
+                  : theme === 'dark'
+                    ? 'text-white hover:text-indigo-400'
+                    : 'text-slate-900 hover:text-indigo-500'
               }`}
               style={{
                 transitionDelay: showNavModal ? `${150 + index * 80}ms` : '0ms',
@@ -229,8 +269,14 @@ export default function Layout({ children }: LayoutProps) {
         </PageTransition>
       </main>
 
-      <footer className="glass mt-auto py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-400">
+      <footer className={`mt-auto py-6 transition-colors ${
+        theme === 'dark'
+          ? 'glass'
+          : 'bg-slate-100 border-t border-slate-200'
+      }`}>
+        <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center ${
+          theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+        }`}>
           <p>Powered by <a href="https://facebook.com/danhtrinh.official" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">Danh Trình</a></p>
         </div>
       </footer>
