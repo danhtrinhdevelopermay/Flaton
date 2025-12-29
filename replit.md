@@ -99,7 +99,14 @@ Uses the official KIE AI API endpoints:
 - `/api/v1/jobs/createTask` - For Grok Imagenia, Seedream, Sora 2
 - `/api/v1/jobs/recordInfo` - Poll Grok, Seedream, Sora 2 task status
 
-## Recent Changes (Dec 24, 2025)
+## Recent Changes (Dec 29, 2025)
+
+### UI Improvements
+- **Theme Consistency**: Fixed light/dark theme styling in ExplorerPage and PowerPointGeneratorPage for consistent UI
+- **Menu Cleanup**: Removed "Bài Giảng" (Lessons) from main navigation menu and user dropdown menu
+- **Removed**: Deleted LessonBuilderPage component and `/lesson-builder` route from App.tsx
+
+## Previous Changes (Dec 24, 2025)
 
 ### Workflow Builder System (FIXED)
 - **Fixed Database Schema**: lesson_id now uses BIGINT to match lessons.id type
