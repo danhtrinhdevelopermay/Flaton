@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Compass, Image, Video, Music, Loader2, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Compass, Image, Video, Music, Loader2, Share2, ChevronUp, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -16,6 +16,7 @@ export default function ExplorerPage() {
   const [activeTab, setActiveTab] = useState<'images' | 'videos' | 'music'>('images');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragStart, setDragStart] = useState(0);
+  const [isVerticalDrag, setIsVerticalDrag] = useState(false);
 
   useEffect(() => {
     fetchExplore();
@@ -73,21 +74,25 @@ export default function ExplorerPage() {
   };
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
-    setDragStart(clientX);
+    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+    setDragStart(clientY);
+    setIsVerticalDrag(true);
   };
 
   const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
-    const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : (e as React.MouseEvent).clientX;
-    const diff = dragStart - clientX;
+    const clientY = 'changedTouches' in e ? e.changedTouches[0].clientY : (e as React.MouseEvent).clientY;
+    const diff = dragStart - clientY;
 
     if (Math.abs(diff) > 50) {
       if (diff > 0) {
+        // Swipe up = next
         handleNext();
       } else {
+        // Swipe down = prev
         handlePrev();
       }
     }
+    setIsVerticalDrag(false);
   };
 
   const renderItem = (item: any) => {
@@ -95,14 +100,16 @@ export default function ExplorerPage() {
       case 'images':
         return (
           <div className="w-full h-full flex flex-col">
-            <img src={item.image_url} alt={item.prompt} className="w-full h-96 object-cover rounded-xl" />
-            <div className="p-6 flex-1 flex flex-col justify-between">
+            <div className="flex-1 flex items-center justify-center overflow-hidden bg-black/20 rounded-xl">
+              <img src={item.image_url} alt={item.prompt} className="w-full h-full object-contain" />
+            </div>
+            <div className="p-6 flex flex-col justify-between">
               <div>
-                <p className="text-sm text-slate-400 mb-2">{item.model}</p>
-                <p className="text-lg font-semibold mb-3">{item.prompt}</p>
+                <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{item.model}</p>
+                <p className={`text-lg font-semibold mb-3 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{item.prompt}</p>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400">{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
+                <span className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
                 <button
                   onClick={() => handleShare(item.image_url)}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm transition-colors"
@@ -117,14 +124,16 @@ export default function ExplorerPage() {
       case 'videos':
         return (
           <div className="w-full h-full flex flex-col">
-            <video src={item.video_url} controls className="w-full h-96 bg-black rounded-xl" />
-            <div className="p-6 flex-1 flex flex-col justify-between">
+            <div className="flex-1 flex items-center justify-center overflow-hidden rounded-xl bg-black">
+              <video src={item.video_url} controls className="w-full h-full object-contain" />
+            </div>
+            <div className="p-6 flex flex-col justify-between">
               <div>
-                <p className="text-sm text-slate-400 mb-2">{item.model}</p>
-                <p className="text-lg font-semibold mb-3">{item.prompt}</p>
+                <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{item.model}</p>
+                <p className={`text-lg font-semibold mb-3 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{item.prompt}</p>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400">{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
+                <span className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
                 <button
                   onClick={() => handleShare(item.video_url)}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm transition-colors"
@@ -139,18 +148,18 @@ export default function ExplorerPage() {
       case 'music':
         return (
           <div className="w-full h-full flex flex-col">
-            <div className="w-full h-96 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600">
               <Music className="w-24 h-24 text-white opacity-50" />
             </div>
-            <div className="p-6 flex-1 flex flex-col justify-between">
+            <div className="p-6 flex flex-col justify-between">
               <div>
-                <h3 className="text-2xl font-semibold mb-2">{item.title || 'Untitled'}</h3>
-                <p className="text-sm text-slate-400 mb-2">{item.model}</p>
-                <p className="text-lg mb-4">{item.prompt}</p>
+                <h3 className={`text-2xl font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{item.title || 'Untitled'}</h3>
+                <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{item.model}</p>
+                <p className={`text-lg mb-4 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>{item.prompt}</p>
                 <audio src={item.audio_url} controls className="w-full mb-4" />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400">{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
+                <span className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
                 <button
                   onClick={() => handleShare(item.audio_url)}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm transition-colors"
@@ -181,17 +190,19 @@ export default function ExplorerPage() {
 
   return (
     <div className="fade-in">
-      <div className="flex items-center gap-3 mb-8">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
           <Compass className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Explorer</h1>
-          <p className="text-slate-400">Khám phá các sản phẩm AI được chia sẻ công khai</p>
+          <h1 className={`text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Explorer</h1>
+          <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>Khám phá các sản phẩm AI được chia sẻ công khai</p>
         </div>
       </div>
 
-      <div className="flex gap-2 mb-8">
+      {/* Tab Buttons */}
+      <div className="flex gap-2 mb-6">
         <button
           onClick={() => {
             setActiveTab('images');
@@ -242,6 +253,7 @@ export default function ExplorerPage() {
         </button>
       </div>
 
+      {/* TikTok-style Vertical Swipe Viewer */}
       {items.length === 0 ? (
         <div className={`rounded-xl p-12 text-center ${
           theme === 'dark'
@@ -251,13 +263,14 @@ export default function ExplorerPage() {
           <p className={`text-lg ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{emptyMessage[activeTab]}</p>
         </div>
       ) : (
-        <div className={`rounded-xl p-6 overflow-hidden ${
+        <div className={`rounded-xl overflow-hidden transition-colors ${
           theme === 'dark'
             ? 'glass'
             : 'bg-white border border-slate-200 shadow-sm'
         }`}>
+          {/* Main Swipe Container */}
           <div
-            className="relative touch-pan-y"
+            className="relative h-[600px] touch-pan-x"
             onMouseDown={handleDragStart}
             onMouseUp={handleDragEnd}
             onTouchStart={handleDragStart}
@@ -266,61 +279,77 @@ export default function ExplorerPage() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentIndex}
-                initial={{ opacity: 0, x: 100 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -100 }}
+                initial={{ opacity: 0, y: 100 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -100 }}
                 transition={{ duration: 0.3 }}
-                className="min-h-[600px]"
+                className="h-full"
               >
                 {renderItem(items[currentIndex])}
               </motion.div>
             </AnimatePresence>
           </div>
 
-          {/* Navigation */}
-          <div className={`flex items-center justify-between mt-6 pt-6 border-t ${
+          {/* Navigation Controls */}
+          <div className={`p-6 border-t transition-colors ${
             theme === 'dark' ? 'border-slate-700' : 'border-slate-200'
           }`}>
-            <button
-              onClick={handlePrev}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                theme === 'dark'
-                  ? 'glass hover:bg-slate-700/50'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              <ChevronLeft className="w-5 h-5" />
-              Trước
-            </button>
+            <div className="flex items-center justify-between">
+              {/* Up Button */}
+              <button
+                onClick={handlePrev}
+                className={`p-3 rounded-lg transition-all ${
+                  theme === 'dark'
+                    ? 'glass hover:bg-slate-700/50'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+                title="Xem trước (vuốt xuống)"
+              >
+                <ChevronUp className="w-5 h-5" />
+              </button>
 
-            <div className="flex items-center gap-2">
-              <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>
-                {currentIndex + 1} / {items.length}
-              </span>
-              <div className="flex gap-1">
-                {items.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentIndex(idx)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      idx === currentIndex ? 'bg-indigo-500 w-6' : theme === 'dark' ? 'bg-slate-600' : 'bg-slate-300'
-                    }`}
-                  />
-                ))}
+              {/* Indicators */}
+              <div className="flex items-center gap-3">
+                <span className={`text-sm font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                  {currentIndex + 1} / {items.length}
+                </span>
+                <div className="flex gap-1">
+                  {items.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentIndex(idx)}
+                      className={`rounded-full transition-all ${
+                        idx === currentIndex
+                          ? 'bg-indigo-500 w-6 h-2'
+                          : theme === 'dark'
+                            ? 'bg-slate-600 w-2 h-2 hover:bg-slate-500'
+                            : 'bg-slate-300 w-2 h-2 hover:bg-slate-400'
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
+
+              {/* Down Button */}
+              <button
+                onClick={handleNext}
+                className={`p-3 rounded-lg transition-all ${
+                  theme === 'dark'
+                    ? 'glass hover:bg-slate-700/50'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+                title="Xem tiếp (vuốt lên)"
+              >
+                <ChevronDown className="w-5 h-5" />
+              </button>
             </div>
 
-            <button
-              onClick={handleNext}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                theme === 'dark'
-                  ? 'glass hover:bg-slate-700/50'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              Sau
-              <ChevronRight className="w-5 h-5" />
-            </button>
+            {/* Swipe Hint */}
+            <div className={`text-center text-xs mt-4 ${
+              theme === 'dark' ? 'text-slate-500' : 'text-slate-500'
+            }`}>
+              👆 Vuốt lên/xuống hoặc nhấn nút để xem tiếp theo
+            </div>
           </div>
         </div>
       )}

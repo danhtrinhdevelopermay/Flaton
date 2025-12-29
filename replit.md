@@ -123,6 +123,12 @@ Uses the official KIE AI API endpoints:
     - Buttons with light/dark mode colors
     - All text content with proper contrast for both themes
     - CTA section with theme-aware container styling
+- **Explorer Page Enhancement**: 
+  - Converted to TikTok-style vertical swipe viewer
+  - Each item now displays in full container with vertical animations
+  - Swipe up/down to navigate (mobile-friendly gestures)
+  - Click buttons or indicators to jump to specific posts
+  - Smooth transitions between items with proper animations
 
 ## Previous Changes (Dec 24, 2025)
 
