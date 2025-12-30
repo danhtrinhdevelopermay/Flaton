@@ -98,7 +98,7 @@ export default function Layout({ children }: LayoutProps) {
               <label className="switch">
                 <input 
                   type="checkbox" 
-                  checked={theme === 'dark'} 
+                  checked={theme === 'light'} 
                   onChange={toggleTheme}
                 />
                 <span className="slider">
