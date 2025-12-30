@@ -4,6 +4,7 @@ import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { PageTransition } from './animations'
+import AIAssistantBot from './AIAssistantBot'
 
 interface LayoutProps {
   children: ReactNode
@@ -336,6 +337,8 @@ export default function Layout({ children }: LayoutProps) {
           <p>Powered by <a href="https://facebook.com/danhtrinh.official" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">Danh Trình</a></p>
         </div>
       </footer>
+
+      <AIAssistantBot />
     </div>
   )
 }

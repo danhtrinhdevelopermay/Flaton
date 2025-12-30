@@ -2528,6 +2528,44 @@ app.get('/api/check-pro-status', authMiddleware, async (req: AuthRequest, res: R
   }
 });
 
+// AI Assistant Bot Endpoint
+app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Response) => {
+  try {
+    const { message } = req.body;
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    // Check if user is asking for specific services
+    const lowerMessage = message.toLowerCase();
+    let response = '';
+
+    if (lowerMessage.includes('hình ảnh') || lowerMessage.includes('ảnh') || lowerMessage.includes('image')) {
+      response = `📸 Bạn muốn tạo hình ảnh nhưng không thể từ bot. Vui lòng truy cập trang "Tạo hình ảnh" để tạo. Tôi có thể giúp bạn:\n\n• Thảo luận ý tưởng cho hình ảnh\n• Mô tả chi tiết những gì bạn muốn\n• Gợi ý prompt tốt hơn\n\nHãy mô tả chi tiết những gì bạn muốn tạo!`;
+    } else if (lowerMessage.includes('video') || lowerMessage.includes('clip')) {
+      response = `🎬 Bạn muốn tạo video! Vui lòng truy cập trang "Tạo video" để tạo. Tôi có thể giúp bạn:\n\n• Brainstorm ý tưởng video\n• Viết kịch bản\n• Mô tả nội dung chi tiết\n\nHãy cho tôi biết ý tưởng video của bạn!`;
+    } else if (lowerMessage.includes('nhạc') || lowerMessage.includes('music')) {
+      response = `🎵 Bạn muốn tạo nhạc! Vui lòng truy cập trang "Tạo nhạc" để tạo. Tôi có thể giúp bạn:\n\n• Gợi ý style nhạc\n• Mô tả cảm xúc và thể loại\n• Sáng tác lời bài hát\n\nBạn muốn tạo nhạc gì?`;
+    } else if (lowerMessage.includes('powerpoint') || lowerMessage.includes('pptx') || lowerMessage.includes('slide')) {
+      response = `📊 Bạn muốn tạo PowerPoint! Vui lòng truy cập trang "Tạo PowerPoint" để tạo. Tôi có thể giúp bạn:\n\n• Lên kế hoạch nội dung slide\n• Sáng tác nội dung thuyết trình\n• Tổ chức thông tin\n\nChủ đề PowerPoint của bạn là gì?`;
+    } else if (lowerMessage.includes('word') || lowerMessage.includes('tài liệu') || lowerMessage.includes('document')) {
+      response = `📝 Bạn muốn tạo Word! Vui lòng truy cập trang "Tạo Word" để tạo. Tôi có thể giúp bạn:\n\n• Viết nội dung tài liệu\n• Tổ chức cấu trúc\n• Sáng tác và chỉnh sửa\n\nBạn cần tạo tài liệu gì?`;
+    } else {
+      // For general questions, use Gemini
+      const aiResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ role: 'user', parts: [{ text: message }] }],
+      });
+      response = aiResponse.text || 'Xin lỗi, không thể xử lý yêu cầu của bạn.';
+    }
+
+    res.json({ response });
+  } catch (error: any) {
+    console.error('AI Assistant error:', error);
+    res.status(500).json({ error: error.message || 'Lỗi xử lý' });
+  }
+});
+
 function startKeepAlive() {
   const RENDER_URL = 'https://flaton.onrender.com';
   if (!RENDER_URL) {
