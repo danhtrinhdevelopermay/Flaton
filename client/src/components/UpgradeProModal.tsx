@@ -52,11 +52,13 @@ export default function UpgradeProModal({
           onClose();
         }, 2000);
       } else {
-        alert('Lỗi khi gửi yêu cầu. Vui lòng thử lại!');
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        alert(`Lỗi: ${errorData.error || 'Lỗi khi gửi yêu cầu. Vui lòng thử lại!'}`);
       }
     } catch (error) {
       console.error('Error submitting upgrade request:', error);
-      alert('Đã xảy ra lỗi. Vui lòng thử lại!');
+      alert(`Lỗi kết nối: ${error instanceof Error ? error.message : 'Đã xảy ra lỗi'}`);
     } finally {
       setLoading(false);
     }
