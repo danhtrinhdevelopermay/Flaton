@@ -2528,41 +2528,117 @@ app.get('/api/check-pro-status', authMiddleware, async (req: AuthRequest, res: R
   }
 });
 
-// AI Assistant Bot Endpoint
-app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Response) => {
+// AI Assistant Bot Endpoint - Creates content automatically
+app.post('/api/ai-assistant', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { message } = req.body;
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Check if user is asking for specific services
     const lowerMessage = message.toLowerCase();
-    let response = '';
+    let response: any = { type: 'text', content: '', action: null };
 
+    // Check if user is asking for specific services
     if (lowerMessage.includes('hình ảnh') || lowerMessage.includes('ảnh') || lowerMessage.includes('image')) {
-      response = `📸 Bạn muốn tạo hình ảnh nhưng không thể từ bot. Vui lòng truy cập trang "Tạo hình ảnh" để tạo. Tôi có thể giúp bạn:\n\n• Thảo luận ý tưởng cho hình ảnh\n• Mô tả chi tiết những gì bạn muốn\n• Gợi ý prompt tốt hơn\n\nHãy mô tả chi tiết những gì bạn muốn tạo!`;
+      try {
+        // Generate image via Gemini
+        const imageResponse = await ai.models.generateContent({
+          model: 'gemini-2.5-flash-image',
+          contents: [{ role: 'user', parts: [{ text: message }] }],
+          config: {
+            responseModalities: [require('@google/genai').Modality.TEXT, require('@google/genai').Modality.IMAGE],
+          },
+        });
+
+        const candidate = imageResponse.candidates?.[0];
+        const imagePart = candidate?.content?.parts?.find((part: any) => part.inlineData);
+
+        if (imagePart?.inlineData?.data) {
+          const mimeType = imagePart.inlineData.mimeType || 'image/png';
+          const imageUrl = `data:${mimeType};base64,${imagePart.inlineData.data}`;
+          
+          // Save to database
+          await pool.query(
+            'INSERT INTO generated_images (user_id, image_url, prompt, model, aspect_ratio) VALUES ($1, $2, $3, $4, $5)',
+            [req.userId, imageUrl, message, 'gemini-2.5-flash-image', '1:1']
+          );
+
+          response = {
+            type: 'image',
+            content: '✅ Đã tạo hình ảnh thành công!',
+            action: 'image-created',
+            imageUrl,
+            prompt: message
+          };
+        } else {
+          response.content = '❌ Không thể tạo hình ảnh. Vui lòng thử lại với mô tả khác.';
+        }
+      } catch (err: any) {
+        response.content = `❌ Lỗi tạo hình ảnh: ${err.message}`;
+      }
     } else if (lowerMessage.includes('video') || lowerMessage.includes('clip')) {
-      response = `🎬 Bạn muốn tạo video! Vui lòng truy cập trang "Tạo video" để tạo. Tôi có thể giúp bạn:\n\n• Brainstorm ý tưởng video\n• Viết kịch bản\n• Mô tả nội dung chi tiết\n\nHãy cho tôi biết ý tưởng video của bạn!`;
+      // Enhance prompt with Gemini for video
+      const enhancedPrompt = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ 
+          role: 'user', 
+          parts: [{ text: `Viết một prompt tiếng Anh chuyên nghiệp để tạo video (dưới 100 từ): ${message}` }] 
+        }],
+      });
+      
+      response = {
+        type: 'video',
+        content: '📹 Yêu cầu tạo video đang được xử lý. Vui lòng truy cập trang "Tạo video" để xem tiến độ.',
+        action: 'redirect-video',
+        prompt: enhancedPrompt.text || message
+      };
     } else if (lowerMessage.includes('nhạc') || lowerMessage.includes('music')) {
-      response = `🎵 Bạn muốn tạo nhạc! Vui lòng truy cập trang "Tạo nhạc" để tạo. Tôi có thể giúp bạn:\n\n• Gợi ý style nhạc\n• Mô tả cảm xúc và thể loại\n• Sáng tác lời bài hát\n\nBạn muốn tạo nhạc gì?`;
+      // Enhance prompt with Gemini for music
+      const enhancedPrompt = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ 
+          role: 'user', 
+          parts: [{ text: `Viết một prompt tiếng Anh để tạo nhạc Suno (dưới 100 từ): ${message}` }] 
+        }],
+      });
+      
+      response = {
+        type: 'music',
+        content: '🎵 Yêu cầu tạo nhạc đang được xử lý. Vui lòng truy cập trang "Tạo nhạc" để xem tiến độ.',
+        action: 'redirect-music',
+        prompt: enhancedPrompt.text || message
+      };
     } else if (lowerMessage.includes('powerpoint') || lowerMessage.includes('pptx') || lowerMessage.includes('slide')) {
-      response = `📊 Bạn muốn tạo PowerPoint! Vui lòng truy cập trang "Tạo PowerPoint" để tạo. Tôi có thể giúp bạn:\n\n• Lên kế hoạch nội dung slide\n• Sáng tác nội dung thuyết trình\n• Tổ chức thông tin\n\nChủ đề PowerPoint của bạn là gì?`;
+      response = {
+        type: 'powerpoint',
+        content: '📊 Yêu cầu tạo PowerPoint đang được xử lý. Vui lòng truy cập trang "Tạo PowerPoint" để xem tiến độ.',
+        action: 'redirect-powerpoint',
+        prompt: message
+      };
     } else if (lowerMessage.includes('word') || lowerMessage.includes('tài liệu') || lowerMessage.includes('document')) {
-      response = `📝 Bạn muốn tạo Word! Vui lòng truy cập trang "Tạo Word" để tạo. Tôi có thể giúp bạn:\n\n• Viết nội dung tài liệu\n• Tổ chức cấu trúc\n• Sáng tác và chỉnh sửa\n\nBạn cần tạo tài liệu gì?`;
+      response = {
+        type: 'word',
+        content: '📝 Yêu cầu tạo Word đang được xử lý. Vui lòng truy cập trang "Tạo Word" để xem tiến độ.',
+        action: 'redirect-word',
+        prompt: message
+      };
     } else {
       // For general questions, use Gemini
       const aiResponse = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: [{ role: 'user', parts: [{ text: message }] }],
       });
-      response = aiResponse.text || 'Xin lỗi, không thể xử lý yêu cầu của bạn.';
+      response = {
+        type: 'text',
+        content: aiResponse.text || 'Xin lỗi, không thể xử lý yêu cầu của bạn.'
+      };
     }
 
-    res.json({ response });
+    res.json(response);
   } catch (error: any) {
     console.error('AI Assistant error:', error);
-    res.status(500).json({ error: error.message || 'Lỗi xử lý' });
+    res.status(500).json({ type: 'error', content: error.message || 'Lỗi xử lý' });
   }
 });
 

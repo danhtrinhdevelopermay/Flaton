@@ -31,7 +31,7 @@ export default function AIAssistantBot() {
       const welcomeMessage: Message = {
         id: '0',
         role: 'assistant',
-        content: 'Xin chào! 👋 Tôi là trợ lý AI của bạn. Tôi có thể giúp bạn:\n\n• Trả lời các câu hỏi\n• Tạo hình ảnh\n• Tạo video\n• Tạo nhạc\n• Tạo PowerPoint\n• Tạo Word\n• Và nhiều hỗ trợ khác\n\nBạn cần gì hôm nay?',
+        content: 'Xin chào! 👋 Tôi là trợ lý AI của bạn. Tôi có thể giúp bạn:\n\n• 🎨 Tạo hình ảnh (trực tiếp)\n• 🎬 Tạo video (hỗ trợ kế hoạch)\n• 🎵 Tạo nhạc (hỗ trợ kế hoạch)\n• 📊 Tạo PowerPoint\n• 📝 Tạo Word\n• 💬 Trả lời các câu hỏi\n\nChỉ cần nói những gì bạn muốn tạo!',
         timestamp: new Date(),
       }
       setMessages([welcomeMessage])
@@ -69,18 +69,48 @@ export default function AIAssistantBot() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Lỗi kết nối')
+        throw new Error(errorData.content || errorData.error || 'Lỗi kết nối')
       }
 
       const data = await response.json()
+      let assistantContent = data.content || 'Xin lỗi, không thể xử lý yêu cầu.'
+
+      // If image was generated, show preview
+      if (data.type === 'image' && data.imageUrl) {
+        assistantContent = `${data.content}\n\n[Hình ảnh đã được tạo]`
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response,
+        content: assistantContent,
         timestamp: new Date(),
       }
 
       setMessages(prev => [...prev, assistantMessage])
+
+      // Handle redirects and actions
+      if (data.action === 'redirect-image') {
+        setTimeout(() => {
+          window.location.href = '/image-generator'
+        }, 1000)
+      } else if (data.action === 'redirect-video') {
+        setTimeout(() => {
+          window.location.href = '/video-generator'
+        }, 1000)
+      } else if (data.action === 'redirect-music') {
+        setTimeout(() => {
+          window.location.href = '/music-generator'
+        }, 1000)
+      } else if (data.action === 'redirect-powerpoint') {
+        setTimeout(() => {
+          window.location.href = '/pptx-generator'
+        }, 1000)
+      } else if (data.action === 'redirect-word') {
+        setTimeout(() => {
+          window.location.href = '/word-generator'
+        }, 1000)
+      }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Lỗi không xác định'
       setError(errorMsg)
