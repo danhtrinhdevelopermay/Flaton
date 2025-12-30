@@ -2576,17 +2576,31 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
 
           if (taskCompleted && imageUrl && req.userId) {
             // Save to database if user is authenticated
-            await pool.query(
-              'INSERT INTO generated_images (user_id, image_url, prompt, model, aspect_ratio) VALUES ($1, $2, $3, $4, $5)',
-              [req.userId, imageUrl, message, 'nano-banana', '1:1']
-            );
-            response = {
-              type: 'image',
-              content: '✅ Đã tạo hình ảnh thành công!',
-              action: 'image-created',
-              imageUrl,
-              prompt: message
-            };
+            try {
+              const userId = parseInt(String(req.userId), 10);
+              console.log(`[AI Assistant] Saving image to database. UserId: ${userId}, ImageUrl: ${imageUrl}`);
+              const saveResult = await pool.query(
+                'INSERT INTO generated_images (user_id, image_url, prompt, model, aspect_ratio) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+                [userId, imageUrl, message, 'nano-banana', '1:1']
+              );
+              console.log(`[AI Assistant] Image saved successfully. ID: ${saveResult.rows[0]?.id}`);
+              response = {
+                type: 'image',
+                content: '✅ Đã tạo hình ảnh thành công!',
+                action: 'image-created',
+                imageUrl,
+                prompt: message
+              };
+            } catch (dbErr: any) {
+              console.error(`[AI Assistant] Failed to save image to database:`, dbErr.message);
+              response = {
+                type: 'image',
+                content: '✅ Hình ảnh được tạo nhưng không lưu được vào lịch sử. Vui lòng kiểm tra lại.',
+                action: 'image-created',
+                imageUrl,
+                prompt: message
+              };
+            }
           } else if (taskCompleted && imageUrl) {
             // For unauthenticated users, still return the image
             response = {
