@@ -57,7 +57,7 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
 
     const userId = decoded.userId;
     console.log('[AuthMiddleware] Looking up user:', userId);
-    const result = await pool.query('SELECT id, email, name FROM users WHERE id = $1', [userId]);
+    const result = await pool.query('SELECT id, email, name, is_pro FROM users WHERE id = $1', [userId]);
     
     if (result.rows.length === 0) {
       console.log('[AuthMiddleware] User not found in DB:', userId);
@@ -82,7 +82,7 @@ export async function optionalAuthMiddleware(req: AuthRequest, res: Response, ne
       const decoded = verifyToken(token);
       if (decoded && decoded.userId) {
         const userId = decoded.userId;
-        const result = await pool.query('SELECT id, email, name FROM users WHERE id = $1', [userId]);
+        const result = await pool.query('SELECT id, email, name, is_pro FROM users WHERE id = $1', [userId]);
         if (result.rows.length > 0) {
           req.userId = result.rows[0].id;
           req.user = result.rows[0];
