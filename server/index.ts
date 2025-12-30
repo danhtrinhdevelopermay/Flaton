@@ -2503,6 +2503,31 @@ app.post('/api/admin/delete-upgrade', authMiddleware, async (req: AuthRequest, r
   }
 });
 
+// Debug endpoint to check user's is_pro status
+app.get('/api/check-pro-status', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, email, is_pro FROM users WHERE id = $1',
+      [req.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+    res.status(200).json({
+      id: user.id,
+      email: user.email,
+      is_pro: user.is_pro,
+      message: user.is_pro ? 'Tài khoản là Pro' : 'Tài khoản không phải Pro'
+    });
+  } catch (error: any) {
+    console.error('Error checking pro status:', error);
+    res.status(500).json({ error: 'Lỗi kiểm tra status' });
+  }
+});
+
 function startKeepAlive() {
   const RENDER_URL = 'https://flaton.onrender.com';
   if (!RENDER_URL) {
