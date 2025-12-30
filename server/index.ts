@@ -2175,28 +2175,22 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
         spacing: { after: 400 },
       }));
       
-      // Add image if enabled
+      // Add image URL if enabled
       if (addImages && s.heading) {
         const imageUrl = await fetchPexelsImage(s.heading);
         if (imageUrl) {
-          try {
-            const imageResponse = await fetch(imageUrl);
-            const imageBuffer = await imageResponse.arrayBuffer();
-            sectionsData.push(new Paragraph({
-              children: [
-                new Image({
-                  data: Buffer.from(imageBuffer),
-                  type: 'image/jpeg',
-                  width: { value: 300, type: 'dxa' },
-                  height: { value: 200, type: 'dxa' },
-                }),
-              ],
-              spacing: { after: 400 },
-            }));
-            console.log('[Word Gen] Thêm ảnh cho:', s.heading);
-          } catch (err) {
-            console.log('[Word Gen] Lỗi thêm ảnh cho', s.heading, ':', err);
-          }
+          sectionsData.push(new Paragraph({
+            children: [
+              new TextRun({
+                text: `[Ảnh: ${imageUrl}]`,
+                rFonts: { ascii: 'Times New Roman', highAnsi: 'Times New Roman' },
+                color: '666666',
+                italics: true,
+              }),
+            ],
+            spacing: { after: 400 },
+          }));
+          console.log('[Word Gen] Thêm ảnh cho:', s.heading);
         }
       }
     }
