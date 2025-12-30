@@ -283,10 +283,6 @@ export default function VideoGeneratorPage() {
     setUpgrading1080p(false)
   }
 
-  if (isAuthenticated && user && !user.is_pro) {
-    return <ProFeatureOverlay featureName="Tạo video AI" />
-  }
-
   return (
     <div className="fade-in">
       <div className="flex items-center gap-3 mb-8">
@@ -593,6 +589,7 @@ export default function VideoGeneratorPage() {
           )}
         </div>
       </div>
+      {isAuthenticated && user && !user.is_pro && <ProFeatureOverlay featureName="Tạo video AI" />}
     </div>
   )
 }

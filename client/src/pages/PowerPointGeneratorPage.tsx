@@ -144,10 +144,6 @@ export default function PowerPointGeneratorPage() {
     }
   };
 
-  if (isAuthenticated && user && !user.is_pro) {
-    return <ProFeatureOverlay featureName="Tạo PowerPoint AI" />
-  }
-
   return (
     <div className={`max-w-6xl mx-auto py-8 px-4 fade-in ${theme === 'light' ? 'bg-white/50' : ''}`}>
       <div className="flex items-center justify-between mb-8">
@@ -384,6 +380,7 @@ export default function PowerPointGeneratorPage() {
           </div>
         </div>
       )}
+      {isAuthenticated && user && !user.is_pro && <ProFeatureOverlay featureName="Tạo PowerPoint AI" />}
     </div>
   );
 }

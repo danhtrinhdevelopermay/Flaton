@@ -222,10 +222,6 @@ export default function MusicGeneratorPage() {
     }
   }
 
-  if (isAuthenticated && user && !user.is_pro) {
-    return <ProFeatureOverlay featureName="Tạo nhạc AI" />
-  }
-
   return (
     <div className="fade-in">
       <div className="flex items-center gap-3 mb-8">
@@ -589,6 +585,7 @@ export default function MusicGeneratorPage() {
           )}
         </div>
       </div>
+      {isAuthenticated && user && !user.is_pro && <ProFeatureOverlay featureName="Tạo nhạc AI" />}
     </div>
   )
 }
