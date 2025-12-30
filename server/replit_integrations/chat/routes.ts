@@ -8,7 +8,7 @@ Supported models: gemini-2.5-flash (fast), gemini-2.5-pro (advanced reasoning)
 
 // Using official Google Gemini API with user's API key
 const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || '',
+  apiKey: 'AIzaSyBYU61voLkwy9QMkfYTWMJH_GEzd5FvspY',
 });
 
 export function registerChatRoutes(app: Express): void {

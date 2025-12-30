@@ -2,7 +2,7 @@ import { GoogleGenAI, Modality } from "@google/genai";
 
 // Using official Google Gemini API with user's API key
 export const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || '',
+  apiKey: 'AIzaSyBYU61voLkwy9QMkfYTWMJH_GEzd5FvspY',
 });
 
 /**
