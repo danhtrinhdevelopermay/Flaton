@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { PageTransition } from './animations'
 import AIAssistantBot from './AIAssistantBot'
+import AdUnit from './AdUnit'
 
 interface LayoutProps {
   children: ReactNode
@@ -319,11 +320,21 @@ export default function Layout({ children }: LayoutProps) {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+        {/* Top Advertisement */}
+        <div className="mb-8">
+          <AdUnit adSlot="1234567890" adFormat="auto" />
+        </div>
+
         <PageTransition>
           <div className={`${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
             {children}
           </div>
         </PageTransition>
+
+        {/* Bottom Advertisement */}
+        <div className="mt-12">
+          <AdUnit adSlot="9876543210" adFormat="auto" />
+        </div>
       </main>
 
       <footer className={`mt-auto py-6 transition-colors ${
