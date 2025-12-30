@@ -128,10 +128,10 @@ export default function AdminUpgradePage() {
           Quản lý yêu cầu nâng cấp Pro
         </h1>
 
-        <div className={`rounded-lg overflow-hidden border ${
+        <div className={`rounded-lg overflow-x-auto border ${
           theme === 'dark' ? 'border-slate-700' : 'border-slate-200'
         }`}>
-          <table className="w-full">
+          <table className="w-full min-w-max">
             <thead className={theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'}>
               <tr>
                 <th className={`px-6 py-3 text-left font-semibold ${theme === 'dark' ? 'text-slate-300' : 'text-slate-900'}`}>ID</th>
@@ -148,8 +148,8 @@ export default function AdminUpgradePage() {
                   <td className={`px-6 py-4 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>{req.id}</td>
                   <td className={`px-6 py-4 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>{req.user_name}</td>
                   <td className={`px-6 py-4 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>{req.user_email}</td>
-                  <td className={`px-6 py-4 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`} title={req.reason}>
-                    {req.reason.substring(0, 50)}...
+                  <td className={`px-6 py-4 max-w-xs ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`} title={req.reason}>
+                    <div className="truncate">{req.reason}</div>
                   </td>
                   <td className="px-6 py-4">
                     {req.status === 'pending' && (
