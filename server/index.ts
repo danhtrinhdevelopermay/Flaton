@@ -2554,13 +2554,57 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
 
         if (imageResult.task_id || imageResult.data?.taskId) {
           const taskId = imageResult.task_id || imageResult.data?.taskId;
-          response = {
-            type: 'image',
-            content: '✅ Yêu cầu tạo hình ảnh đã được gửi! Đang xử lý...',
-            action: 'image-creating',
-            taskId,
-            prompt: message
-          };
+          
+          // Poll for result with timeout
+          let taskCompleted = false;
+          let imageUrl = null;
+          for (let i = 0; i < 60; i++) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            try {
+              const taskStatus = await checkTaskStatus(taskId, 'playground');
+              if (taskStatus.status === 'completed' && taskStatus.imageUrl) {
+                imageUrl = taskStatus.imageUrl;
+                taskCompleted = true;
+                break;
+              } else if (taskStatus.status === 'failed') {
+                throw new Error('Tạo ảnh thất bại: ' + (taskStatus.error || 'Unknown error'));
+              }
+            } catch (pollErr) {
+              // Continue polling
+            }
+          }
+
+          if (taskCompleted && imageUrl && req.userId) {
+            // Save to database if user is authenticated
+            await pool.query(
+              'INSERT INTO generated_images (user_id, image_url, prompt, model, aspect_ratio) VALUES ($1, $2, $3, $4, $5)',
+              [req.userId, imageUrl, message, 'nano-banana', '1:1']
+            );
+            response = {
+              type: 'image',
+              content: '✅ Đã tạo hình ảnh thành công!',
+              action: 'image-created',
+              imageUrl,
+              prompt: message
+            };
+          } else if (taskCompleted && imageUrl) {
+            // For unauthenticated users, still return the image
+            response = {
+              type: 'image',
+              content: '✅ Đã tạo hình ảnh thành công! (Chưa lưu vào lịch sử - vui lòng đăng nhập)',
+              action: 'image-created',
+              imageUrl,
+              prompt: message
+            };
+          } else {
+            response = {
+              type: 'image',
+              content: '⏱️ Hình ảnh đang được xử lý. Vui lòng kiểm tra lịch sử tạo sau vài giây.',
+              action: 'image-processing',
+              taskId,
+              prompt: message
+            };
+          }
         } else {
           response.content = '❌ Không thể gửi yêu cầu tạo ảnh. Vui lòng thử lại.';
         }
