@@ -2175,10 +2175,33 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
         spacing: { after: 400 },
       }));
       
-      // Image feature coming soon
-      // if (addImages && s.heading) {
-      //   const imageUrl = await fetchPexelsImage(s.heading);
-      // }
+      // Add image if enabled - using base64 embedding
+      if (addImages && s.heading) {
+        const imageUrl = await fetchPexelsImage(s.heading);
+        if (imageUrl) {
+          try {
+            const imageResponse = await fetch(imageUrl);
+            const imageBuffer = await imageResponse.arrayBuffer();
+            const base64Image = Buffer.from(imageBuffer).toString('base64');
+            
+            // Embed base64 image directly into Word
+            sectionsData.push(new Paragraph({
+              children: [
+                new Image({
+                  data: base64Image,
+                  type: 'image/jpeg',
+                  width: { value: 300, type: 'dxa' },
+                  height: { value: 200, type: 'dxa' },
+                } as any),
+              ],
+              spacing: { after: 400 },
+            }));
+            console.log('[Word Gen] Thêm ảnh base64 cho:', s.heading);
+          } catch (err) {
+            console.log('[Word Gen] Lỗi thêm ảnh base64:', err);
+          }
+        }
+      }
     }
     
     const sections = sectionsData;
