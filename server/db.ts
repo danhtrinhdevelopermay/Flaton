@@ -40,6 +40,14 @@ export async function initDatabase() {
       await client.query(`ALTER TABLE users ADD COLUMN last_checkin DATE`);
     }
 
+    const isProColumnCheck = await client.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'users' AND column_name = 'is_pro'
+    `);
+    if (isProColumnCheck.rows.length === 0) {
+      await client.query(`ALTER TABLE users ADD COLUMN is_pro BOOLEAN DEFAULT false`);
+    }
+
     // Create generated_images table
     await client.query(`
       CREATE TABLE IF NOT EXISTS generated_images (

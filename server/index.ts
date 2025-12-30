@@ -684,6 +684,12 @@ app.post('/api/generate/gpt4o-image', authMiddleware, async (req: AuthRequest, r
 
 app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    // Check if user is pro
+    const userCheck = await pool.query('SELECT is_pro FROM users WHERE id = $1', [req.userId]);
+    if (!userCheck.rows[0]?.is_pro) {
+      return res.status(403).json({ error: 'Tính năng này chỉ dành cho tài khoản Pro. Vui lòng nâng cấp tài khoản để sử dụng.' });
+    }
+
     const { prompt, aspectRatio = '16:9' } = req.body;
     const result = await callKieApi('/veo/generate', {
       prompt,
@@ -700,6 +706,12 @@ app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res
 // Sora 2 Text to Video
 app.post('/api/generate/sora2-text', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    // Check if user is pro
+    const userCheck = await pool.query('SELECT is_pro FROM users WHERE id = $1', [req.userId]);
+    if (!userCheck.rows[0]?.is_pro) {
+      return res.status(403).json({ error: 'Tính năng này chỉ dành cho tài khoản Pro. Vui lòng nâng cấp tài khoản để sử dụng.' });
+    }
+
     const { prompt, aspectRatio = 'landscape', duration = '10' } = req.body;
     const result = await callKieApi('/jobs/createTask', {
       model: 'sora-2-text-to-video',
@@ -720,6 +732,12 @@ app.post('/api/generate/sora2-text', authMiddleware, async (req: AuthRequest, re
 // Sora 2 Image to Video
 app.post('/api/generate/sora2-image', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    // Check if user is pro
+    const userCheck = await pool.query('SELECT is_pro FROM users WHERE id = $1', [req.userId]);
+    if (!userCheck.rows[0]?.is_pro) {
+      return res.status(403).json({ error: 'Tính năng này chỉ dành cho tài khoản Pro. Vui lòng nâng cấp tài khoản để sử dụng.' });
+    }
+
     const { prompt, imageUrl, aspectRatio = 'landscape', duration = '10' } = req.body;
     
     if (!imageUrl) {
@@ -784,6 +802,12 @@ app.get('/api/veo3/1080p/:taskId', authMiddleware, async (req: AuthRequest, res:
 // Suno AI - Generate Music
 app.post('/api/generate/suno', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    // Check if user is pro
+    const userCheck = await pool.query('SELECT is_pro FROM users WHERE id = $1', [req.userId]);
+    if (!userCheck.rows[0]?.is_pro) {
+      return res.status(403).json({ error: 'Tính năng này chỉ dành cho tài khoản Pro. Vui lòng nâng cấp tài khoản để sử dụng.' });
+    }
+
     const { 
       prompt, 
       songDescription,
@@ -1857,6 +1881,12 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
 
 app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    // Check if user is pro
+    const userCheck = await pool.query('SELECT is_pro FROM users WHERE id = $1', [req.userId]);
+    if (!userCheck.rows[0]?.is_pro) {
+      return res.status(403).json({ error: 'Tính năng này chỉ dành cho tài khoản Pro. Vui lòng nâng cấp tài khoản để sử dụng.' });
+    }
+
     const { prompt, style, imageSource = 'internet' } = req.body;
     
     if (!prompt) {
