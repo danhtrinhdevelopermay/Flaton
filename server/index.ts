@@ -1222,6 +1222,95 @@ app.get('/api/products/explore', optionalAuthMiddleware, async (req: Request, re
   }
 });
 
+// Get user profile and their public items
+app.get('/api/users/:userId/profile', async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    
+    // Get user info
+    const userResult = await pool.query(
+      'SELECT id, email, name, created_at FROM users WHERE id = $1',
+      [userId]
+    );
+    
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Get public items from user
+    const images = await pool.query(
+      'SELECT id, image_url, prompt, model, created_at FROM generated_images WHERE user_id = $1 AND is_public = true ORDER BY created_at DESC',
+      [userId]
+    );
+    
+    const videos = await pool.query(
+      'SELECT id, video_url, prompt, model, created_at FROM generated_videos WHERE user_id = $1 AND is_public = true ORDER BY created_at DESC',
+      [userId]
+    );
+    
+    const music = await pool.query(
+      'SELECT id, audio_url, title, prompt, model, created_at FROM generated_music WHERE user_id = $1 AND is_public = true ORDER BY created_at DESC',
+      [userId]
+    );
+    
+    // Combine all items
+    const items: any[] = [];
+    
+    images.rows.forEach((img: any) => {
+      items.push({
+        id: `img-${img.id}`,
+        type: 'image',
+        image_url: img.image_url,
+        prompt: img.prompt,
+        model: img.model,
+        created_at: img.created_at
+      });
+    });
+    
+    videos.rows.forEach((vid: any) => {
+      items.push({
+        id: `vid-${vid.id}`,
+        type: 'video',
+        video_url: vid.video_url,
+        prompt: vid.prompt,
+        model: vid.model,
+        created_at: vid.created_at
+      });
+    });
+    
+    music.rows.forEach((mus: any) => {
+      items.push({
+        id: `mus-${mus.id}`,
+        type: 'music',
+        audio_url: mus.audio_url,
+        title: mus.title,
+        prompt: mus.prompt,
+        model: mus.model,
+        created_at: mus.created_at
+      });
+    });
+    
+    // Sort by date
+    items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    
+    res.json({
+      profile: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        created_at: user.created_at,
+        itemCount: items.length
+      },
+      items
+    });
+  } catch (error: any) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/products/publish', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { type, id } = req.body;

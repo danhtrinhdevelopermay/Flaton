@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Compass, Music, Loader2, Share2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Compass, Music, Loader2, Share2, ChevronUp, ChevronDown, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 
 interface ExplorerItem {
   id: string;
   type: 'image' | 'video' | 'music';
+  user_id?: number;
   image_url?: string;
   video_url?: string;
   audio_url?: string;
@@ -17,6 +19,7 @@ interface ExplorerItem {
 
 export default function ExplorerPage() {
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const [allItems, setAllItems] = useState<ExplorerItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -39,6 +42,7 @@ export default function ExplorerPage() {
           mixed.push({
             id: `img-${img.id || Math.random()}`,
             type: 'image',
+            user_id: img.user_id,
             image_url: img.image_url,
             prompt: img.prompt,
             model: img.model,
@@ -51,6 +55,7 @@ export default function ExplorerPage() {
           mixed.push({
             id: `vid-${vid.id || Math.random()}`,
             type: 'video',
+            user_id: vid.user_id,
             video_url: vid.video_url,
             prompt: vid.prompt,
             model: vid.model,
@@ -63,6 +68,7 @@ export default function ExplorerPage() {
           mixed.push({
             id: `mus-${mus.id || Math.random()}`,
             type: 'music',
+            user_id: mus.user_id,
             audio_url: mus.audio_url,
             prompt: mus.prompt,
             model: mus.model,
@@ -142,13 +148,24 @@ export default function ExplorerPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
-                <button
-                  onClick={() => handleShare(item.image_url)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm transition-colors"
-                >
-                  <Share2 className="w-4 h-4" />
-                  Chia sẻ
-                </button>
+                <div className="flex gap-2">
+                  {item.user_id && (
+                    <button
+                      onClick={() => navigate(`/profile/${item.user_id}`)}
+                      className="flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 text-sm transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      Tác giả
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleShare(item.image_url)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm transition-colors"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Chia sẻ
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -171,13 +188,24 @@ export default function ExplorerPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
-                <button
-                  onClick={() => handleShare(item.video_url)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm transition-colors"
-                >
-                  <Share2 className="w-4 h-4" />
-                  Chia sẻ
-                </button>
+                <div className="flex gap-2">
+                  {item.user_id && (
+                    <button
+                      onClick={() => navigate(`/profile/${item.user_id}`)}
+                      className="flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 text-sm transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      Tác giả
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleShare(item.video_url)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm transition-colors"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Chia sẻ
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -202,13 +230,24 @@ export default function ExplorerPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{new Date(item.created_at).toLocaleDateString('vi-VN')}</span>
-                <button
-                  onClick={() => handleShare(item.audio_url)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm transition-colors"
-                >
-                  <Share2 className="w-4 h-4" />
-                  Chia sẻ
-                </button>
+                <div className="flex gap-2">
+                  {item.user_id && (
+                    <button
+                      onClick={() => navigate(`/profile/${item.user_id}`)}
+                      className="flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 text-sm transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      Tác giả
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleShare(item.audio_url)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm transition-colors"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Chia sẻ
+                  </button>
+                </div>
               </div>
             </div>
           </div>

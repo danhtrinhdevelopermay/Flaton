@@ -12,6 +12,7 @@ import HistoryPage from './pages/HistoryPage'
 import StatusPage from './pages/StatusPage'
 import AdminPage from './pages/AdminPage'
 import ExplorerPage from './pages/ExplorerPage'
+import ProfilePage from './pages/ProfilePage'
 import LessonDetailPage from './pages/LessonDetailPage'
 import LessonsListPage from './pages/LessonsListPage'
 import PowerPointGeneratorPage from './pages/PowerPointGeneratorPage'
@@ -35,6 +36,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/explorer" element={<ExplorerPage />} />
+          <Route path="/profile/:userId" element={<ProfilePage />} />
           <Route path="/status" element={<StatusPage />} />
           <Route path="/flaton-admin-secret" element={<AdminPage />} />
         </Routes>
