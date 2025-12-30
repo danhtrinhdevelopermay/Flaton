@@ -2487,6 +2487,22 @@ app.post('/api/admin/reject-upgrade', authMiddleware, async (req: AuthRequest, r
   }
 });
 
+app.post('/api/admin/delete-upgrade', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { requestId } = req.body;
+
+    await pool.query(
+      'DELETE FROM upgrade_requests WHERE id = $1',
+      [requestId]
+    );
+
+    res.status(200).json({ success: true, message: 'Yêu cầu đã bị xóa' });
+  } catch (error: any) {
+    console.error('Error deleting upgrade:', error);
+    res.status(500).json({ error: 'Lỗi xóa yêu cầu' });
+  }
+});
+
 function startKeepAlive() {
   const RENDER_URL = 'https://flaton.onrender.com';
   if (!RENDER_URL) {

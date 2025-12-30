@@ -117,6 +117,33 @@ export default function AdminUpgradePage() {
     }
   };
 
+  const handleDelete = async (requestId: number) => {
+    if (!confirm('Bạn chắc chắn muốn xóa yêu cầu này?')) return;
+    
+    setActionLoading(requestId);
+    try {
+      const response = await fetch('/api/admin/delete-upgrade', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ requestId })
+      });
+
+      if (response.ok) {
+        setRequests(requests.filter(r => r.id !== requestId));
+      } else {
+        alert('Lỗi khi xóa yêu cầu');
+      }
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      alert('Đã xảy ra lỗi');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   if (loading) {
     return <div className="p-8">Đang tải...</div>;
   }
@@ -189,6 +216,15 @@ export default function AdminUpgradePage() {
                           Từ chối
                         </button>
                       </div>
+                    )}
+                    {(req.status === 'approved' || req.status === 'rejected') && (
+                      <button
+                        onClick={() => handleDelete(req.id)}
+                        disabled={actionLoading === req.id}
+                        className="px-3 py-1 bg-slate-500 hover:bg-slate-600 text-white rounded text-sm disabled:opacity-50"
+                      >
+                        Xóa
+                      </button>
                     )}
                   </td>
                 </tr>
