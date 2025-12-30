@@ -7,6 +7,7 @@ export default function WordGeneratorPage() {
   const [content, setContent] = useState('');
   const [contentLink, setContentLink] = useState('');
   const [useLink, setUseLink] = useState(false);
+  const [addImages, setAddImages] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
   const { theme } = useTheme();
@@ -35,7 +36,8 @@ export default function WordGeneratorPage() {
         },
         body: JSON.stringify({
           content: useLink ? contentLink : content,
-          isLink: useLink
+          isLink: useLink,
+          addImages: addImages
         })
       });
 
@@ -155,6 +157,20 @@ export default function WordGeneratorPage() {
             </p>
           </div>
         )}
+
+        {/* Add Images Option */}
+        <div className="mb-6 flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="addImages"
+            checked={addImages}
+            onChange={(e) => setAddImages(e.target.checked)}
+            className="w-4 h-4 rounded border-slate-300 cursor-pointer"
+          />
+          <label htmlFor="addImages" className={`text-sm font-medium cursor-pointer ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+            ✨ Thêm ảnh từ Pexels (AI sẽ tự chọn ảnh phù hợp)
+          </label>
+        </div>
 
         {/* Generate Button */}
         <button

@@ -17,7 +17,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { Document, Packer, Paragraph, HeadingLevel, AlignmentType, TextRun } from 'docx';
+import { Document, Packer, Paragraph, HeadingLevel, AlignmentType, TextRun, Image } from 'docx';
 
 const execPromise = promisify(exec);
 
@@ -2062,16 +2062,37 @@ if ('production' === 'production') {
   });
 }
 
+// Pexels API helper function
+const PEXELS_API_KEY = '5CMiTYU623YlebMZTUMXniZNDoe3rHP1HNwWhMJC2VLXqOtOIws7WZCx';
+
+async function fetchPexelsImage(query: string): Promise<string | null> {
+  try {
+    const response = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1`, {
+      headers: {
+        'Authorization': PEXELS_API_KEY
+      }
+    });
+    
+    const data = await response.json() as any;
+    if (data.photos && data.photos.length > 0) {
+      return data.photos[0].src.medium;
+    }
+  } catch (error) {
+    console.error('[Pexels] Error fetching image:', error);
+  }
+  return null;
+}
+
 // Word Generator Endpoint
 app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { content, isLink } = req.body;
+    const { content, isLink, addImages } = req.body;
     
     if (!content) {
       return res.status(400).json({ error: 'Nội dung hoặc link là bắt buộc' });
     }
 
-    console.log('[Word Gen] Generating document from:', isLink ? 'Link' : 'Content');
+    console.log('[Word Gen] Generating document from:', isLink ? 'Link' : 'Content', 'with images:', addImages);
 
     let textContent = content;
     
@@ -2128,8 +2149,10 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
     };
 
     // Create Word document using docx library with Times New Roman font
-    const sections = (structuredContent.sections || []).slice(0, 5).map((s: any) => [
-      new Paragraph({
+    const sectionsData = [];
+    
+    for (const s of (structuredContent.sections || []).slice(0, 5)) {
+      sectionsData.push(new Paragraph({
         children: [
           new TextRun({
             text: s.heading || 'Mục',
@@ -2139,8 +2162,9 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
           }),
         ],
         heading: HeadingLevel.HEADING_2,
-      }),
-      new Paragraph({
+      }));
+      
+      sectionsData.push(new Paragraph({
         children: [
           new TextRun({
             text: (s.content || '').substring(0, 1000),
@@ -2149,8 +2173,35 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
           }),
         ],
         spacing: { after: 400 },
-      }),
-    ]).flat();
+      }));
+      
+      // Add image if enabled
+      if (addImages && s.heading) {
+        const imageUrl = await fetchPexelsImage(s.heading);
+        if (imageUrl) {
+          try {
+            const imageResponse = await fetch(imageUrl);
+            const imageBuffer = await imageResponse.arrayBuffer();
+            sectionsData.push(new Paragraph({
+              children: [
+                new Image({
+                  data: Buffer.from(imageBuffer),
+                  type: 'image/jpeg',
+                  width: { value: 300, type: 'dxa' },
+                  height: { value: 200, type: 'dxa' },
+                }),
+              ],
+              spacing: { after: 400 },
+            }));
+            console.log('[Word Gen] Thêm ảnh cho:', s.heading);
+          } catch (err) {
+            console.log('[Word Gen] Lỗi thêm ảnh cho', s.heading, ':', err);
+          }
+        }
+      }
+    }
+    
+    const sections = sectionsData;
 
     const doc = new Document({
       sections: [{
