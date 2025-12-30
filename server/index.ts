@@ -2529,7 +2529,7 @@ app.get('/api/check-pro-status', authMiddleware, async (req: AuthRequest, res: R
 });
 
 // AI Assistant Bot Endpoint - Creates content automatically
-app.post('/api/ai-assistant', authMiddleware, async (req: AuthRequest, res: Response) => {
+app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Response) => {
   try {
     const { message } = req.body;
     if (!message) {
@@ -2558,11 +2558,13 @@ app.post('/api/ai-assistant', authMiddleware, async (req: AuthRequest, res: Resp
           const mimeType = imagePart.inlineData.mimeType || 'image/png';
           const imageUrl = `data:${mimeType};base64,${imagePart.inlineData.data}`;
           
-          // Save to database
-          await pool.query(
-            'INSERT INTO generated_images (user_id, image_url, prompt, model, aspect_ratio) VALUES ($1, $2, $3, $4, $5)',
-            [req.userId, imageUrl, message, 'gemini-2.5-flash-image', '1:1']
-          );
+          // Save to database if user is authenticated
+          if (req.userId) {
+            await pool.query(
+              'INSERT INTO generated_images (user_id, image_url, prompt, model, aspect_ratio) VALUES ($1, $2, $3, $4, $5)',
+              [req.userId, imageUrl, message, 'gemini-2.5-flash-image', '1:1']
+            );
+          }
 
           response = {
             type: 'image',
