@@ -31,10 +31,10 @@ export default function StatusPage() {
   const [loadingCredits, setLoadingCredits] = useState(true)
   const [systemStats, setSystemStats] = useState<SystemStats | null>(null)
   const [services, setServices] = useState<ServiceStatus[]>([
-    { name: 'API Server', status: 'operational', latency: 0 },
-    { name: 'Image Generation', status: 'operational', latency: 0 },
-    { name: 'Video Generation', status: 'operational', latency: 0 },
-    { name: 'Music Generation', status: 'operational', latency: 0 },
+    { name: 'Máy chủ API', status: 'operational', latency: 0 },
+    { name: 'Tạo hình ảnh', status: 'operational', latency: 0 },
+    { name: 'Tạo video', status: 'operational', latency: 0 },
+    { name: 'Tạo nhạc', status: 'operational', latency: 0 },
   ])
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
@@ -51,14 +51,14 @@ export default function StatusPage() {
       }
       
       setServices(prev => prev.map(s => 
-        s.name === 'API Server' 
+        s.name === 'Máy chủ API' 
           ? { ...s, status: 'operational' as const, latency }
           : s
       ))
     } catch (error) {
       console.error('Failed to fetch credits:', error)
       setServices(prev => prev.map(s => 
-        s.name === 'API Server' 
+        s.name === 'Máy chủ API' 
           ? { ...s, status: 'down' as const }
           : s
       ))
@@ -75,7 +75,7 @@ export default function StatusPage() {
       setSystemStats(data)
       
       setServices(prev => prev.map(s => 
-        s.name === 'API Server' 
+        s.name === 'Máy chủ API' 
           ? { ...s, status: 'operational' as const, latency: data.latency }
           : s
       ))

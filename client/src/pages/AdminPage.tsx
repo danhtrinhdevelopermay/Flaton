@@ -291,7 +291,7 @@ export default function AdminPage() {
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
                 <Shield className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-3xl font-bold">Admin Panel</h1>
+              <h1 className="text-3xl font-bold">Bảng điều khiển Admin</h1>
             </div>
 
             {error && (
@@ -351,7 +351,7 @@ export default function AdminPage() {
             <Shield className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Admin Panel</h1>
+            <h1 className="text-3xl font-bold">Bảng điều khiển Admin</h1>
             <p className="text-slate-400">Quản lý API Keys Kie.ai</p>
           </div>
         </div>
