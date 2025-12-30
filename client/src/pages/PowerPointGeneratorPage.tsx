@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Presentation, Loader2, Download, Wand2, Type, Image as ImageIcon, Move, ChevronLeft, ChevronRight } from 'lucide-react';
+import ProFeatureOverlay from '../components/ProFeatureOverlay';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Rnd } from 'react-rnd';
@@ -12,7 +13,7 @@ export default function PowerPointGeneratorPage() {
   const [generating, setGenerating] = useState(false);
   const [slides, setSlides] = useState<any[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const { token } = useAuth();
+  const { token, isAuthenticated, user } = useAuth();
 
   const templates = [
     {
@@ -142,6 +143,10 @@ export default function PowerPointGeneratorPage() {
       setGenerating(false);
     }
   };
+
+  if (isAuthenticated && user && !user.is_pro) {
+    return <ProFeatureOverlay featureName="Tạo PowerPoint AI" />
+  }
 
   return (
     <div className={`max-w-6xl mx-auto py-8 px-4 fade-in ${theme === 'light' ? 'bg-white/50' : ''}`}>

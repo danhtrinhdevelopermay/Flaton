@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Music, Loader2, Zap, RefreshCw, Mic, Piano, LogIn, Rocket, Sparkles, Crown } from 'lucide-react'
 import MusicPlayer from '../components/MusicPlayer'
+import ProFeatureOverlay from '../components/ProFeatureOverlay'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 
@@ -23,7 +24,7 @@ interface GenerationResult {
 export default function MusicGeneratorPage() {
   const navigate = useNavigate()
   const { theme } = useTheme()
-  const { token, isAuthenticated, loading: authLoading } = useAuth()
+  const { token, isAuthenticated, loading: authLoading, user } = useAuth()
   const [prompt, setPrompt] = useState('')
   const [songDescription, setSongDescription] = useState('')
   const [customMode, setCustomMode] = useState(false)
@@ -219,6 +220,10 @@ export default function MusicGeneratorPage() {
     } catch (err) {
       window.open(url, '_blank')
     }
+  }
+
+  if (isAuthenticated && user && !user.is_pro) {
+    return <ProFeatureOverlay featureName="Tạo nhạc AI" />
   }
 
   return (

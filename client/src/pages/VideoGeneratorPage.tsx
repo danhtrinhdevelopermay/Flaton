@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { Video, Loader2, Zap, Check, RefreshCw, Sparkles, LogIn, Rocket, Crown, Image } from 'lucide-react'
 import VideoPlayer from '../components/VideoPlayer'
+import ProFeatureOverlay from '../components/ProFeatureOverlay'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 
@@ -37,7 +38,7 @@ export default function VideoGeneratorPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { theme } = useTheme()
-  const { token, isAuthenticated, loading: authLoading } = useAuth()
+  const { token, isAuthenticated, loading: authLoading, user } = useAuth()
   const [selectedTool, setSelectedTool] = useState(searchParams.get('tool') || 'veo3-fast')
   const [prompt, setPrompt] = useState('')
   const [imageUrl, setImageUrl] = useState('')
@@ -280,6 +281,10 @@ export default function VideoGeneratorPage() {
       alert('Failed to get 1080P video: ' + err.message)
     }
     setUpgrading1080p(false)
+  }
+
+  if (isAuthenticated && user && !user.is_pro) {
+    return <ProFeatureOverlay featureName="Tạo video AI" />
   }
 
   return (
