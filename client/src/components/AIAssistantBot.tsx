@@ -168,18 +168,16 @@ export default function AIAssistantBot() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className={`fixed bottom-24 right-6 w-96 h-[600px] z-[80] rounded-2xl shadow-2xl flex flex-col overflow-hidden ${
+            className={`fixed inset-0 z-[90] w-full h-full flex flex-col overflow-hidden ${
               theme === 'dark'
-                ? 'bg-slate-900 border border-slate-700'
-                : 'bg-white border border-slate-200'
+                ? 'bg-slate-900'
+                : 'bg-white'
             }`}
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{
-              type: 'spring',
-              stiffness: 300,
-              damping: 30,
+              duration: 0.3,
             }}
           >
           {/* Header */}
