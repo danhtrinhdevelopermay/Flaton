@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Music, Loader2, Zap, RefreshCw, Mic, Piano, LogIn, Rocket, Sparkles, Crown } from 'lucide-react'
 import MusicPlayer from '../components/MusicPlayer'
@@ -24,7 +24,7 @@ interface GenerationResult {
 export default function MusicGeneratorPage() {
   const navigate = useNavigate()
   const { theme } = useTheme()
-  const { token, isAuthenticated, loading: authLoading, user } = useAuth()
+  const { token, isAuthenticated, loading: authLoading, user, refreshUser } = useAuth()
   const [prompt, setPrompt] = useState('')
   const [songDescription, setSongDescription] = useState('')
   const [customMode, setCustomMode] = useState(false)
@@ -39,6 +39,13 @@ export default function MusicGeneratorPage() {
   const [polling, setPolling] = useState(false)
   const [progress, setProgress] = useState(0)
   const [progressMessage, setProgressMessage] = useState('')
+
+  // Refresh user data on mount to check for Pro status updates
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      refreshUser();
+    }
+  }, [isAuthenticated, token]);
 
   const saveMusicToHistory = async (audioUrl: string, musicTitle: string, generationPrompt: string, generationStyle: string | undefined, generationModel: string) => {
     if (!isAuthenticated || !token) return

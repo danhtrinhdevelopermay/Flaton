@@ -38,7 +38,7 @@ export default function VideoGeneratorPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { theme } = useTheme()
-  const { token, isAuthenticated, loading: authLoading, user } = useAuth()
+  const { token, isAuthenticated, loading: authLoading, user, refreshUser } = useAuth()
   const [selectedTool, setSelectedTool] = useState(searchParams.get('tool') || 'veo3-fast')
   const [prompt, setPrompt] = useState('')
   const [imageUrl, setImageUrl] = useState('')
@@ -55,6 +55,13 @@ export default function VideoGeneratorPage() {
   const [progressMessage, setProgressMessage] = useState('')
 
   const currentTool = videoTools.find(t => t.id === selectedTool)
+
+  // Refresh user data on mount to check for Pro status updates
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      refreshUser();
+    }
+  }, [isAuthenticated, token]);
 
   useEffect(() => {
     const toolParam = searchParams.get('tool')

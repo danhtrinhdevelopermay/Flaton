@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Presentation, Loader2, Download, Wand2, Type, Image as ImageIcon, Move, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProFeatureOverlay from '../components/ProFeatureOverlay';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,7 +13,14 @@ export default function PowerPointGeneratorPage() {
   const [generating, setGenerating] = useState(false);
   const [slides, setSlides] = useState<any[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const { token, isAuthenticated, user } = useAuth();
+  const { token, isAuthenticated, user, refreshUser } = useAuth();
+
+  // Refresh user data on mount to check for Pro status updates
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      refreshUser();
+    }
+  }, [isAuthenticated, token]);
 
   const templates = [
     {

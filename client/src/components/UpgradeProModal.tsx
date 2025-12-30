@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, MessageCircle } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface UpgradeProModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export default function UpgradeProModal({
   token
 }: UpgradeProModalProps) {
   const { theme } = useTheme();
+  const { refreshUser } = useAuth();
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -47,6 +49,8 @@ export default function UpgradeProModal({
       if (response.ok) {
         setSubmitted(true);
         setReason('');
+        // Refresh user data to check if is_pro was already updated by admin
+        await refreshUser();
         setTimeout(() => {
           setSubmitted(false);
           onClose();
