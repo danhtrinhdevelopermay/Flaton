@@ -2528,6 +2528,34 @@ app.get('/api/check-pro-status', authMiddleware, async (req: AuthRequest, res: R
   }
 });
 
+// Admin: Grant Pro Access
+app.post('/api/admin/grant-pro', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const result = await pool.query(
+      'UPDATE users SET is_pro = true WHERE email = $1 RETURNING id, email, is_pro',
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      user: result.rows[0],
+      message: `Tài khoản ${email} đã được nâng cấp lên Pro`
+    });
+  } catch (error: any) {
+    console.error('Grant pro error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // AI Assistant Bot Endpoint - Creates content automatically
 app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Response) => {
   try {
