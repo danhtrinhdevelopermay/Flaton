@@ -17,6 +17,7 @@ import LessonDetailPage from './pages/LessonDetailPage'
 import LessonsListPage from './pages/LessonsListPage'
 import PowerPointGeneratorPage from './pages/PowerPointGeneratorPage'
 import WordGeneratorPage from './pages/WordGeneratorPage'
+import AdminUpgradePage from './pages/AdminUpgradePage'
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
           <Route path="/profile/:userId" element={<ProfilePage />} />
           <Route path="/status" element={<StatusPage />} />
           <Route path="/flaton-admin-secret" element={<AdminPage />} />
+          <Route path="/flaton-admin-secret/upgrade-requests" element={<AdminUpgradePage />} />
         </Routes>
       </Layout>
     </AuthProvider>

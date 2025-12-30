@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { Crown } from 'lucide-react';
+import UpgradeProModal from './UpgradeProModal';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProFeatureOverlayProps {
   featureName: string;
@@ -7,6 +10,8 @@ interface ProFeatureOverlayProps {
 
 export default function ProFeatureOverlay({ featureName }: ProFeatureOverlayProps) {
   const { theme } = useTheme();
+  const { user, token } = useAuth();
+  const [showModal, setShowModal] = useState(false);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/20 pointer-events-none">
@@ -33,7 +38,10 @@ export default function ProFeatureOverlay({ featureName }: ProFeatureOverlayProp
         </p>
 
         {/* Button */}
-        <button className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:shadow-lg transition-shadow">
+        <button
+          onClick={() => setShowModal(true)}
+          className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:shadow-lg transition-shadow pointer-events-auto"
+        >
           Nâng cấp tài khoản
         </button>
 
@@ -44,6 +52,17 @@ export default function ProFeatureOverlay({ featureName }: ProFeatureOverlayProp
           Nhận quyền truy cập vào tất cả các tính năng premium
         </p>
       </div>
+
+      {user && token && (
+        <UpgradeProModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          userId={user.id}
+          userName={user.name || user.email}
+          userEmail={user.email}
+          token={token}
+        />
+      )}
     </div>
   );
 }

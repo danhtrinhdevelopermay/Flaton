@@ -2410,6 +2410,78 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
   }
 });
 
+// Pro Upgrade Endpoints
+app.post('/api/upgrade-pro-request', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId, userName, userEmail, reason } = req.body;
+    
+    if (!reason || reason.trim().length === 0) {
+      return res.status(400).json({ error: 'Vui lòng nhập lý do nâng cấp' });
+    }
+
+    await pool.query(
+      'INSERT INTO upgrade_requests (user_id, user_name, user_email, reason) VALUES ($1, $2, $3, $4)',
+      [userId, userName, userEmail, reason]
+    );
+
+    res.status(200).json({ success: true, message: 'Yêu cầu đã được gửi' });
+  } catch (error: any) {
+    console.error('Error submitting upgrade request:', error);
+    res.status(500).json({ error: 'Lỗi gửi yêu cầu' });
+  }
+});
+
+app.get('/api/admin/upgrade-requests', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM upgrade_requests ORDER BY created_at DESC'
+    );
+    res.status(200).json(result.rows);
+  } catch (error: any) {
+    console.error('Error fetching upgrade requests:', error);
+    res.status(500).json({ error: 'Lỗi tải yêu cầu' });
+  }
+});
+
+app.post('/api/admin/approve-upgrade', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { requestId, userId } = req.body;
+
+    // Update request status
+    await pool.query(
+      'UPDATE upgrade_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      ['approved', requestId]
+    );
+
+    // Update user is_pro status
+    await pool.query(
+      'UPDATE users SET is_pro = true WHERE id = $1',
+      [userId]
+    );
+
+    res.status(200).json({ success: true, message: 'Yêu cầu đã được duyệt' });
+  } catch (error: any) {
+    console.error('Error approving upgrade:', error);
+    res.status(500).json({ error: 'Lỗi duyệt yêu cầu' });
+  }
+});
+
+app.post('/api/admin/reject-upgrade', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { requestId } = req.body;
+
+    await pool.query(
+      'UPDATE upgrade_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      ['rejected', requestId]
+    );
+
+    res.status(200).json({ success: true, message: 'Yêu cầu đã bị từ chối' });
+  } catch (error: any) {
+    console.error('Error rejecting upgrade:', error);
+    res.status(500).json({ error: 'Lỗi từ chối yêu cầu' });
+  }
+});
+
 function startKeepAlive() {
   const RENDER_URL = 'https://flaton.onrender.com';
   if (!RENDER_URL) {

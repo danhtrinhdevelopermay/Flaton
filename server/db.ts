@@ -259,6 +259,21 @@ export async function initDatabase() {
       )
     `);
 
+    // Create upgrade_requests table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS upgrade_requests (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        user_name VARCHAR(255) NOT NULL,
+        user_email VARCHAR(255) NOT NULL,
+        reason TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        approved_by VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     console.log('Database tables created successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
