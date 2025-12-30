@@ -30,10 +30,18 @@ export default function AdminUpgradePage() {
       return;
     }
 
-    fetchRequests();
-  }, []);
+    if (token) {
+      fetchRequests();
+    }
+  }, [token]);
 
   const fetchRequests = async () => {
+    if (!token) {
+      console.error('No token available');
+      setLoading(false);
+      return;
+    }
+    
     try {
       const response = await fetch('/api/admin/upgrade-requests', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -41,7 +49,12 @@ export default function AdminUpgradePage() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Fetched upgrade requests:', data);
         setRequests(data);
+      } else {
+        console.error('Error response:', response.status);
+        const errorData = await response.json();
+        console.error('Error details:', errorData);
       }
     } catch (error) {
       console.error('Error fetching requests:', error);

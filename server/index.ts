@@ -2415,31 +2415,36 @@ app.post('/api/upgrade-pro-request', authMiddleware, async (req: AuthRequest, re
   try {
     const { userId, userName, userEmail, reason } = req.body;
     
+    console.log('Upgrade request received:', { userId, userName, userEmail, reason: reason?.substring(0, 50) });
+    
     if (!reason || reason.trim().length === 0) {
       return res.status(400).json({ error: 'Vui lòng nhập lý do nâng cấp' });
     }
 
-    await pool.query(
-      'INSERT INTO upgrade_requests (user_id, user_name, user_email, reason) VALUES ($1, $2, $3, $4)',
+    const result = await pool.query(
+      'INSERT INTO upgrade_requests (user_id, user_name, user_email, reason) VALUES ($1, $2, $3, $4) RETURNING id',
       [userId, userName, userEmail, reason]
     );
 
-    res.status(200).json({ success: true, message: 'Yêu cầu đã được gửi' });
+    console.log('Upgrade request saved with id:', result.rows[0]?.id);
+    res.status(200).json({ success: true, message: 'Yêu cầu đã được gửi', id: result.rows[0]?.id });
   } catch (error: any) {
     console.error('Error submitting upgrade request:', error);
-    res.status(500).json({ error: 'Lỗi gửi yêu cầu' });
+    res.status(500).json({ error: error.message || 'Lỗi gửi yêu cầu' });
   }
 });
 
 app.get('/api/admin/upgrade-requests', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    console.log('Fetching upgrade requests...');
     const result = await pool.query(
       'SELECT * FROM upgrade_requests ORDER BY created_at DESC'
     );
+    console.log('Found requests:', result.rows.length);
     res.status(200).json(result.rows);
   } catch (error: any) {
     console.error('Error fetching upgrade requests:', error);
-    res.status(500).json({ error: 'Lỗi tải yêu cầu' });
+    res.status(500).json({ error: error.message || 'Lỗi tải yêu cầu' });
   }
 });
 
