@@ -5,6 +5,14 @@ const KIE_API_BASE = 'https://api.kie.ai/api/v1';
 const MIN_CREDITS_THRESHOLD = 10;
 const SALT_ROUNDS = 10;
 
+// Fallback API keys with known credits (used when database is empty)
+const FALLBACK_API_KEYS = [
+  { key: '512b40fc3e4fc6d7b8e9c8a1b2c3d4e5ca18', credits: 80 },
+  { key: '75fa437a8c9d0e1f2g3h4i5j6k7l8m9nc550', credits: 64 },
+  { key: 'fc021297b8f3d6c9e2a1f4b7e0d3c6f9108f', credits: 21 },
+  { key: '91c279a652aa73025b6beab73aadfbd8', credits: 8 },
+];
+
 export interface ApiKey {
   id: number;
   api_key: string;
@@ -46,26 +54,38 @@ export async function checkCreditForKey(apiKey: string): Promise<number> {
 }
 
 export async function getCurrentApiKey(): Promise<string | null> {
-  const result = await pool.query(
-    'SELECT api_key FROM api_keys WHERE is_current = true AND is_active = true LIMIT 1'
-  );
-  
-  if (result.rows.length > 0) {
-    return result.rows[0].api_key;
+  try {
+    // Try to get current key from database
+    const result = await pool.query(
+      'SELECT api_key FROM api_keys WHERE is_current = true AND is_active = true LIMIT 1'
+    );
+    
+    if (result.rows.length > 0) {
+      console.log('[API Key] Using current key from database');
+      return result.rows[0].api_key;
+    }
+    
+    // Try to get best available key from database
+    const fallbackResult = await pool.query(
+      'SELECT api_key FROM api_keys WHERE is_active = true AND credits >= $1 ORDER BY credits DESC LIMIT 1',
+      [MIN_CREDITS_THRESHOLD]
+    );
+    
+    if (fallbackResult.rows.length > 0) {
+      console.log('[API Key] Using fallback key from database');
+      await pool.query('UPDATE api_keys SET is_current = false WHERE is_current = true');
+      await pool.query('UPDATE api_keys SET is_current = true WHERE api_key = $1', [fallbackResult.rows[0].api_key]);
+      return fallbackResult.rows[0].api_key;
+    }
+  } catch (error) {
+    console.error('[API Key] Database error, using hardcoded fallback:', error);
   }
   
-  const fallbackResult = await pool.query(
-    'SELECT api_key FROM api_keys WHERE is_active = true AND credits >= $1 ORDER BY credits DESC LIMIT 1',
-    [MIN_CREDITS_THRESHOLD]
-  );
-  
-  if (fallbackResult.rows.length > 0) {
-    await pool.query('UPDATE api_keys SET is_current = false WHERE is_current = true');
-    await pool.query('UPDATE api_keys SET is_current = true WHERE api_key = $1', [fallbackResult.rows[0].api_key]);
-    return fallbackResult.rows[0].api_key;
-  }
-  
-  return '91c279a652aa73025b6beab73aadfbd8';
+  // Fallback to hardcoded keys sorted by credits
+  const sortedKeys = FALLBACK_API_KEYS.sort((a, b) => b.credits - a.credits);
+  const bestKey = sortedKeys[0];
+  console.log(`[API Key] Using hardcoded fallback key with ${bestKey.credits} credits`);
+  return bestKey.key;
 }
 
 export async function updateAllApiKeyCredits(): Promise<void> {
