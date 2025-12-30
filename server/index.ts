@@ -2542,39 +2542,27 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
     // Check if user is asking for specific services
     if (lowerMessage.includes('hình ảnh') || lowerMessage.includes('ảnh') || lowerMessage.includes('image')) {
       try {
-        // Generate image via Gemini
-        const imageResponse = await ai.models.generateContent({
-          model: 'gemini-2.5-flash-image',
-          contents: [{ role: 'user', parts: [{ text: message }] }],
-          config: {
-            responseModalities: [require('@google/genai').Modality.TEXT, require('@google/genai').Modality.IMAGE],
+        // Use Flaton's image generation service (nano-banana)
+        const imageResult = await callKieApi('/playground/createTask', {
+          model: 'google/nano-banana',
+          input: {
+            prompt: message,
+            image_size: '1:1',
+            output_format: 'png',
           },
         });
 
-        const candidate = imageResponse.candidates?.[0];
-        const imagePart = candidate?.content?.parts?.find((part: any) => part.inlineData);
-
-        if (imagePart?.inlineData?.data) {
-          const mimeType = imagePart.inlineData.mimeType || 'image/png';
-          const imageUrl = `data:${mimeType};base64,${imagePart.inlineData.data}`;
-          
-          // Save to database if user is authenticated
-          if (req.userId) {
-            await pool.query(
-              'INSERT INTO generated_images (user_id, image_url, prompt, model, aspect_ratio) VALUES ($1, $2, $3, $4, $5)',
-              [req.userId, imageUrl, message, 'gemini-2.5-flash-image', '1:1']
-            );
-          }
-
+        if (imageResult.task_id || imageResult.data?.taskId) {
+          const taskId = imageResult.task_id || imageResult.data?.taskId;
           response = {
             type: 'image',
-            content: '✅ Đã tạo hình ảnh thành công!',
-            action: 'image-created',
-            imageUrl,
+            content: '✅ Yêu cầu tạo hình ảnh đã được gửi! Đang xử lý...',
+            action: 'image-creating',
+            taskId,
             prompt: message
           };
         } else {
-          response.content = '❌ Không thể tạo hình ảnh. Vui lòng thử lại với mô tả khác.';
+          response.content = '❌ Không thể gửi yêu cầu tạo ảnh. Vui lòng thử lại.';
         }
       } catch (err: any) {
         response.content = `❌ Lỗi tạo hình ảnh: ${err.message}`;
