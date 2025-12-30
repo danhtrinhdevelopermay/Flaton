@@ -2175,22 +2175,41 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
         spacing: { after: 400 },
       }));
       
-      // Add image URL if enabled
+      // Add image if enabled
       if (addImages && s.heading) {
         const imageUrl = await fetchPexelsImage(s.heading);
         if (imageUrl) {
-          sectionsData.push(new Paragraph({
-            children: [
-              new TextRun({
-                text: `[Ảnh: ${imageUrl}]`,
-                rFonts: { ascii: 'Times New Roman', highAnsi: 'Times New Roman' },
-                color: '666666',
-                italics: true,
-              }),
-            ],
-            spacing: { after: 400 },
-          }));
-          console.log('[Word Gen] Thêm ảnh cho:', s.heading);
+          try {
+            const imageResponse = await fetch(imageUrl);
+            const imageBuffer = await imageResponse.arrayBuffer();
+            const imageData = Buffer.from(imageBuffer);
+            
+            sectionsData.push(new Paragraph({
+              children: [
+                new Image({
+                  data: imageData,
+                  type: 'image/jpeg',
+                  width: { value: 300, type: 'dxa' },
+                  height: { value: 200, type: 'dxa' },
+                } as any),
+              ],
+              spacing: { after: 400 },
+            }));
+            console.log('[Word Gen] Thêm ảnh cho:', s.heading);
+          } catch (err) {
+            console.log('[Word Gen] Lỗi thêm ảnh:', err);
+            // Fallback: add image URL as text
+            sectionsData.push(new Paragraph({
+              children: [
+                new TextRun({
+                  text: `Ảnh từ Pexels: ${imageUrl}`,
+                  rFonts: { ascii: 'Times New Roman', highAnsi: 'Times New Roman' },
+                  color: '666666',
+                }),
+              ],
+              spacing: { after: 400 },
+            }));
+          }
         }
       }
     }
