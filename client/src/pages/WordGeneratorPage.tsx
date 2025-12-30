@@ -158,17 +158,18 @@ export default function WordGeneratorPage() {
           </div>
         )}
 
-        {/* Add Images Option */}
-        <div className="mb-6 flex items-center gap-3">
+        {/* Add Images Option - Coming Soon */}
+        <div className="mb-6 flex items-center gap-3 opacity-50">
           <input
             type="checkbox"
             id="addImages"
             checked={addImages}
             onChange={(e) => setAddImages(e.target.checked)}
-            className="w-4 h-4 rounded border-slate-300 cursor-pointer"
+            className="w-4 h-4 rounded border-slate-300 cursor-not-allowed"
+            disabled
           />
-          <label htmlFor="addImages" className={`text-sm font-medium cursor-pointer ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-            ✨ Thêm ảnh từ Pexels (AI sẽ tự chọn ảnh phù hợp)
+          <label htmlFor="addImages" className={`text-sm font-medium cursor-not-allowed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+            ✨ Thêm ảnh từ Pexels (Sắp cập nhật...)
           </label>
         </div>
 
