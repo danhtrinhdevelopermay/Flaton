@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { MessageSquare, X, Send, Loader2, Sparkles } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '../contexts/ThemeContext'
 
 interface Message {
@@ -129,31 +130,58 @@ export default function AIAssistantBot() {
   return (
     <>
       {/* Floating Button */}
-      <button
+      <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-[80] w-14 h-14 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center ${
+        className={`fixed bottom-6 right-6 z-[80] w-14 h-14 rounded-full shadow-lg flex items-center justify-center ${
           theme === 'dark'
             ? 'bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white'
             : 'bg-gradient-to-br from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white'
-        } ${isOpen ? 'scale-110' : 'scale-100'}`}
+        }`}
         title="Trợ lý AI"
+        animate={{
+          scale: isOpen ? 1.1 : 1,
+          rotate: isOpen ? 90 : 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 260,
+          damping: 20,
+        }}
+        whileHover={{ scale: isOpen ? 1.15 : 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
-        {isOpen ? (
-          <X className="w-6 h-6" />
-        ) : (
-          <MessageSquare className="w-6 h-6" />
-        )}
-      </button>
+        <motion.div
+          animate={{
+            rotate: isOpen ? 180 : 0,
+          }}
+          transition={{ duration: 0.3 }}
+        >
+          {isOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <MessageSquare className="w-6 h-6" />
+          )}
+        </motion.div>
+      </motion.button>
 
       {/* Chat Window */}
-      {isOpen && (
-        <div
-          className={`fixed bottom-24 right-6 w-96 h-[600px] z-[80] rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
-            theme === 'dark'
-              ? 'bg-slate-900 border border-slate-700'
-              : 'bg-white border border-slate-200'
-          }`}
-        >
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className={`fixed bottom-24 right-6 w-96 h-[600px] z-[80] rounded-2xl shadow-2xl flex flex-col overflow-hidden ${
+              theme === 'dark'
+                ? 'bg-slate-900 border border-slate-700'
+                : 'bg-white border border-slate-200'
+            }`}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{
+              type: 'spring',
+              stiffness: 300,
+              damping: 30,
+            }}
+          >
           {/* Header */}
           <div
             className={`p-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-between`}
@@ -251,8 +279,9 @@ export default function AIAssistantBot() {
               </button>
             </div>
           </form>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
