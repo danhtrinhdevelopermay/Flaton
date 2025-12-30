@@ -18,6 +18,7 @@ import LessonsListPage from './pages/LessonsListPage'
 import PowerPointGeneratorPage from './pages/PowerPointGeneratorPage'
 import WordGeneratorPage from './pages/WordGeneratorPage'
 import AdminUpgradePage from './pages/AdminUpgradePage'
+import MilestonesPage from './pages/MilestonesPage'
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
           <Route path="/explorer" element={<ExplorerPage />} />
           <Route path="/profile/:userId" element={<ProfilePage />} />
           <Route path="/status" element={<StatusPage />} />
+          <Route path="/milestones" element={<MilestonesPage />} />
           <Route path="/flaton-admin-secret" element={<AdminPage />} />
           <Route path="/flaton-admin-secret/upgrade-requests" element={<AdminUpgradePage />} />
         </Routes>

@@ -29,7 +29,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
+args = "cd /home/runner/workspace && npm run dev"
 waitForPort = 5000
 
 [[ports]]
@@ -40,11 +40,6 @@ externalPort = 3001
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 5002
-externalPort = 5000
-
 [userenv]
 
 [userenv.shared]
-GEMINI_API_KEY = "AIzaSyBYU61voLkwy9QMkfYTWMJH_GEzd5FvspY"
