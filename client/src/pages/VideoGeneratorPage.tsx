@@ -137,12 +137,12 @@ export default function VideoGeneratorPage() {
         }
 
         if (data.status === 'failed') {
-          return { error: 'Video generation failed' }
+          return { error: 'Tạo video thất bại' }
         }
 
         attempts++
         if (attempts >= maxAttempts) {
-          return { error: 'Timeout - please try again' }
+          return { error: 'Hết giờ - vui lòng thử lại' }
         }
 
         await new Promise(resolve => setTimeout(resolve, 5000))

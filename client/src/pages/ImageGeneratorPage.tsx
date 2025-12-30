@@ -104,12 +104,12 @@ export default function ImageGeneratorPage() {
         }
 
         if (data.status === 'failed') {
-          return { error: 'Generation failed' }
+          return { error: 'Tạo hình ảnh thất bại' }
         }
 
         attempts++
         if (attempts >= maxAttempts) {
-          return { error: 'Timeout - please try again' }
+          return { error: 'Hết giờ - vui lòng thử lại' }
         }
 
         const progressPercent = Math.min(95, Math.floor((attempts / 20) * 100))

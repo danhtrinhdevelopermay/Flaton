@@ -121,12 +121,12 @@ export default function MusicGeneratorPage() {
         }
 
         if (data.status === 'failed') {
-          return { error: data.error || 'Music generation failed' }
+          return { error: data.error || 'Tạo nhạc thất bại' }
         }
 
         attempts++
         if (attempts >= maxAttempts) {
-          return { error: 'Timeout - please try again' }
+          return { error: 'Hết giờ - vui lòng thử lại' }
         }
 
         await new Promise(resolve => setTimeout(resolve, 5000))
