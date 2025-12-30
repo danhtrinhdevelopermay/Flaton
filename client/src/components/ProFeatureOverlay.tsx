@@ -9,12 +9,9 @@ export default function ProFeatureOverlay({ featureName }: ProFeatureOverlayProp
   const { theme } = useTheme();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop blur */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-      
+    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
       {/* Content */}
-      <div className={`relative mx-4 rounded-2xl p-8 max-w-sm shadow-2xl ${
+      <div className={`relative mx-4 rounded-2xl p-8 max-w-sm shadow-2xl pointer-events-auto ${
         theme === 'dark' 
           ? 'bg-slate-900 border border-slate-800' 
           : 'bg-white border border-slate-200'
