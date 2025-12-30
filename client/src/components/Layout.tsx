@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift, Compass, BookOpen, Presentation, FileText, Sun, Moon } from 'lucide-react'
+import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift, Compass, BookOpen, Presentation, FileText, Sun, Moon, ChevronDown } from 'lucide-react'
 import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -18,6 +18,7 @@ export default function Layout({ children }: LayoutProps) {
   const [credits, setCredits] = useState<number | null>(null)
   const [canCheckin, setCanCheckin] = useState(false)
   const [checkinLoading, setCheckinLoading] = useState(false)
+  const [showServicesDropdown, setShowServicesDropdown] = useState(false)
 
   useEffect(() => {
     setShowNavModal(false)
@@ -63,13 +64,16 @@ export default function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { path: '/', label: 'Trang chủ', icon: Home },
+    { path: '/explorer', label: 'Explorer', icon: Compass },
+    { path: '/status', label: 'Trạng thái dịch vụ', icon: Activity },
+  ]
+
+  const serviceItems = [
     { path: '/image-generator', label: 'Tạo hình ảnh', icon: Image },
     { path: '/video-generator', label: 'Tạo video', icon: Video },
     { path: '/music-generator', label: 'Tạo nhạc', icon: Music },
     { path: '/pptx-generator', label: 'Tạo PowerPoint', icon: Presentation },
     { path: '/word-generator', label: 'Tạo Word', icon: FileText },
-    { path: '/explorer', label: 'Explorer', icon: Compass },
-    { path: '/status', label: 'Trạng thái dịch vụ', icon: Activity },
   ]
 
   return (
@@ -259,6 +263,57 @@ export default function Layout({ children }: LayoutProps) {
               {item.label}
             </Link>
           ))}
+
+          {/* Services Dropdown */}
+          <button
+            onClick={() => setShowServicesDropdown(!showServicesDropdown)}
+            className={`py-3 text-2xl font-medium transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center gap-2 ${
+              theme === 'dark'
+                ? 'text-white hover:text-indigo-400'
+                : 'text-slate-900 hover:text-indigo-500'
+            }`}
+            style={{
+              transitionDelay: showNavModal ? `${150 + navItems.length * 80}ms` : '0ms',
+              opacity: showNavModal ? 1 : 0,
+              transform: showNavModal ? 'translateY(0)' : 'translateY(-20px)'
+            }}
+          >
+            Dịch vụ
+            <ChevronDown
+              className={`w-5 h-5 transition-transform duration-300 ${showServicesDropdown ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {/* Services Items */}
+          {showServicesDropdown && (
+            <div className="flex flex-col pl-4">
+              {serviceItems.map((item, index) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => {
+                    setShowNavModal(false)
+                    setShowServicesDropdown(false)
+                  }}
+                  className={`py-2 text-lg font-medium transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center gap-2 ${
+                    location.pathname === item.path
+                      ? 'text-indigo-400'
+                      : theme === 'dark'
+                        ? 'text-slate-300 hover:text-indigo-400'
+                        : 'text-slate-700 hover:text-indigo-500'
+                  }`}
+                  style={{
+                    transitionDelay: showServicesDropdown ? `${100 + index * 60}ms` : '0ms',
+                    opacity: showServicesDropdown ? 1 : 0,
+                    transform: showServicesDropdown ? 'translateY(0)' : 'translateY(-10px)'
+                  }}
+                >
+                  <item.icon className="w-5 h-5" />
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
         </nav>
       </div>
 
