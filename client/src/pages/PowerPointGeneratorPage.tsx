@@ -147,24 +147,32 @@ export default function PowerPointGeneratorPage() {
   const generateFinalPPTX = async () => {
     setGenerating(true);
     try {
-      const response = await fetch('/api/export-pptx', {
+      const response = await fetch('/api/generate/pptx-from-html', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ slides, style: selectedTemplate, imageSource }),
+        body: JSON.stringify({ 
+          slides: slides.map(s => ({
+            title: s.elements.find((el: any) => el.id === 'title')?.content || s.title,
+            content: (s.elements.find((el: any) => el.id === 'content')?.content || '').split('\n').filter((p: string) => p.trim())
+          }))
+        }),
       });
 
-      const data = await response.json();
       if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = `data:application/vnd.openxmlformats-officedocument.presentationml.presentation;base64,${data.file}`;
-        link.download = data.fileName || 'presentation.pptx';
+        link.href = url;
+        link.download = 'presentation.pptx';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
       } else {
+        const data = await response.json();
         alert(data.error || 'Lỗi khi xuất file');
       }
     } catch (error) {
