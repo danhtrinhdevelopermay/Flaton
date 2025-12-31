@@ -1774,7 +1774,7 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: [{ role: 'user', parts: [{ text: geminiPrompt }] }],
     });
 
@@ -1842,7 +1842,7 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: [{ role: 'user', parts: [{ text: pythonCodePrompt }] }],
     });
 
@@ -2207,7 +2207,7 @@ app.post('/api/generate/pptx-from-raw-html', authMiddleware, async (req: AuthReq
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       messages: [{ role: "user", content: parserPrompt }],
       response_format: { type: "json_object" },
     });
