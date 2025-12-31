@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { Image, Loader2, Download, Zap, Check, RefreshCw, LogIn, Rocket, Sparkles, Palette } from 'lucide-react'
+import WaterDropAnimation from '../components/WaterDropAnimation'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 
@@ -41,6 +42,9 @@ export default function ImageGeneratorPage() {
   const [polling, setPolling] = useState(false)
   const [progress, setProgress] = useState(0)
   const [progressMessage, setProgressMessage] = useState('')
+  const [showWaterDrop, setShowWaterDrop] = useState(false)
+  const generateButtonRef = useRef<HTMLButtonElement>(null)
+  const loadingAreaRef = useRef<HTMLDivElement>(null)
 
   const currentTool = imageTools.find(t => t.id === selectedTool)
 
@@ -144,6 +148,9 @@ export default function ImageGeneratorPage() {
       return
     }
 
+    setShowWaterDrop(true)
+    setTimeout(() => setShowWaterDrop(false), 1200)
+
     setLoading(true)
     setResult(null)
 
@@ -221,6 +228,11 @@ export default function ImageGeneratorPage() {
 
   return (
     <div className="fade-in">
+      <WaterDropAnimation 
+        isActive={showWaterDrop}
+        fromButton={generateButtonRef}
+        toLoading={loadingAreaRef}
+      />
       <div className="flex items-center gap-3 mb-8">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
           <Image className="w-6 h-6 text-white" />
@@ -311,6 +323,7 @@ export default function ImageGeneratorPage() {
           </div>
 
           <button
+            ref={generateButtonRef}
             onClick={handleGenerate}
             disabled={loading || !prompt.trim()}
             className="w-full bubble-btn btn-primary py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
@@ -329,7 +342,7 @@ export default function ImageGeneratorPage() {
           </button>
         </div>
 
-        <div className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
+        <div ref={loadingAreaRef} className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
           <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Kết quả</h2>
 
           {!result && !loading && (

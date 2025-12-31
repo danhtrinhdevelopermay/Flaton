@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { Video, Loader2, Zap, Check, RefreshCw, Sparkles, LogIn, Rocket, Crown, Image } from 'lucide-react'
+import WaterDropAnimation from '../components/WaterDropAnimation'
 import VideoPlayer from '../components/VideoPlayer'
 import ProFeatureOverlay from '../components/ProFeatureOverlay'
 import { useAuth } from '../contexts/AuthContext'
@@ -53,6 +54,9 @@ export default function VideoGeneratorPage() {
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
   const [progressMessage, setProgressMessage] = useState('')
+  const [showWaterDrop, setShowWaterDrop] = useState(false)
+  const generateButtonRef = useRef<HTMLButtonElement>(null)
+  const loadingAreaRef = useRef<HTMLDivElement>(null)
 
   const currentTool = videoTools.find(t => t.id === selectedTool)
 
@@ -169,6 +173,9 @@ export default function VideoGeneratorPage() {
       navigate('/login')
       return
     }
+
+    setShowWaterDrop(true)
+    setTimeout(() => setShowWaterDrop(false), 1200)
 
     setLoading(true)
     setResult(null)
@@ -292,6 +299,11 @@ export default function VideoGeneratorPage() {
 
   return (
     <div className="fade-in">
+      <WaterDropAnimation 
+        isActive={showWaterDrop}
+        fromButton={generateButtonRef}
+        toLoading={loadingAreaRef}
+      />
       <div className="flex items-center gap-3 mb-8">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
           <Video className="w-6 h-6 text-white" />

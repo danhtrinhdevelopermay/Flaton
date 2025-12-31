@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { FileText, Loader2, Download, Wand2 } from 'lucide-react';
+import WaterDropAnimation from '../components/WaterDropAnimation';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -10,6 +11,9 @@ export default function WordGeneratorPage() {
   const [addImages, setAddImages] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
+  const [showWaterDrop, setShowWaterDrop] = useState(false);
+  const generateButtonRef = useRef<HTMLButtonElement>(null);
+  const loadingAreaRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const { token, isAuthenticated } = useAuth();
 
@@ -24,6 +28,8 @@ export default function WordGeneratorPage() {
       return;
     }
 
+    setShowWaterDrop(true);
+    setTimeout(() => setShowWaterDrop(false), 1200);
     setGenerating(true);
     setDownloadUrl('');
 
@@ -70,6 +76,11 @@ export default function WordGeneratorPage() {
 
   return (
     <div className="fade-in">
+      <WaterDropAnimation 
+        isActive={showWaterDrop}
+        fromButton={generateButtonRef}
+        toLoading={loadingAreaRef}
+      />
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Presentation, Loader2, Download, Wand2, Type, Image as ImageIcon, Move, ChevronLeft, ChevronRight } from 'lucide-react';
+import WaterDropAnimation from '../components/WaterDropAnimation';
 import ProFeatureOverlay from '../components/ProFeatureOverlay';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -13,6 +14,9 @@ export default function PowerPointGeneratorPage() {
   const [generating, setGenerating] = useState(false);
   const [slides, setSlides] = useState<any[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [showWaterDrop, setShowWaterDrop] = useState(false);
+  const generateButtonRef = useRef<HTMLButtonElement>(null);
+  const loadingAreaRef = useRef<HTMLDivElement>(null);
   const { token, isAuthenticated, user, refreshUser } = useAuth();
 
   // Refresh user data on mount to check for Pro status updates
@@ -55,6 +59,8 @@ export default function PowerPointGeneratorPage() {
 
   const handleGenerate = async () => {
     if (!prompt) return;
+    setShowWaterDrop(true);
+    setTimeout(() => setShowWaterDrop(false), 1200);
     setGenerating(true);
     setSlides([]);
     setCurrentSlideIndex(0);
@@ -153,6 +159,11 @@ export default function PowerPointGeneratorPage() {
 
   return (
     <div className={`max-w-6xl mx-auto py-8 px-4 fade-in ${theme === 'light' ? 'bg-white/50' : ''}`}>
+      <WaterDropAnimation 
+        isActive={showWaterDrop}
+        fromButton={generateButtonRef}
+        toLoading={loadingAreaRef}
+      />
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg">

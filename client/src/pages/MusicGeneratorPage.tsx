@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Music, Loader2, Zap, RefreshCw, Mic, Piano, LogIn, Rocket, Sparkles, Crown } from 'lucide-react'
+import WaterDropAnimation from '../components/WaterDropAnimation'
 import MusicPlayer from '../components/MusicPlayer'
 import ProFeatureOverlay from '../components/ProFeatureOverlay'
 import { useAuth } from '../contexts/AuthContext'
@@ -39,6 +40,9 @@ export default function MusicGeneratorPage() {
   const [polling, setPolling] = useState(false)
   const [progress, setProgress] = useState(0)
   const [progressMessage, setProgressMessage] = useState('')
+  const [showWaterDrop, setShowWaterDrop] = useState(false)
+  const generateButtonRef = useRef<HTMLButtonElement>(null)
+  const loadingAreaRef = useRef<HTMLDivElement>(null)
 
   // Refresh user data on mount to check for Pro status updates
   useEffect(() => {
@@ -150,6 +154,9 @@ export default function MusicGeneratorPage() {
       return
     }
 
+    setShowWaterDrop(true)
+    setTimeout(() => setShowWaterDrop(false), 1200)
+
     setLoading(true)
     setResult(null)
 
@@ -231,6 +238,11 @@ export default function MusicGeneratorPage() {
 
   return (
     <div className="fade-in">
+      <WaterDropAnimation 
+        isActive={showWaterDrop}
+        fromButton={generateButtonRef}
+        toLoading={loadingAreaRef}
+      />
       <div className="flex items-center gap-3 mb-8">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center">
           <Music className="w-6 h-6 text-white" />
