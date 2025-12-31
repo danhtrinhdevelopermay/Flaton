@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Presentation, Loader2, Download, Wand2, Type, Image as ImageIcon, Move, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Presentation, Loader2, Download, Wand2, Type, Image as ImageIcon, Move, ChevronLeft, ChevronRight, Code } from 'lucide-react';
 import WaterDropAnimation from '../components/WaterDropAnimation';
 import ProFeatureOverlay from '../components/ProFeatureOverlay';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,6 +10,8 @@ import { Rnd } from 'react-rnd';
 export default function PowerPointGeneratorPage() {
   const [searchParams] = useSearchParams()
   const [prompt, setPrompt] = useState('');
+  const [htmlContent, setHtmlContent] = useState('');
+  const [showHtmlModal, setShowHtmlModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState('Professional');
   const [imageSource, setImageSource] = useState('internet');
   const { theme } = useTheme();
@@ -74,6 +76,42 @@ export default function PowerPointGeneratorPage() {
       color: '#ffb7c5'
     }
   ];
+
+  const handleGenerateFromHtml = async () => {
+    if (!htmlContent) return;
+    setGenerating(true);
+    try {
+      const response = await fetch('/api/generate/pptx-from-raw-html', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ htmlContent }),
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'presentation_from_html.pptx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        setShowHtmlModal(false);
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Lỗi khi xuất file từ HTML');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Đã xảy ra lỗi kết nối');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!prompt) return;
@@ -190,6 +228,48 @@ export default function PowerPointGeneratorPage() {
         fromButton={generateButtonRef}
         toLoading={loadingAreaRef}
       />
+      
+      {showHtmlModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className={`w-full max-w-2xl rounded-2xl shadow-2xl p-6 ${theme === 'dark' ? 'bg-slate-900 border border-slate-700' : 'bg-white border border-slate-200'}`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Code className="w-6 h-6 text-orange-500" />
+                <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Nhập mã HTML/CSS</h2>
+              </div>
+              <button onClick={() => setShowHtmlModal(false)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400">✕</button>
+            </div>
+            <p className={`text-sm mb-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Dán mã HTML/CSS chứa nội dung bài giảng của bạn vào đây. AI sẽ tự động tách slide và tạo file PPTX.</p>
+            <textarea
+              value={htmlContent}
+              onChange={(e) => setHtmlContent(e.target.value)}
+              placeholder="Paste <html> or CSS/HTML snippets here..."
+              className={`w-full h-64 border rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-colors ${
+                theme === 'dark'
+                  ? 'bg-slate-800 border-slate-700 text-slate-100'
+                  : 'bg-slate-50 border-slate-300 text-slate-900'
+              }`}
+            />
+            <div className="flex justify-end gap-3 mt-6">
+              <button 
+                onClick={() => setShowHtmlModal(false)}
+                className={`px-6 py-2 rounded-xl font-medium ${theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleGenerateFromHtml}
+                disabled={generating || !htmlContent}
+                className="flex items-center gap-2 px-8 py-2 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold rounded-xl shadow-lg transition-all"
+              >
+                {generating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                Tạo PowerPoint ngay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg">
@@ -201,16 +281,29 @@ export default function PowerPointGeneratorPage() {
           </div>
         </div>
         
-        {slides.length > 0 && (
+        <div className="flex gap-3">
           <button
-            onClick={generateFinalPPTX}
-            disabled={generating}
-            className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 text-white rounded-xl font-bold transition-all shadow-lg"
+            onClick={() => setShowHtmlModal(true)}
+            className={`flex items-center gap-2 px-5 py-3 border-2 rounded-xl font-bold transition-all shadow-md ${
+              theme === 'dark' 
+                ? 'border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-100' 
+                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-900'
+            }`}
           >
-            {generating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-            Xuất PPTX
+            <Code className="w-5 h-5" />
+            Nhập HTML
           </button>
-        )}
+          {slides.length > 0 && (
+            <button
+              onClick={generateFinalPPTX}
+              disabled={generating}
+              className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 text-white rounded-xl font-bold transition-all shadow-lg"
+            >
+              {generating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+              Xuất PPTX
+            </button>
+          )}
+        </div>
       </div>
 
       {!slides.length ? (
