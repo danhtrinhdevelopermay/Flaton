@@ -99,7 +99,21 @@ Uses the official KIE AI API endpoints:
 - `/api/v1/jobs/createTask` - For Grok Imagenia, Seedream, Sora 2
 - `/api/v1/jobs/recordInfo` - Poll Grok, Seedream, Sora 2 task status
 
-## Recent Changes (Dec 29, 2025)
+## Recent Changes (Dec 31, 2025)
+
+### AI Assistant Auto-Generation Feature (Complete)
+- **Backend**: AI assistant endpoint already returns `prompt` field in response for all content types
+- **Frontend Integration**: Modified AIAssistantBot to pass prompt as URL parameter (`?autoPrompt=encoded_prompt`) when redirecting to generator pages
+- **Auto-Trigger Logic**: All 5 generator pages (Image, Video, Music, PowerPoint, Word) now:
+  - Import `useSearchParams` from react-router-dom
+  - Read `autoPrompt` URL parameter on mount
+  - Auto-fill prompt input field
+  - Automatically trigger generation after 800ms delay
+  - Support for enhanced prompts (Gemini AI-enhanced for video/music)
+- **Tested Flows**: All routes working - user chat → AI detects keywords → auto-redirect with prompt → auto-generate content
+- **No LSP Errors**: All TypeScript import issues resolved
+
+## Previous Changes (Dec 29, 2025)
 
 ### UI Improvements & Theme Consistency (Complete)
 - **Navbar Styling**: Fixed header navbar to support light/dark theme properly:
