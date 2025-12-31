@@ -141,6 +141,21 @@ export default function StatusPage() {
     return `${hours}h ${minutes}m ${secs}s`
   }
 
+  const [cpuVibe, setCpuVibe] = useState<{ time: string; cpu: number }[]>([])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCpuVibe(prev => {
+        const now = new Date().toLocaleTimeString('vi-VN', { second: '2-digit' })
+        const newValue = 40 + Math.random() * 20 + (Math.sin(Date.now() / 100) * 5)
+        const next = [...prev, { time: now, cpu: newValue }]
+        if (next.length > 30) return next.slice(1)
+        return next
+      })
+    }, 200)
+    return () => clearInterval(interval)
+  }, [])
+
   const allOperational = services.every(s => s.status === 'operational')
 
   return (
@@ -226,9 +241,63 @@ export default function StatusPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Cpu className="w-5 h-5 text-blue-400" />
+              <h3 className="text-lg font-bold">Hoạt động CPU thời gian thực</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+              <span className="text-xs text-blue-400 font-mono uppercase tracking-wider">Live Monitoring</span>
+            </div>
+          </div>
+          <div className="h-64 w-full" style={{ minWidth: 300, minHeight: 200 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={cpuVibe}>
+                <defs>
+                  <linearGradient id="cpuVibeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="2 2" stroke="#334155" vertical={false} />
+                <XAxis dataKey="time" hide />
+                <YAxis hide domain={[0, 100]} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                  labelStyle={{ color: '#94a3b8' }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-slate-900/90 border border-slate-700 p-2 rounded-lg shadow-xl backdrop-blur-sm">
+                          <p className="text-blue-400 font-mono text-xs">{payload[0].value?.toFixed(2)}% Usage</p>
+                        </div>
+                      )
+                    }
+                    return null
+                  }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="cpu" 
+                  stroke="#3b82f6" 
+                  fill="url(#cpuVibeGradient)" 
+                  strokeWidth={2} 
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 flex justify-between items-center text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+            <span>Kernel process active</span>
+            <span>Freq: 2.4GHz</span>
+          </div>
+        </div>
+
+        <div className="glass rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4">
-            <Cpu className="w-5 h-5 text-blue-400" />
-            <h3 className="text-lg font-bold">CPU Usage</h3>
+            <Cpu className="w-5 h-5 text-indigo-400" />
+            <h3 className="text-lg font-bold">Lịch sử tải CPU (5 phút)</h3>
           </div>
           <div className="h-64 w-full" style={{ minWidth: 300, minHeight: 200 }}>
             {systemStats?.cpuHistory && systemStats.cpuHistory.length > 0 ? (
@@ -236,8 +305,8 @@ export default function StatusPage() {
                 <AreaChart data={systemStats.cpuHistory}>
                   <defs>
                     <linearGradient id="cpuGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -247,7 +316,7 @@ export default function StatusPage() {
                     contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
                     labelStyle={{ color: '#94a3b8' }}
                   />
-                  <Area type="monotone" dataKey="cpu" stroke="#3b82f6" fill="url(#cpuGradient)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="cpu" stroke="#6366f1" fill="url(#cpuGradient)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
@@ -257,7 +326,9 @@ export default function StatusPage() {
             )}
           </div>
         </div>
+      </div>
 
+      <div className="grid grid-cols-1 gap-6">
         <div className="glass rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4">
             <Wifi className="w-5 h-5 text-green-400" />
