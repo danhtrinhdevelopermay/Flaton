@@ -2189,12 +2189,32 @@ app.post('/api/generate/pptx-from-raw-html', authMiddleware, async (req: AuthReq
     const lessonId = Date.now().toString();
 
     const dbKey = await apiKeyManager.getCurrentApiKey();
-    const apiKey = dbKey || process.env.GEMINI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY || 'AIzaSyCUjSwiNUhDIM3yg82jg6HeTaWi-aLsdBE'; 
+    // prioritize KIE fallback logic if DB is empty, but for Gemini we need a real key
+    let apiKey = dbKey;
     
-    if (!apiKey || apiKey === 'AIzaSyCUjSwiNUhDIM3yg82jg6HeTaWi-aLsdBE') {
-       console.error('[PowerPoint] Using default or missing key - might fail');
+    // Check if dbKey is one of the KIE fallback keys (which are NOT Gemini keys)
+    const kieFallbacks = ['512b40fc3e4fc6d7b8e9c8a1b2c3d4e5ca18', '75fa437a8c9d0e1f2g3h4i5j6k7l8m9nc550', 'fc021297b8f3d6c9e2a1f4b7e0d3c6f9108f', '91c279a652aa73025b6beab73aadfbd8'];
+    if (!apiKey || kieFallbacks.includes(apiKey)) {
+      apiKey = process.env.GEMINI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.GOOGLE_API_KEY;
+    }
+
+    if (!apiKey) {
+      console.error('[PowerPoint] No valid Gemini API key found');
+      throw new Error("Vui lòng cấu hình Gemini API Key trong phần Cài đặt Admin để sử dụng tính năng này.");
     }
     
+    // Extra validation: Gemini keys usually start with AIza
+    if (!apiKey.startsWith('AIza')) {
+      console.warn('[PowerPoint] API key does not look like a Gemini key, attempting fallback...');
+      const fallbackKey = process.env.GEMINI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.GOOGLE_API_KEY;
+      if (fallbackKey && fallbackKey.startsWith('AIza')) {
+        apiKey = fallbackKey;
+      } else {
+        // Final fallback to hardcoded if necessary for testing, but ideally we use env
+        apiKey = 'AIzaSyCUjSwiNUhDIM3yg82jg6HeTaWi-aLsdBE';
+      }
+    }
+
     console.log('[PowerPoint] Using API Key:', apiKey.substring(0, 8) + '...');
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
