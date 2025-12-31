@@ -2209,7 +2209,6 @@ app.post('/api/generate/pptx-from-raw-html', authMiddleware, async (req: AuthReq
     const response = await openai.chat.completions.create({
       model: "gemini-1.5-flash",
       messages: [{ role: "user", content: parserPrompt }],
-      response_format: { type: "json_object" },
     });
 
     const responseText = response.choices[0]?.message?.content || "";
