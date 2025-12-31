@@ -2189,7 +2189,9 @@ app.post('/api/generate/pptx-from-raw-html', authMiddleware, async (req: AuthReq
     const lessonId = Date.now().toString();
 
     const dbKey = await apiKeyManager.getCurrentApiKey();
-    const apiKey = dbKey || 'AIzaSyCUjSwiNUhDIM3yg82jg6HeTaWi-aLsdBE';
+    const apiKey = dbKey || process.env.GEMINI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY; 
+    if (!apiKey) throw new Error("API key not valid. Please configure a Gemini API key in Admin Settings.");
+    
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
