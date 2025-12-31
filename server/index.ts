@@ -2212,10 +2212,36 @@ app.post('/api/generate/pptx-from-raw-html', authMiddleware, async (req: AuthReq
     });
 
     const responseText = response.choices[0]?.message?.content || "";
-    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error("Could not parse HTML content into slides");
+    console.log('[PowerPoint] Raw AI Response:', responseText);
+
+    // More robust JSON extraction
+    let slides = [];
+    const jsonMatch = responseText.match(/\[\s*\{[\s\S]*\}\s*\]/);
     
-    const slides = JSON.parse(jsonMatch[0]);
+    if (jsonMatch) {
+      try {
+        slides = JSON.parse(jsonMatch[0]);
+      } catch (e) {
+        console.error('[PowerPoint] JSON Parse failed, trying fallback extraction');
+      }
+    }
+
+    if (slides.length === 0) {
+      // Emergency fallback: manually try to find objects if the whole array parse failed
+      const objectMatches = responseText.match(/\{[\s\S]*?\}/g);
+      if (objectMatches) {
+        for (const objStr of objectMatches) {
+          try {
+            const obj = JSON.parse(objStr);
+            if (obj.title) slides.push(obj);
+          } catch (e) {}
+        }
+      }
+    }
+
+    if (slides.length === 0) {
+      throw new Error("Could not parse HTML content into slides. Please try again with a simpler HTML structure.");
+    }
 
     // Reuse existing PPTX generation logic
     const pythonCode = `
