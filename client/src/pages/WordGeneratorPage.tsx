@@ -185,6 +185,7 @@ export default function WordGeneratorPage() {
 
         {/* Generate Button */}
         <button
+          ref={generateButtonRef}
           onClick={handleGenerate}
           disabled={generating}
           className={`w-full py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
@@ -208,7 +209,7 @@ export default function WordGeneratorPage() {
 
         {/* Download Section */}
         {downloadUrl && (
-          <div className={`mt-6 p-4 rounded-lg ${
+          <div ref={loadingAreaRef} className={`mt-6 p-4 rounded-lg ${
             theme === 'dark'
               ? 'bg-green-500/20 border border-green-500/30'
               : 'bg-green-50 border border-green-200'

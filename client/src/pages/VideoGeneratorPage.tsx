@@ -487,6 +487,7 @@ export default function VideoGeneratorPage() {
           </div>
 
           <button
+            ref={generateButtonRef}
             onClick={handleGenerate}
             disabled={loading || !prompt.trim() || (selectedTool === 'sora2' && sora2Type === 'image' && !imageUrl.trim())}
             className="w-full bubble-btn btn-primary py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
@@ -509,7 +510,7 @@ export default function VideoGeneratorPage() {
           </p>
         </div>
 
-        <div className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
+        <div ref={loadingAreaRef} className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
           <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Kết quả</h2>
 
           {!result && !loading && (

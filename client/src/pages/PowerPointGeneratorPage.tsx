@@ -237,6 +237,7 @@ export default function PowerPointGeneratorPage() {
 
           <div className="flex items-center justify-center pt-4">
             <button
+              ref={generateButtonRef}
               onClick={handleGenerate}
               disabled={generating || !prompt}
               className="w-full max-w-xs bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 disabled:from-slate-700 disabled:to-slate-800 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3 transform hover:scale-105 active:scale-95"
@@ -247,7 +248,7 @@ export default function PowerPointGeneratorPage() {
           </div>
         </div>
       ) : (
-        <div className="grid lg:grid-cols-[1fr_300px] gap-8 h-[700px]">
+        <div ref={loadingAreaRef} className="grid lg:grid-cols-[1fr_300px] gap-8 h-[700px]">
           <div className="flex flex-col gap-4">
             <div className={`flex items-center justify-between px-4 py-2 rounded-xl ${
               theme === 'dark' 
