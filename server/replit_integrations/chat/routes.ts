@@ -13,7 +13,10 @@ let ai: GoogleGenAI;
 async function getAiClient() {
   if (ai) return ai;
   const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'gemini_api_key' LIMIT 1");
-  const apiKey = result.rows[0]?.setting_value || 'AIzaSyCUjSwiNUhDIM3yg82jg6HeTaWi-aLsdBE';
+  const apiKey = result.rows[0]?.setting_value;
+  if (!apiKey) {
+    throw new Error('Gemini API key not found in database. Please configure it in the admin panel.');
+  }
   ai = new GoogleGenAI(apiKey);
   return ai;
 }
