@@ -1,4 +1,6 @@
 import express, { Request, Response } from 'express';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from './replit_integrations/image/client';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
@@ -2188,7 +2190,7 @@ app.post('/api/generate/pptx-from-raw-html', authMiddleware, async (req: AuthReq
 
     const dbKey = await apiKeyManager.getCurrentApiKey();
     const apiKey = dbKey || 'AIzaSyCUjSwiNUhDIM3yg82jg6HeTaWi-aLsdBE';
-    const genAI = new GoogleGenAI(apiKey);
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const parserPrompt = `
