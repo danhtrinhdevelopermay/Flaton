@@ -2228,7 +2228,13 @@ prs.save('/tmp/raw_generated_${lessonId}.pptx')
     
     const outputFile = `/tmp/raw_generated_${lessonId}.pptx`;
     if (fs.existsSync(outputFile)) {
-      res.download(outputFile, 'presentation.pptx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+      res.setHeader('Content-Disposition', 'attachment; filename=presentation.pptx');
+      const fileStream = fs.createReadStream(outputFile);
+      fileStream.pipe(res);
+      fileStream.on('end', () => {
+        try { fs.unlinkSync(outputFile); } catch (e) {}
+      });
     } else {
       throw new Error('PPTX file generation failed');
     }
