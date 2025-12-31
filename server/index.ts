@@ -2214,9 +2214,12 @@ app.post('/api/generate/pptx-from-raw-html', authMiddleware, async (req: AuthReq
     const responseText = response.choices[0]?.message?.content || "";
     console.log('[PowerPoint] Raw AI Response:', responseText);
 
+    // Clean response text from markdown code blocks if present
+    const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+
     // More robust JSON extraction
     let slides = [];
-    const jsonMatch = responseText.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    const jsonMatch = cleanText.match(/\[\s*\{[\s\S]*\}\s*\]/);
     
     if (jsonMatch) {
       try {
@@ -2228,7 +2231,7 @@ app.post('/api/generate/pptx-from-raw-html', authMiddleware, async (req: AuthReq
 
     if (slides.length === 0) {
       // Emergency fallback: manually try to find objects if the whole array parse failed
-      const objectMatches = responseText.match(/\{[\s\S]*?\}/g);
+      const objectMatches = cleanText.match(/\{[\s\S]*?\}/g);
       if (objectMatches) {
         for (const objStr of objectMatches) {
           try {
