@@ -2181,6 +2181,62 @@ prs.save('/tmp/generated_presentation_${lessonId}.pptx')
   }
 });
 
+app.post('/api/generate/pptx-from-raw-html', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { htmlContent } = req.body;
+    const lessonId = Date.now().toString();
+
+    const dbKey = await apiKeyManager.getCurrentApiKey();
+    const apiKey = dbKey || 'AIzaSyCUjSwiNUhDIM3yg82jg6HeTaWi-aLsdBE';
+    const genAI = new GoogleGenAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const parserPrompt = `
+      Extract slide content from this HTML/CSS code.
+      Each slide should have a title and bullet points.
+      HTML Content:
+      ${htmlContent}
+      
+      Return ONLY a JSON array of objects: [{ "title": "...", "content": ["point 1", "point 2"] }]
+    `;
+
+    const result = await model.generateContent(parserPrompt);
+    const responseText = result.response.text();
+    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error("Could not parse HTML content into slides");
+    
+    const slides = JSON.parse(jsonMatch[0]);
+
+    // Reuse existing PPTX generation logic
+    const pythonCode = `
+import pptx
+from pptx.util import Inches, Pt
+
+prs = pptx.Presentation()
+for s in ${JSON.stringify(slides)}:
+    slide = prs.slides.add_slide(prs.slide_layouts[1])
+    slide.shapes.title.text = s.get('title', 'No Title')
+    tf = slide.placeholders[1].text_frame
+    for p in s.get('content', []):
+        tf.add_paragraph().text = p
+prs.save('/tmp/raw_generated_${lessonId}.pptx')
+`;
+
+    const tmpFile = `/tmp/pptx_parse_${lessonId}.py`;
+    fs.writeFileSync(tmpFile, pythonCode);
+    await execPromise(`python3 ${tmpFile}`);
+    
+    const outputFile = `/tmp/raw_generated_${lessonId}.pptx`;
+    if (fs.existsSync(outputFile)) {
+      res.download(outputFile, 'presentation.pptx');
+    } else {
+      throw new Error('PPTX file generation failed');
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/system-stats', async (req: Request, res: Response) => {
   try {
     const startTime = Date.now();
