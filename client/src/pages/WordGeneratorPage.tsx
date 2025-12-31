@@ -1,10 +1,12 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { FileText, Loader2, Download, Wand2 } from 'lucide-react';
 import WaterDropAnimation from '../components/WaterDropAnimation';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function WordGeneratorPage() {
+  const [searchParams] = useSearchParams()
   const [content, setContent] = useState('');
   const [contentLink, setContentLink] = useState('');
   const [useLink, setUseLink] = useState(false);
@@ -16,6 +18,23 @@ export default function WordGeneratorPage() {
   const loadingAreaRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const { token, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    const autoPrompt = searchParams.get('autoPrompt')
+    if (autoPrompt) {
+      setContent(autoPrompt)
+      setUseLink(false)
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    const autoPrompt = searchParams.get('autoPrompt')
+    if (autoPrompt && !generating && content) {
+      setTimeout(() => {
+        handleGenerate()
+      }, 800)
+    }
+  }, [content])
 
   const handleGenerate = async () => {
     if (!isAuthenticated || !token) {

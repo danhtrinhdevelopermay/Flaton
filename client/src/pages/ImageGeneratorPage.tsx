@@ -53,7 +53,20 @@ export default function ImageGeneratorPage() {
     if (toolParam && imageTools.some(t => t.id === toolParam)) {
       setSelectedTool(toolParam)
     }
+    const autoPrompt = searchParams.get('autoPrompt')
+    if (autoPrompt) {
+      setPrompt(autoPrompt)
+    }
   }, [searchParams])
+
+  useEffect(() => {
+    const autoPrompt = searchParams.get('autoPrompt')
+    if (autoPrompt && !loading) {
+      setTimeout(() => {
+        handleGenerate()
+      }, 800)
+    }
+  }, [])
 
   const saveImageToHistory = async (imageUrl: string, generationPrompt: string, generationModel: string, generationAspectRatio: string) => {
     if (!isAuthenticated || !token) return

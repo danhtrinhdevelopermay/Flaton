@@ -102,23 +102,23 @@ export default function AIAssistantBot() {
 
       if (data.action === 'redirect-image') {
         setTimeout(() => {
-          window.location.href = '/image-generator'
+          window.location.href = `/image-generator?autoPrompt=${encodeURIComponent(data.prompt || '')}`
         }, 1000)
       } else if (data.action === 'redirect-video') {
         setTimeout(() => {
-          window.location.href = '/video-generator'
+          window.location.href = `/video-generator?autoPrompt=${encodeURIComponent(data.prompt || '')}`
         }, 1000)
       } else if (data.action === 'redirect-music') {
         setTimeout(() => {
-          window.location.href = '/music-generator'
+          window.location.href = `/music-generator?autoPrompt=${encodeURIComponent(data.prompt || '')}`
         }, 1000)
       } else if (data.action === 'redirect-powerpoint') {
         setTimeout(() => {
-          window.location.href = '/pptx-generator'
+          window.location.href = `/pptx-generator?autoPrompt=${encodeURIComponent(data.prompt || '')}`
         }, 1000)
       } else if (data.action === 'redirect-word') {
         setTimeout(() => {
-          window.location.href = '/word-generator'
+          window.location.href = `/word-generator?autoPrompt=${encodeURIComponent(data.prompt || '')}`
         }, 1000)
       }
     } catch (err) {

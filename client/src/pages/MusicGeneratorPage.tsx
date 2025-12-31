@@ -23,6 +23,7 @@ interface GenerationResult {
 }
 
 export default function MusicGeneratorPage() {
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { theme } = useTheme()
   const { token, isAuthenticated, loading: authLoading, user, refreshUser } = useAuth()
@@ -50,6 +51,22 @@ export default function MusicGeneratorPage() {
       refreshUser();
     }
   }, [isAuthenticated, token]);
+
+  useEffect(() => {
+    const autoPrompt = searchParams.get('autoPrompt')
+    if (autoPrompt) {
+      setSongDescription(autoPrompt)
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    const autoPrompt = searchParams.get('autoPrompt')
+    if (autoPrompt && !loading) {
+      setTimeout(() => {
+        handleGenerate()
+      }, 800)
+    }
+  }, [])
 
   const saveMusicToHistory = async (audioUrl: string, musicTitle: string, generationPrompt: string, generationStyle: string | undefined, generationModel: string) => {
     if (!isAuthenticated || !token) return

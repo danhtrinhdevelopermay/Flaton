@@ -72,7 +72,20 @@ export default function VideoGeneratorPage() {
     if (toolParam && videoTools.some(t => t.id === toolParam)) {
       setSelectedTool(toolParam)
     }
+    const autoPrompt = searchParams.get('autoPrompt')
+    if (autoPrompt) {
+      setPrompt(autoPrompt)
+    }
   }, [searchParams])
+
+  useEffect(() => {
+    const autoPrompt = searchParams.get('autoPrompt')
+    if (autoPrompt && !loading) {
+      setTimeout(() => {
+        handleGenerate()
+      }, 800)
+    }
+  }, [])
 
   const saveVideoToHistory = async (videoUrl: string, generationPrompt: string, generationImageUrl: string, generationModel: string, generationAspectRatio: string, isImageTool: boolean) => {
     if (!isAuthenticated || !token) return

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Presentation, Loader2, Download, Wand2, Type, Image as ImageIcon, Move, ChevronLeft, ChevronRight } from 'lucide-react';
 import WaterDropAnimation from '../components/WaterDropAnimation';
 import ProFeatureOverlay from '../components/ProFeatureOverlay';
@@ -7,6 +8,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { Rnd } from 'react-rnd';
 
 export default function PowerPointGeneratorPage() {
+  const [searchParams] = useSearchParams()
   const [prompt, setPrompt] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('Professional');
   const [imageSource, setImageSource] = useState('internet');
@@ -25,6 +27,22 @@ export default function PowerPointGeneratorPage() {
       refreshUser();
     }
   }, [isAuthenticated, token]);
+
+  useEffect(() => {
+    const autoPrompt = searchParams.get('autoPrompt')
+    if (autoPrompt) {
+      setPrompt(autoPrompt)
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    const autoPrompt = searchParams.get('autoPrompt')
+    if (autoPrompt && !generating) {
+      setTimeout(() => {
+        handleGenerate()
+      }, 800)
+    }
+  }, [])
 
   const templates = [
     {
