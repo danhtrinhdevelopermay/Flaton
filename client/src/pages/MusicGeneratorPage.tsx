@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { Music, Loader2, Zap, RefreshCw, Mic, Piano, LogIn, Rocket, Sparkles, Crown } from 'lucide-react'
 import WaterDropAnimation from '../components/WaterDropAnimation'
 import MusicPlayer from '../components/MusicPlayer'
