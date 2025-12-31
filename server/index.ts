@@ -2189,9 +2189,12 @@ app.post('/api/generate/pptx-from-raw-html', authMiddleware, async (req: AuthReq
     const { htmlContent } = req.body;
     const lessonId = Date.now().toString();
 
+    const dbKey = await apiKeyManager.getCurrentApiKey();
+    const apiKey = dbKey || process.env.AI_INTEGRATIONS_GEMINI_API_KEY || 'AIzaSyCUjSwiNUhDIM3yg82jg6HeTaWi-aLsdBE';
+
     const openai = new OpenAI({
-      apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
-      baseURL: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL,
+      apiKey: apiKey,
+      baseURL: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai/',
     });
 
     const parserPrompt = `
