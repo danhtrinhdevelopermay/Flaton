@@ -1,15 +1,22 @@
 import type { Express, Request, Response } from "express";
 import { GoogleGenAI } from "@google/genai";
 import { chatStorage } from "./storage";
+import pool from "../../db";
 
 /*
 Supported models: gemini-2.5-flash (fast), gemini-2.5-pro (advanced reasoning)
 */
 
-// Using official Google Gemini API with user's API key
-const ai = new GoogleGenAI({
-  apiKey: 'AIzaSyCUjSwiNUhDIM3yg82jg6HeTaWi-aLsdBE',
-});
+// Using official Google Gemini API with API key from database
+let ai: GoogleGenAI;
+
+async function getAiClient() {
+  if (ai) return ai;
+  const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'gemini_api_key' LIMIT 1");
+  const apiKey = result.rows[0]?.setting_value || 'AIzaSyCUjSwiNUhDIM3yg82jg6HeTaWi-aLsdBE';
+  ai = new GoogleGenAI(apiKey);
+  return ai;
+}
 
 export function registerChatRoutes(app: Express): void {
   // Get all conversations
@@ -69,13 +76,15 @@ export function registerChatRoutes(app: Express): void {
       const conversationId = parseInt(req.params.id);
       const { content } = req.body;
 
+      const aiClient = await getAiClient();
+
       // Save user message
       await chatStorage.createMessage(conversationId, "user", content);
 
       // Get conversation history for context
       const messages = await chatStorage.getMessagesByConversation(conversationId);
       const chatMessages = messages.map((m) => ({
-        role: m.role as "user" | "model",
+        role: m.role === "user" ? "user" : "model",
         parts: [{ text: m.content }],
       }));
 
@@ -85,18 +94,18 @@ export function registerChatRoutes(app: Express): void {
       res.setHeader("Connection", "keep-alive");
 
       // Stream response from Gemini
-      const stream = await ai.models.generateContentStream({
-        model: "gemini-2.5-flash",
+      const model = aiClient.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContentStream({
         contents: chatMessages,
       });
 
       let fullResponse = "";
 
-      for await (const chunk of stream) {
-        const content = chunk.text || "";
-        if (content) {
-          fullResponse += content;
-          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        if (chunkText) {
+          fullResponse += chunkText;
+          res.write(`data: ${JSON.stringify({ content: chunkText })}\n\n`);
         }
       }
 
