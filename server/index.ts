@@ -2124,6 +2124,63 @@ function getCpuUsage(): Promise<number> {
   });
 }
 
+app.post('/api/generate/pptx-from-html', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { slides } = req.body; // Expecting array of { title: string, content: string[] }
+    const lessonId = Date.now().toString();
+    
+    console.log('[PowerPoint] Generating PPTX from structured data...');
+    
+    // Create Python script to generate PPTX
+    const pythonCode = `
+import pptx
+from pptx.util import Inches, Pt
+from pptx.enum.text import PP_ALIGN
+
+prs = pptx.Presentation()
+
+def add_slide(title_text, points):
+    slide_layout = prs.slide_layouts[1] # Title and Content
+    slide = prs.slides.add_slide(slide_layout)
+    
+    title = slide.shapes.title
+    title.text = title_text
+    
+    body_shape = slide.placeholders[1]
+    tf = body_shape.text_frame
+    tf.word_wrap = True
+    
+    for point in points:
+        p = tf.add_paragraph()
+        p.text = point
+        p.level = 0
+
+slides_data = ${JSON.stringify(slides)}
+
+for s in slides_data:
+    add_slide(s.get('title', 'No Title'), s.get('content', []))
+
+prs.save('/tmp/generated_presentation_${lessonId}.pptx')
+`;
+
+    const tmpFile = `/tmp/pptx_gen_manual_${lessonId}.py`;
+    fs.writeFileSync(tmpFile, pythonCode);
+
+    await execPromise(`python3 ${tmpFile}`);
+    
+    const outputFile = `/tmp/generated_presentation_${lessonId}.pptx`;
+    
+    if (fs.existsSync(outputFile)) {
+      res.download(outputFile, 'presentation.pptx');
+    } else {
+      throw new Error('PPTX file was not generated');
+    }
+  } catch (error: any) {
+    console.error('[PowerPoint] Generation failed:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/system-stats', async (req: Request, res: Response) => {
   try {
     const startTime = Date.now();
