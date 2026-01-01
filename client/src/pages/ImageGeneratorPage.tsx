@@ -449,7 +449,7 @@ export default function ImageGeneratorPage() {
                             />
                             <span className="uiverse-circle">
                               <svg
-                                class="uiverse-icon"
+                                className="uiverse-icon"
                                 aria-hidden="true"
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
@@ -457,9 +457,9 @@ export default function ImageGeneratorPage() {
                               >
                                 <path
                                   stroke="currentColor"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="1.5"
                                   d="M12 19V5m0 14-4-4m4 4 4-4"
                                 ></path>
                               </svg>
@@ -498,7 +498,7 @@ export default function ImageGeneratorPage() {
                           />
                           <span className="uiverse-circle">
                             <svg
-                              class="uiverse-icon"
+                              className="uiverse-icon"
                               aria-hidden="true"
                               xmlns="http://www.w3.org/2000/svg"
                               fill="none"
@@ -506,9 +506,9 @@ export default function ImageGeneratorPage() {
                             >
                               <path
                                 stroke="currentColor"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="1.5"
                                 d="M12 19V5m0 14-4-4m4 4 4-4"
                               ></path>
                             </svg>
