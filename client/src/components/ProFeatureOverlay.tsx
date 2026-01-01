@@ -22,7 +22,7 @@ export default function ProFeatureOverlay({ featureName }: ProFeatureOverlayProp
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center backdrop-blur-md bg-black/60 overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center backdrop-blur-md overflow-hidden">
       {/* Content */}
       <div className={`relative mx-4 rounded-2xl p-8 max-w-sm shadow-2xl pointer-events-auto ${
         theme === 'dark' ? 'bg-slate-900 border border-slate-700' : 'bg-white border border-slate-200'

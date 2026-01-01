@@ -91,7 +91,7 @@ export default function UpgradeProModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-md overflow-hidden">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center backdrop-blur-md overflow-hidden">
       <div className={`relative mx-4 rounded-2xl p-8 max-w-md shadow-2xl ${
         theme === 'dark'
           ? 'bg-slate-900 border border-slate-700'
