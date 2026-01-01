@@ -1,9 +1,16 @@
 import express, { Request, Response } from 'express';
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { GoogleGenAI } from './replit_integrations/image/client';
-import { batchProcess } from "./replit_integrations/batch";
 import cors from 'cors';
+
+function getGeminiModel() {
+  const genAI = new GoogleGenerativeAI(process.env.AI_INTEGRATIONS_GEMINI_API_KEY || '');
+  return genAI.getGenerativeModel({ 
+    model: "gemini-1.5-flash"
+  }, {
+    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
+  });
+}
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import os from 'os';
@@ -15,7 +22,6 @@ import * as apiKeyManager from './apiKeyManager';
 import * as cloudinaryUtil from './cloudinaryUtil';
 import jwt from 'jsonwebtoken';
 import * as lessonService from './lesson';
-import { ai } from './replit_integrations/image/client';
 
 import fs from 'fs';
 import path from 'path';
@@ -47,16 +53,7 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
   try {
     const { prompt, style } = req.body;
     
-    const genAI = new GoogleGenerativeAI(process.env.AI_INTEGRATIONS_GEMINI_API_KEY || '');
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        responseMimeType: "application/json",
-      }
-    }, {
-      baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
-    });
-
+    const model = getGeminiModel();
     const systemPrompt = `Bạn là một chuyên gia thiết kế bài thuyết trình. 
     Hãy tạo nội dung cho một bài thuyết trình về chủ đề: "${prompt}" với phong cách "${style}".
     Trả về định dạng JSON theo cấu trúc:
@@ -2778,6 +2775,10 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
     const lowerMessage = message.toLowerCase();
     let response: any = { type: 'text', content: '', action: null };
 
+    // Initialize Gemini model directly
+    const genAI = new GoogleGenerativeAI(process.env.AI_INTEGRATIONS_GEMINI_API_KEY || '');
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL });
+
     // Check if user is asking for specific services
     if (lowerMessage.includes('hình ảnh') || lowerMessage.includes('ảnh') || lowerMessage.includes('image')) {
       try {
@@ -2865,36 +2866,26 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
         response.content = `❌ Lỗi tạo hình ảnh: ${err.message}`;
       }
     } else if (lowerMessage.includes('video') || lowerMessage.includes('clip')) {
-      // Enhance prompt with Gemini for video
-      const enhancedPrompt = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [{ 
-          role: 'user', 
-          parts: [{ text: `Viết một prompt tiếng Anh chuyên nghiệp để tạo video (dưới 100 từ): ${message}` }] 
-        }],
-      });
+      // Use Gemini directly for video prompt enhancement
+      const result = await model.generateContent(`Viết một prompt tiếng Anh chuyên nghiệp để tạo video (dưới 100 từ): ${message}`);
+      const enhancedText = result.response.text();
       
       response = {
         type: 'video',
         content: '📹 Yêu cầu tạo video đang được xử lý. Vui lòng truy cập trang "Tạo video" để xem tiến độ.',
         action: 'redirect-video',
-        prompt: enhancedPrompt.text || message
+        prompt: enhancedText || message
       };
     } else if (lowerMessage.includes('nhạc') || lowerMessage.includes('music')) {
-      // Enhance prompt with Gemini for music
-      const enhancedPrompt = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [{ 
-          role: 'user', 
-          parts: [{ text: `Viết một prompt tiếng Anh để tạo nhạc Suno (dưới 100 từ): ${message}` }] 
-        }],
-      });
+      // Use Gemini directly for music prompt enhancement
+      const result = await model.generateContent(`Viết một prompt tiếng Anh để tạo nhạc Suno (dưới 100 từ): ${message}`);
+      const enhancedText = result.response.text();
       
       response = {
         type: 'music',
         content: '🎵 Yêu cầu tạo nhạc đang được xử lý. Vui lòng truy cập trang "Tạo nhạc" để xem tiến độ.',
         action: 'redirect-music',
-        prompt: enhancedPrompt.text || message
+        prompt: enhancedText || message
       };
     } else if (lowerMessage.includes('powerpoint') || lowerMessage.includes('pptx') || lowerMessage.includes('slide')) {
       response = {
@@ -2911,14 +2902,13 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
         prompt: message
       };
     } else {
-      // For general questions, use Gemini
-      const aiResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [{ role: 'user', parts: [{ text: message }] }],
-      });
+      // For general questions, use Gemini directly
+      const result = await model.generateContent(message);
+      const aiText = result.response.text();
+      
       response = {
         type: 'text',
-        content: aiResponse.text || 'Xin lỗi, không thể xử lý yêu cầu của bạn.'
+        content: aiText || 'Xin lỗi, không thể xử lý yêu cầu của bạn.'
       };
     }
 

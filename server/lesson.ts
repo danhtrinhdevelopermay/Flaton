@@ -1,5 +1,14 @@
-import { ai } from './replit_integrations/image/client';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import pool from './db';
+
+function getGeminiModel() {
+  const genAI = new GoogleGenerativeAI(process.env.AI_INTEGRATIONS_GEMINI_API_KEY || '');
+  return genAI.getGenerativeModel({ 
+    model: "gemini-1.5-flash"
+  }, {
+    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
+  });
+}
 
 export async function generateLessonScript(
   topic: string,
@@ -25,14 +34,10 @@ export async function generateLessonScript(
   `;
 
   try {
-    console.log(`[Gemini] API Key exists: ${!!process.env.AI_INTEGRATIONS_GEMINI_API_KEY}`);
-    console.log(`[Gemini] Base URL: ${process.env.AI_INTEGRATIONS_GEMINI_BASE_URL}`);
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    });
-    console.log(`[Gemini] Response received, text length: ${response.text?.length || 0}`);
-    return response.text || '';
+    const model = getGeminiModel();
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text() || '';
   } catch (error) {
     console.error('[Gemini] Error generating script:', error);
     throw error;
@@ -58,12 +63,11 @@ export async function generateLessonSlides(
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    });
+    const model = getGeminiModel();
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
 
-    const text = response.text || '[]';
+    const text = response.text() || '[]';
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
   } catch (error) {
@@ -239,8 +243,7 @@ export async function generateLessonImages(
 
 // Execute PowerPoint with auto-execution
 export async function generateAndExecutePowerPoint(
-  lessonId: string,
-  ai: any
+  lessonId: string
 ): Promise<string> {
   const { execSync } = require('child_process');
   const fs = require('fs');
@@ -264,12 +267,11 @@ Requirements:
 
 Return ONLY the Python code, no explanations or markdown formatting.`;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-  });
+  const model = getGeminiModel();
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
 
-  const pythonCode = response.text || '';
+  const pythonCode = response.text() || '';
   console.log('[PowerPoint] Generated code, executing...');
 
   // Write to temp file and execute
@@ -291,8 +293,7 @@ Return ONLY the Python code, no explanations or markdown formatting.`;
 export async function executeWorkflow(
   lessonId: string,
   steps: any[],
-  config: any,
-  ai?: any
+  config: any
 ): Promise<any> {
   console.log('[Workflow] Starting execution for lesson:', lessonId);
   console.log('[Workflow] Steps received:', JSON.stringify(steps, null, 2));
@@ -339,12 +340,8 @@ export async function executeWorkflow(
           break;
 
         case 'powerpoint':
-          if (ai) {
-            results.powerpoint = await generateAndExecutePowerPoint(lessonId, ai);
-            console.log('[Workflow] PowerPoint generated and executed');
-          } else {
-            results.powerpoint = { status: 'skipped', message: 'AI not available' };
-          }
+          results.powerpoint = await generateAndExecutePowerPoint(lessonId);
+          console.log('[Workflow] PowerPoint generated and executed');
           break;
       }
     } catch (error: any) {
