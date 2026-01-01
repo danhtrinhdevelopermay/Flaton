@@ -23,8 +23,16 @@ export default function UpgradeProModal({
   const { theme } = useTheme();
   const { refreshUser } = useAuth();
   const [reason, setReason] = useState('');
+  const [plan, setPlan] = useState('1 tháng - 45.000vnd');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const plans = [
+    '1 ngày - 2.000vnd',
+    '1 tuần - 8.000vnd',
+    '1 tháng - 45.000vnd',
+    '1 năm - 90.000vnd'
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +50,7 @@ export default function UpgradeProModal({
           userId,
           userName,
           userEmail,
-          reason: reason.trim()
+          reason: `Gói: ${plan} | Lý do: ${reason.trim()}`
         })
       });
 
@@ -99,6 +107,27 @@ export default function UpgradeProModal({
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${
+                  theme === 'dark' ? 'text-slate-300' : 'text-slate-700'
+                }`}>
+                  Chọn kỳ hạn
+                </label>
+                <select
+                  value={plan}
+                  onChange={(e) => setPlan(e.target.value)}
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50 ${
+                    theme === 'dark'
+                      ? 'bg-slate-800 border-slate-700 text-white'
+                      : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
+                >
+                  {plans.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label className={`block text-sm font-medium mb-2 ${
                   theme === 'dark' ? 'text-slate-300' : 'text-slate-700'

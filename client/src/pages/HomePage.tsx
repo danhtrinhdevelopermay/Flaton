@@ -479,7 +479,82 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-24 relative z-10">
+      <section className="py-24 relative z-10 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4">
+          <AnimatedText>
+            <div className="text-center mb-16">
+              <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${
+                theme === 'dark' ? 'text-white' : 'text-slate-900'
+              }`}>
+                Bảng giá dịch vụ <span className="gradient-text">Pro</span>
+              </h2>
+              <p className={`text-lg max-w-2xl mx-auto ${
+                theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+              }`}>
+                Nâng cấp để trải nghiệm không giới hạn các tính năng AI đỉnh cao
+              </p>
+            </div>
+          </AnimatedText>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { duration: '1 Ngày', price: '2.000', label: 'Khám phá' },
+              { duration: '1 Tuần', price: '8.000', label: 'Phổ biến', featured: true },
+              { duration: '1 Tháng', price: '45.000', label: 'Tiết kiệm' },
+              { duration: '1 Năm', price: '90.000', label: 'Siêu rẻ' }
+            ].map((plan, idx) => (
+              <div 
+                key={idx}
+                className={`relative p-8 rounded-3xl transition-all duration-300 hover:scale-105 ${
+                  plan.featured 
+                    ? 'bg-gradient-to-br from-indigo-600 to-purple-700 text-white shadow-xl shadow-indigo-500/20' 
+                    : theme === 'dark' ? 'glass border border-slate-700' : 'bg-white border border-slate-200 shadow-sm'
+                }`}
+              >
+                {plan.featured && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-indigo-900 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Phổ biến nhất
+                  </div>
+                )}
+                <div className="text-center">
+                  <h3 className={`text-xl font-bold mb-4 ${!plan.featured && (theme === 'dark' ? 'text-white' : 'text-slate-900')}`}>
+                    {plan.duration}
+                  </h3>
+                  <div className="flex items-baseline justify-center gap-1 mb-6">
+                    <span className="text-4xl font-extrabold">{plan.price}</span>
+                    <span className="text-sm opacity-70">VNĐ</span>
+                  </div>
+                  <ul className={`text-sm space-y-3 mb-8 text-left ${plan.featured ? 'text-indigo-100' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      Tạo hình ảnh không giới hạn
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      Tạo video chất lượng HD
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      Xuất Word/PowerPoint Pro
+                    </li>
+                  </ul>
+                  <Link to="/register">
+                    <button className={`w-full py-3 rounded-xl font-bold transition-all ${
+                      plan.featured 
+                        ? 'bg-white text-indigo-600 hover:bg-indigo-50' 
+                        : 'bg-indigo-500 text-white hover:bg-indigo-600'
+                    }`}>
+                      Chọn gói này
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 relative z-10 overflow-hidden">
         <div className="max-w-4xl mx-auto px-4">
           <AnimatedText>
             <div className={`rounded-3xl p-12 text-center relative overflow-hidden ${
