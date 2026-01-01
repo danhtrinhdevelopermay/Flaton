@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleGenAI } from './replit_integrations/image/client';
+import { batchProcess } from "./replit_integrations/batch";
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
@@ -20,7 +21,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { Document, Packer, Paragraph, HeadingLevel, AlignmentType, TextRun, Image } from 'docx';
+import { Document, Packer, Paragraph, HeadingLevel, AlignmentType, TextRun } from 'docx';
 
 const execPromise = promisify(exec);
 
@@ -40,6 +41,58 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+
+// PPTX generation endpoint
+app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { prompt, style } = req.body;
+    
+    const genAI = new GoogleGenerativeAI(process.env.AI_INTEGRATIONS_GEMINI_API_KEY || '');
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+      }
+    }, {
+      baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
+    });
+
+    const systemPrompt = `Bạn là một chuyên gia thiết kế bài thuyết trình. 
+    Hãy tạo nội dung cho một bài thuyết trình về chủ đề: "${prompt}" với phong cách "${style}".
+    Trả về định dạng JSON theo cấu trúc:
+    {
+      "slides": [
+        {
+          "title": "Tiêu đề slide",
+          "bullets": ["Nội dung 1", "Nội dung 2"],
+          "imageUrl": "https://images.unsplash.com/photo-..."
+        }
+      ]
+    }
+    Lưu ý: 
+    - Mỗi bài có khoảng 5-7 slide.
+    - Tìm các URL ảnh từ Unsplash liên quan đến nội dung slide.
+    - Ngôn ngữ: Tiếng Việt.`;
+
+    const result = await model.generateContent(systemPrompt);
+    const response = await result.response;
+    const content = JSON.parse(response.text());
+
+    res.json(content);
+  } catch (error: any) {
+    console.error('Gemini error:', error);
+    res.status(500).json({ error: 'Không thể tạo nội dung slide miễn phí lúc này.' });
+  }
+});
+
+app.post('/api/generate/pptx-from-html', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { slides } = req.body;
+    res.status(200).json({ message: "Chức năng xuất PPTX đang được hoàn thiện." });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 const KIE_API_BASE = 'https://api.kie.ai/api/v1';
 

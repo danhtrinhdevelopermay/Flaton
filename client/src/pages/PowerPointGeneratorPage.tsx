@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Presentation, Loader2, Download, Wand2, Type, Image as ImageIcon, Move, ChevronLeft, ChevronRight, Code } from 'lucide-react';
 import WaterDropAnimation from '../components/WaterDropAnimation';
-import ProFeatureOverlay from '../components/ProFeatureOverlay';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Rnd } from 'react-rnd';
@@ -13,7 +12,6 @@ export default function PowerPointGeneratorPage() {
   const [htmlContent, setHtmlContent] = useState('');
   const [showHtmlModal, setShowHtmlModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState('Professional');
-  const [imageSource, setImageSource] = useState('internet');
   const { theme } = useTheme();
   const [generating, setGenerating] = useState(false);
   const [slides, setSlides] = useState<any[]>([]);
@@ -128,20 +126,20 @@ export default function PowerPointGeneratorPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ prompt, style: selectedTemplate, imageSource }),
+        body: JSON.stringify({ prompt, style: selectedTemplate }),
       });
 
       const data = await response.json();
       if (response.ok) {
-        const layoutSlides = data.slides.map((s: any) => {
+        const layoutSlides = data.slides.map((s: any, index: number) => {
           const slideElements = [
-            { id: 'title', type: 'text', content: s.title, x: 50, y: 50, width: 700, height: 60, fontSize: 32, fontWeight: 'bold' },
-            { id: 'content', type: 'text', content: Array.isArray(s.bullets) ? s.bullets.join('\n') : s.bullets, x: 50, y: 150, width: 400, height: 250, fontSize: 18, fontWeight: 'normal' }
+            { id: `title-${index}`, type: 'text', content: s.title, x: 50, y: 50, width: 700, height: 60, fontSize: 32, fontWeight: 'bold' },
+            { id: `content-${index}`, type: 'text', content: Array.isArray(s.bullets) ? s.bullets.join('\n') : s.bullets, x: 50, y: 150, width: 400, height: 250, fontSize: 18, fontWeight: 'normal' }
           ];
 
           if (s.imageUrl) {
             slideElements.push({
-              id: 'image',
+              id: `image-${index}`,
               type: 'image',
               content: s.imageUrl,
               x: 480,
@@ -518,7 +516,7 @@ export default function PowerPointGeneratorPage() {
           </div>
         </div>
       )}
-      {isAuthenticated && user && !user.is_pro && <ProFeatureOverlay featureName="Tạo PowerPoint AI" />}
+      {isAuthenticated && user && !user.is_pro && <div className="hidden">Free Mode Active</div>}
     </div>
   );
 }
