@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Crown } from 'lucide-react';
 import UpgradeProModal from './UpgradeProModal';
 import { useTheme } from '../contexts/ThemeContext';
@@ -12,6 +12,14 @@ export default function ProFeatureOverlay({ featureName }: ProFeatureOverlayProp
   const { theme } = useTheme();
   const { user, token } = useAuth();
   const [showModal, setShowModal] = useState(false);
+
+  // Lock body scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center backdrop-blur-md bg-black/60 overflow-hidden">
