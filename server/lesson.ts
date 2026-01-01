@@ -27,11 +27,12 @@ export async function generateLessonScript(
   try {
     console.log(`[Gemini] API Key exists: ${!!process.env.AI_INTEGRATIONS_GEMINI_API_KEY}`);
     console.log(`[Gemini] Base URL: ${process.env.AI_INTEGRATIONS_GEMINI_BASE_URL}`);
-    const response = await ai.getGenerativeModel({ model: 'gemini-2.5-flash' }).generateContent({
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
     });
-    console.log(`[Gemini] Response received, text length: ${response.response.text()?.length || 0}`);
-    return response.response.text() || '';
+    console.log(`[Gemini] Response received, text length: ${response.text?.length || 0}`);
+    return response.text || '';
   } catch (error) {
     console.error('[Gemini] Error generating script:', error);
     throw error;
@@ -57,11 +58,12 @@ export async function generateLessonSlides(
   `;
 
   try {
-    const response = await ai.getGenerativeModel({ model: 'gemini-2.5-flash' }).generateContent({
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
     });
 
-    const text = response.response.text() || '[]';
+    const text = response.text || '[]';
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
   } catch (error) {
@@ -242,53 +244,46 @@ export async function generateAndExecutePowerPoint(
 ): Promise<string> {
   const { execSync } = require('child_process');
   const fs = require('fs');
+  const os = require('os');
   
   const lesson = await getLessonById(lessonId);
   if (!lesson) throw new Error('Lesson not found');
 
-  console.log('[PowerPoint] Generating Gamma-style code with Gemini...');
-  const prompt = `Generate advanced Python code using python-pptx to create a high-quality presentation similar to Gamma AI.
-Presentation Topic: "${lesson.title}"
-Subject: "${lesson.subject}"
-Grade: "${lesson.grade_level}"
-Script: ${lesson.script_content}
+  console.log('[PowerPoint] Generating code with Gemini...');
+  const prompt = `Generate Python code using python-pptx library to create a professional PowerPoint presentation.
+The presentation should be based on this teaching script:
 
-Requirements for the Python Code:
-1. DESIGN SYSTEM:
-   - Use a modern color palette (e.g., Deep Navy #1E293B, Accent Orange #F97316, Soft Slate #F1F5F9).
-   - Set consistent fonts (Heading: Arial, Body: Calibri).
-   - Use 'slide_layouts[6]' (Blank) for custom positioning to mimic Gamma's flexible layouts.
+${lesson.script_content}
 
-2. SLIDE TYPES (Generate 6-8 slides):
-   - Title Slide: Large centered title with a subtitle and a colored accent shape.
-   - Agenda Slide: Use a series of formatted shapes or a table to show the flow.
-   - Content Slides: 
-     * Mix layouts: some with text on left and visual placeholders on right.
-     * Use rounded rectangles (shapes) with light fills as "Cards" to group content.
-     * Add simple icons using shapes or Wingdings font.
-   - Conclusion: Summary slide with key takeaways in a prominent card.
+Requirements:
+1. Title slide with lesson title="${lesson.title}", subject="${lesson.subject}", grade="${lesson.grade_level}"
+2. Content slides (5-7 slides) with key points from the script
+3. Professional formatting with consistent styling
+4. Bullet points for readability
+5. Save to file: /tmp/lesson_presentation_${lessonId}.pptx
 
-3. TECHNICAL:
-   - Save to: /tmp/lesson_presentation_${lessonId}.pptx
-   - Ensure all imports are included: from pptx import Presentation; from pptx.util import Inches, Pt; from pptx.dml.color import RGBColor; from pptx.enum.text import PP_ALIGN; from pptx.enum.shapes import MSO_SHAPE
+Return ONLY the Python code, no explanations or markdown formatting.`;
 
-Return ONLY the Python code without any markdown or explanations.`;
-
-  const response = await ai.getGenerativeModel({ model: 'gemini-2.5-flash' }).generateContent({
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
   });
 
-  const pythonCode = (response.response.text() || '').replace(/```python/g, '').replace(/```/g, '').trim();
+  const pythonCode = response.text || '';
+  console.log('[PowerPoint] Generated code, executing...');
+
+  // Write to temp file and execute
   const tmpFile = `/tmp/pptx_gen_${lessonId}.py`;
   fs.writeFileSync(tmpFile, pythonCode);
 
   try {
     execSync(`python3 ${tmpFile}`, { stdio: 'pipe' });
     const outputFile = `/tmp/lesson_presentation_${lessonId}.pptx`;
+    console.log('[PowerPoint] Execution complete, saved to:', outputFile);
     return outputFile;
   } catch (error: any) {
-    console.error('[PowerPoint] Gamma-style generation failed:', error.message);
-    throw new Error(`Gamma-style generation failed: ${error.message}`);
+    console.error('[PowerPoint] Execution failed:', error.message);
+    throw new Error(`PowerPoint generation failed: ${error.message}`);
   }
 }
 

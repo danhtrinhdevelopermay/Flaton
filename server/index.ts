@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from './replit_integrations/image/client';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
@@ -19,7 +20,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { Document, Packer, Paragraph, HeadingLevel, AlignmentType, TextRun } from 'docx';
+import { Document, Packer, Paragraph, HeadingLevel, AlignmentType, TextRun, Image } from 'docx';
 
 const execPromise = promisify(exec);
 
@@ -1772,11 +1773,12 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
       Format as: [{"title": "...", "bullets": ["...", "..."], "imageSearchQuery": "..."}]
     `;
 
-    const response = await ai.getGenerativeModel({ model: 'gemini-1.5-flash' }).generateContent({
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
       contents: [{ role: 'user', parts: [{ text: geminiPrompt }] }],
     });
 
-    const text = response.response.text() || '[]';
+    const text = response.text || '[]';
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     const rawSlides = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
 
@@ -1839,11 +1841,12 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
       Return ONLY the Python code.
     `;
 
-    const response = await ai.getGenerativeModel({ model: 'gemini-1.5-flash' }).generateContent({
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
       contents: [{ role: 'user', parts: [{ text: pythonCodePrompt }] }],
     });
 
-    const pythonCode = response.response.text() || '';
+    const pythonCode = response.text || '';
     const cleanPythonCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
     
     const tmpFile = `/tmp/gen_${lessonId}.py`;
@@ -1901,11 +1904,12 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
       try {
         console.log('[PPTX Gen] Generating AI images via Flaton Image V1...');
         // Request image prompts from Gemini first to make them relevant
-        const imagePromptRequest = await ai.getGenerativeModel({ model: 'gemini-2.5-flash' }).generateContent({
+        const imagePromptRequest = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
           contents: [{ role: 'user', parts: [{ text: `Based on the PowerPoint topic "${prompt}", suggest 3 short, highly descriptive image prompts for an AI image generator. Return ONLY a JSON array of strings.` }] }],
         });
         
-        const promptsText = imagePromptRequest.response.text() || '[]';
+        const promptsText = imagePromptRequest.text || '[]';
         // Improved parsing for prompt JSON
         let prompts: string[] = [];
         try {
@@ -1915,7 +1919,7 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
         } catch (e) {
           console.log('[PPTX Gen] Fallback parsing for prompts');
           const matches = promptsText.match(/"([^"]+)"/g);
-          if (matches) prompts = matches.map((m: string) => m.replace(/"/g, ''));
+          if (matches) prompts = matches.map(m => m.replace(/"/g, ''));
           else prompts = [prompt];
         }
         
@@ -1978,7 +1982,7 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
       }
     }
 
-    const aiPrompt = `Generate Python code using python-pptx library to create a STUNNING presentation similar to Gamma AI.
+    const aiPrompt = `Generate Python code using python-pptx library to create a highly visual and professional PowerPoint presentation.
 Topic: ${prompt}
 Style: ${style || 'Professional and clean'}
 Image Source: ${imageSource}
@@ -1986,25 +1990,37 @@ ${aiGeneratedImages.length > 0 ? `AI Images to use: ${JSON.stringify(aiGenerated
 ${pexelsImages.length > 0 ? `Pexels Images to use: ${JSON.stringify(pexelsImages)}` : ''}
 
 Requirements for the Python code:
-1. DESIGN SYSTEM (GAMMA AI STYLE):
-   - Use a modern, high-contrast color palette.
-   - For "Professional": Deep Navy #1E293B, Soft Slate #F1F5F9, Accent Blue #3B82F6.
-   - For "Creative": Rich Purple #581C87, Light Lavender #F3E8FF, Gold #F59E0B.
-   - Use 'slide_layouts[6]' (Blank) for most slides to create custom, flexible layouts.
-   
-2. LAYOUT & VISUALS:
-   - Mix of layouts: Split screen (text/image), Card-based (content in rounded rectangles), and Full-bleed images with text overlays.
-   - Use shapes (rectangles with rounded corners) as containers for text to create a "modern web app" feel.
-   - Add a subtle progress bar or accent line at the bottom of each slide.
-   
-3. IMAGE HANDLING:
-   - Use the provided ${imageSource === 'ai' ? 'AI' : 'Pexels'} images prominently.
-   - Set images to fill half the slide or use as background with a semi-transparent overlay for text.
-   - Use try-except for every image addition.
-
-4. CONTENT:
-   - At least 6-8 slides including Title, Agenda, Key Points, and Conclusion.
-   - Titles in Bold 44pt, Body in 24pt.
+1. Use professional layouts: Only use standard layout indices (0-6) to avoid "index out of range" errors. (0: Title, 1: Title and Content, 2: Section Header, 3: Two Content, 4: Comparison, 5: Title Only, 6: Blank).
+2. Visual Richness: 
+   ${imageSource === 'ai' && aiGeneratedImages.length > 0 
+     ? `Use the provided AI Image URLs sequentially in the slides.` 
+     : pexelsImages.length > 0
+       ? `Use the provided Pexels Image URLs sequentially in the slides.`
+       : `Include at least 3 high-quality images from Unsplash. Use: https://source.unsplash.com/featured/?{keyword} or random professional photo URLs.`}
+3. Typography & Styling:
+   - Use 'Arial' or 'Calibri' as safe fonts.
+   - Set font sizes: Titles (36-44pt), Body (20-24pt).
+   - Use MSO_ANCHOR.TOP instead of PP_ALIGN.TOP for vertical anchoring of text frames.
+4. Content:
+   - At least 6 slides.
+5. Image Handling (CRITICAL):
+   - Use a try-except block when downloading and adding each image. If an image fails, skip it and continue.
+   - For images from Pexels, set a User-Agent header to avoid 403 Forbidden errors.
+   - Use a timeout for urllib.request.urlopen to prevent hanging. (timeout=10)
+   - Ensure the image exists before adding it (check length of downloaded data).
+   - IMPORTANT: Do NOT use any external files or special characters in filenames.
+   - Use slide.shapes.add_picture(img_data, Inches(0.5), Inches(1.5), width=Inches(5)) for standard placement.
+   - Import: import urllib.request, from io import BytesIO
+   - Use:
+     try:
+       req = urllib.request.Request(img_url, headers={'User-Agent': 'Mozilla/5.0'})
+       with urllib.request.urlopen(req, timeout=10) as url:
+         img_data = BytesIO(url.read())
+         if len(img_data.getvalue()) > 100:
+           # Check if it's a title slide (index 0) to avoid overlapping
+           slide.shapes.add_picture(img_data, Inches(0.5), Inches(1.5), width=Inches(5))
+     except Exception as e:
+       print(f"Failed to add image from {img_url}: {e}")
 
 Return ONLY the Python code, no explanations or markdown formatting.
 Start with:
@@ -2017,11 +2033,12 @@ from pptx.dml.color import RGBColor
 
 Save final presentation to: /tmp/generated_presentation.pptx`;
 
-    const response = await ai.getGenerativeModel({ model: 'gemini-2.5-flash' }).generateContent({
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts: [{ text: aiPrompt }] }],
     });
 
-    let pythonCode = response.response.text() || '';
+    let pythonCode = response.text || '';
     // Clean up code if Gemini adds markdown
     pythonCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
     
