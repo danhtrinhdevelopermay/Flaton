@@ -1652,6 +1652,7 @@ Requirements:
 Return ONLY the Python code, no explanations or markdown formatting.
 Start with: from pptx import Presentation`;
 
+    const model = getGeminiModel();
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const pythonCode = response.text() || '';
@@ -2074,12 +2075,10 @@ from pptx.dml.color import RGBColor
 
 Save final presentation to: /tmp/generated_presentation.pptx`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [{ role: 'user', parts: [{ text: aiPrompt }] }],
-    });
-
-    let pythonCode = response.text || '';
+    const model = getGeminiModel();
+    const result = await model.generateContent(aiPrompt);
+    const response = await result.response;
+    let pythonCode = response.text() || '';
     // Clean up code if Gemini adds markdown
     pythonCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
     
