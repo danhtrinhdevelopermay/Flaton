@@ -432,13 +432,44 @@ export default function ImageGeneratorPage() {
                         alt={`Generated ${index + 1}`}
                         className="w-full rounded-xl"
                       />
-                      <button
-                        onClick={() => handleDownload(img, `ai-image-${Date.now()}-${index + 1}.png`)}
-                        className="absolute bottom-2 right-2 bg-black/50 hover:bg-black/70 p-2 rounded-full opacity-100 group-hover:scale-110 transition-all shadow-lg text-white"
-                        title="Tải ảnh về"
-                      >
-                        <Download className="w-4 h-4" />
-                      </button>
+                      <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="uiverse-container">
+                          <label className="uiverse-label">
+                            <input 
+                              type="checkbox" 
+                              className="uiverse-input" 
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  handleDownload(img, `ai-image-${Date.now()}-${index + 1}.png`);
+                                  setTimeout(() => {
+                                    e.target.checked = false;
+                                  }, 4000);
+                                }
+                              }}
+                            />
+                            <span className="uiverse-circle">
+                              <svg
+                                class="uiverse-icon"
+                                aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="1.5"
+                                  d="M12 19V5m0 14-4-4m4 4 4-4"
+                                ></path>
+                              </svg>
+                              <div className="uiverse-square"></div>
+                            </span>
+                            <p className="uiverse-title">Download</p>
+                            <p className="uiverse-title">Done</p>
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -450,13 +481,44 @@ export default function ImageGeneratorPage() {
                       alt="Generated"
                       className="w-full rounded-xl"
                     />
-                    <button
-                      onClick={() => handleDownload(result.images?.[0] || result.imageUrl!, `ai-image-${Date.now()}.png`)}
-                      className="absolute bottom-4 right-4 bg-black/60 hover:bg-black/70 p-3 rounded-full opacity-100 group-hover:scale-110 transition-all shadow-lg text-white"
-                      title="Tải ảnh về"
-                    >
-                      <Download className="w-5 h-5" />
-                    </button>
+                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="uiverse-container">
+                        <label className="uiverse-label">
+                          <input 
+                            type="checkbox" 
+                            className="uiverse-input" 
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                handleDownload(result.images?.[0] || result.imageUrl!, `ai-image-${Date.now()}.png`);
+                                setTimeout(() => {
+                                  e.target.checked = false;
+                                }, 4000);
+                              }
+                            }}
+                          />
+                          <span className="uiverse-circle">
+                            <svg
+                              class="uiverse-icon"
+                              aria-hidden="true"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="1.5"
+                                d="M12 19V5m0 14-4-4m4 4 4-4"
+                              ></path>
+                            </svg>
+                            <div className="uiverse-square"></div>
+                          </span>
+                          <p className="uiverse-title">Download</p>
+                          <p className="uiverse-title">Done</p>
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
