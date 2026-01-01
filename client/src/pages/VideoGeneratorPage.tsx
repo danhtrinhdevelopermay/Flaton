@@ -55,8 +55,8 @@ export default function VideoGeneratorPage() {
   const [progress, setProgress] = useState(0)
   const [progressMessage, setProgressMessage] = useState('')
   const [showWaterDrop, setShowWaterDrop] = useState(false)
-  const generateButtonRef = useRef<HTMLButtonElement>(null!)
-  const loadingAreaRef = useRef<HTMLDivElement>(null!)
+  const generateButtonRef = useRef<HTMLButtonElement>(null)
+  const loadingAreaRef = useRef<HTMLDivElement>(null)
 
   const currentTool = videoTools.find(t => t.id === selectedTool)
 
@@ -317,11 +317,6 @@ export default function VideoGeneratorPage() {
         fromButton={generateButtonRef}
         toLoading={loadingAreaRef}
       />
-      {!user?.is_pro && (
-        <ProFeatureOverlay 
-          featureName="Video Pro"
-        />
-      )}
       <div className="flex items-center gap-3 mb-8">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
           <Video className="w-6 h-6 text-white" />

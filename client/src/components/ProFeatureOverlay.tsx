@@ -14,11 +14,9 @@ export default function ProFeatureOverlay({ featureName }: ProFeatureOverlayProp
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/20">
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/20 pointer-events-none">
       {/* Content */}
-      <div className={`relative mx-4 rounded-2xl p-8 max-w-sm ${
-        theme === 'dark' ? 'bg-slate-900 border border-slate-700' : 'bg-white border border-slate-200'
-      }`}>
+      <div className="relative mx-4 rounded-2xl p-8 max-w-sm pointer-events-auto">
         {/* Icon */}
         <div className="flex justify-center mb-4">
           <div className="p-3 rounded-full bg-gradient-to-br from-amber-500 to-orange-500">
