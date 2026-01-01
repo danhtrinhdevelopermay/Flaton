@@ -27,12 +27,11 @@ export async function generateLessonScript(
   try {
     console.log(`[Gemini] API Key exists: ${!!process.env.AI_INTEGRATIONS_GEMINI_API_KEY}`);
     console.log(`[Gemini] Base URL: ${process.env.AI_INTEGRATIONS_GEMINI_BASE_URL}`);
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+    const response = await ai.getGenerativeModel({ model: 'gemini-2.5-flash' }).generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
     });
-    console.log(`[Gemini] Response received, text length: ${response.text?.length || 0}`);
-    return response.text || '';
+    console.log(`[Gemini] Response received, text length: ${response.response.text()?.length || 0}`);
+    return response.response.text() || '';
   } catch (error) {
     console.error('[Gemini] Error generating script:', error);
     throw error;
@@ -58,12 +57,11 @@ export async function generateLessonSlides(
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+    const response = await ai.getGenerativeModel({ model: 'gemini-2.5-flash' }).generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
     });
 
-    const text = response.text || '[]';
+    const text = response.response.text() || '[]';
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
   } catch (error) {
@@ -276,12 +274,11 @@ Requirements for the Python Code:
 
 Return ONLY the Python code without any markdown or explanations.`;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+  const response = await ai.getGenerativeModel({ model: 'gemini-2.5-flash' }).generateContent({
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
   });
 
-  const pythonCode = (response.text || '').replace(/```python/g, '').replace(/```/g, '').trim();
+  const pythonCode = (response.response.text() || '').replace(/```python/g, '').replace(/```/g, '').trim();
   const tmpFile = `/tmp/pptx_gen_${lessonId}.py`;
   fs.writeFileSync(tmpFile, pythonCode);
 
