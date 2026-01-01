@@ -1,0 +1,214 @@
+2026-01-01T23:21:03.9461064Z Current runner version: '2.330.0'
+2026-01-01T23:21:03.9484389Z ##[group]Runner Image Provisioner
+2026-01-01T23:21:03.9485312Z Hosted Compute Agent
+2026-01-01T23:21:03.9486120Z Version: 20251211.462
+2026-01-01T23:21:03.9486812Z Commit: 6cbad8c2bb55d58165063d031ccabf57e2d2db61
+2026-01-01T23:21:03.9487473Z Build Date: 2025-12-11T16:28:49Z
+2026-01-01T23:21:03.9488186Z Worker ID: {938ec7cd-48d1-4aa9-99d5-5099e68fce23}
+2026-01-01T23:21:03.9488840Z ##[endgroup]
+2026-01-01T23:21:03.9489405Z ##[group]Operating System
+2026-01-01T23:21:03.9490034Z Ubuntu
+2026-01-01T23:21:03.9490505Z 24.04.3
+2026-01-01T23:21:03.9490999Z LTS
+2026-01-01T23:21:03.9491445Z ##[endgroup]
+2026-01-01T23:21:03.9492051Z ##[group]Runner Image
+2026-01-01T23:21:03.9492572Z Image: ubuntu-24.04
+2026-01-01T23:21:03.9493073Z Version: 20251215.174.1
+2026-01-01T23:21:03.9494133Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20251215.174/images/ubuntu/Ubuntu2404-Readme.md
+2026-01-01T23:21:03.9495676Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20251215.174
+2026-01-01T23:21:03.9496912Z ##[endgroup]
+2026-01-01T23:21:03.9498029Z ##[group]GITHUB_TOKEN Permissions
+2026-01-01T23:21:03.9500082Z Contents: read
+2026-01-01T23:21:03.9500607Z Metadata: read
+2026-01-01T23:21:03.9501115Z Packages: read
+2026-01-01T23:21:03.9501701Z ##[endgroup]
+2026-01-01T23:21:03.9503660Z Secret source: Actions
+2026-01-01T23:21:03.9504349Z Prepare workflow directory
+2026-01-01T23:21:03.9830977Z Prepare all required actions
+2026-01-01T23:21:03.9870576Z Getting action download info
+2026-01-01T23:21:04.3992415Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-01-01T23:21:04.5151799Z Download action repository 'actions/setup-java@v4' (SHA:c1e323688fd81a25caa38c78aa6df2d33d3e20d9)
+2026-01-01T23:21:05.4755777Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-01-01T23:21:05.7084244Z Complete job name: build
+2026-01-01T23:21:05.7869904Z ##[group]Run actions/checkout@v4
+2026-01-01T23:21:05.7871097Z with:
+2026-01-01T23:21:05.7871808Z   repository: danhtrinhdevelopermay/Flaton
+2026-01-01T23:21:05.7873064Z   token: ***
+2026-01-01T23:21:05.7873696Z   ssh-strict: true
+2026-01-01T23:21:05.7874349Z   ssh-user: git
+2026-01-01T23:21:05.7875021Z   persist-credentials: true
+2026-01-01T23:21:05.7875791Z   clean: true
+2026-01-01T23:21:05.7876646Z   sparse-checkout-cone-mode: true
+2026-01-01T23:21:05.7877488Z   fetch-depth: 1
+2026-01-01T23:21:05.7878133Z   fetch-tags: false
+2026-01-01T23:21:05.7878814Z   show-progress: true
+2026-01-01T23:21:05.7879504Z   lfs: false
+2026-01-01T23:21:05.7880140Z   submodules: false
+2026-01-01T23:21:05.7880822Z   set-safe-directory: true
+2026-01-01T23:21:05.7881813Z ##[endgroup]
+2026-01-01T23:21:05.8965018Z Syncing repository: danhtrinhdevelopermay/Flaton
+2026-01-01T23:21:05.8967848Z ##[group]Getting Git version info
+2026-01-01T23:21:05.8969071Z Working directory is '/home/runner/work/Flaton/Flaton'
+2026-01-01T23:21:05.8970682Z [command]/usr/bin/git version
+2026-01-01T23:21:05.9035864Z git version 2.52.0
+2026-01-01T23:21:05.9063489Z ##[endgroup]
+2026-01-01T23:21:05.9087661Z Temporarily overriding HOME='/home/runner/work/_temp/3dc7b0fe-adae-444e-9aac-f6343de108df' before making global git config changes
+2026-01-01T23:21:05.9092126Z Adding repository directory to the temporary git global config as a safe directory
+2026-01-01T23:21:05.9095607Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Flaton/Flaton
+2026-01-01T23:21:05.9134358Z Deleting the contents of '/home/runner/work/Flaton/Flaton'
+2026-01-01T23:21:05.9138293Z ##[group]Initializing the repository
+2026-01-01T23:21:05.9143051Z [command]/usr/bin/git init /home/runner/work/Flaton/Flaton
+2026-01-01T23:21:05.9269955Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-01-01T23:21:05.9272274Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-01-01T23:21:05.9274578Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-01-01T23:21:05.9277381Z hint: call:
+2026-01-01T23:21:05.9278421Z hint:
+2026-01-01T23:21:05.9279981Z hint: 	git config --global init.defaultBranch <name>
+2026-01-01T23:21:05.9281697Z hint:
+2026-01-01T23:21:05.9283391Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-01-01T23:21:05.9286372Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-01-01T23:21:05.9288646Z hint:
+2026-01-01T23:21:05.9289765Z hint: 	git branch -m <name>
+2026-01-01T23:21:05.9291041Z hint:
+2026-01-01T23:21:05.9292763Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-01-01T23:21:05.9295592Z Initialized empty Git repository in /home/runner/work/Flaton/Flaton/.git/
+2026-01-01T23:21:05.9299268Z [command]/usr/bin/git remote add origin https://github.com/danhtrinhdevelopermay/Flaton
+2026-01-01T23:21:05.9330269Z ##[endgroup]
+2026-01-01T23:21:05.9331528Z ##[group]Disabling automatic garbage collection
+2026-01-01T23:21:05.9334071Z [command]/usr/bin/git config --local gc.auto 0
+2026-01-01T23:21:05.9363143Z ##[endgroup]
+2026-01-01T23:21:05.9370058Z ##[group]Setting up auth
+2026-01-01T23:21:05.9371328Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-01-01T23:21:05.9401308Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-01-01T23:21:05.9743507Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-01-01T23:21:05.9774017Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-01-01T23:21:06.0007747Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-01-01T23:21:06.0050615Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-01-01T23:21:06.0304034Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-01-01T23:21:06.0345363Z ##[endgroup]
+2026-01-01T23:21:06.0346802Z ##[group]Fetching the repository
+2026-01-01T23:21:06.0358958Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +f870d36183524d8606781cf98fa72a944f9ed53b:refs/remotes/origin/main
+2026-01-01T23:21:08.1702563Z From https://github.com/danhtrinhdevelopermay/Flaton
+2026-01-01T23:21:08.1704841Z  * [new ref]         f870d36183524d8606781cf98fa72a944f9ed53b -> origin/main
+2026-01-01T23:21:08.1735577Z ##[endgroup]
+2026-01-01T23:21:08.1736318Z ##[group]Determining the checkout info
+2026-01-01T23:21:08.1738176Z ##[endgroup]
+2026-01-01T23:21:08.1742980Z [command]/usr/bin/git sparse-checkout disable
+2026-01-01T23:21:08.1783746Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-01-01T23:21:08.1810860Z ##[group]Checking out the ref
+2026-01-01T23:21:08.1814486Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-01-01T23:21:08.4376249Z Switched to a new branch 'main'
+2026-01-01T23:21:08.4377080Z branch 'main' set up to track 'origin/main'.
+2026-01-01T23:21:08.4404012Z ##[endgroup]
+2026-01-01T23:21:08.4446261Z [command]/usr/bin/git log -1 --format=%H
+2026-01-01T23:21:08.4471055Z f870d36183524d8606781cf98fa72a944f9ed53b
+2026-01-01T23:21:08.4726216Z ##[group]Run actions/setup-java@v4
+2026-01-01T23:21:08.4726546Z with:
+2026-01-01T23:21:08.4726732Z   java-version: 17
+2026-01-01T23:21:08.4726927Z   distribution: temurin
+2026-01-01T23:21:08.4727122Z   cache: gradle
+2026-01-01T23:21:08.4727307Z   java-package: jdk
+2026-01-01T23:21:08.4727501Z   check-latest: false
+2026-01-01T23:21:08.4727693Z   server-id: github
+2026-01-01T23:21:08.4727882Z   server-username: GITHUB_ACTOR
+2026-01-01T23:21:08.4728328Z   server-password: GITHUB_TOKEN
+2026-01-01T23:21:08.4728563Z   overwrite-settings: true
+2026-01-01T23:21:08.4728780Z   job-status: success
+2026-01-01T23:21:08.4729114Z   token: ***
+2026-01-01T23:21:08.4729299Z ##[endgroup]
+2026-01-01T23:21:08.6678042Z ##[group]Installed distributions
+2026-01-01T23:21:08.6756312Z Resolved Java 17.0.17+10 from tool-cache
+2026-01-01T23:21:08.6757135Z Setting Java 17.0.17+10 as the default
+2026-01-01T23:21:08.6770768Z Creating toolchains.xml for JDK version 17 from temurin
+2026-01-01T23:21:08.6847490Z Writing to /home/runner/.m2/toolchains.xml
+2026-01-01T23:21:08.6847881Z 
+2026-01-01T23:21:08.6848023Z Java configuration:
+2026-01-01T23:21:08.6849599Z   Distribution: temurin
+2026-01-01T23:21:08.6850011Z   Version: 17.0.17+10
+2026-01-01T23:21:08.6853257Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.17-10/x64
+2026-01-01T23:21:08.6853775Z 
+2026-01-01T23:21:08.6854279Z ##[endgroup]
+2026-01-01T23:21:08.6868354Z Creating settings.xml with server-id: github
+2026-01-01T23:21:08.6872964Z Writing to /home/runner/.m2/settings.xml
+2026-01-01T23:21:08.9993631Z gradle cache is not found
+2026-01-01T23:21:09.0113652Z ##[group]Run chmod +x android-app/gradlew
+2026-01-01T23:21:09.0114028Z [36;1mchmod +x android-app/gradlew[0m
+2026-01-01T23:21:09.0154889Z shell: /usr/bin/bash -e {0}
+2026-01-01T23:21:09.0155138Z env:
+2026-01-01T23:21:09.0155421Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.17-10/x64
+2026-01-01T23:21:09.0156156Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.17-10/x64
+2026-01-01T23:21:09.0156534Z ##[endgroup]
+2026-01-01T23:21:09.0340236Z ##[group]Run cd android-app && ./gradlew assembleDebug
+2026-01-01T23:21:09.0340655Z [36;1mcd android-app && ./gradlew assembleDebug[0m
+2026-01-01T23:21:09.0373767Z shell: /usr/bin/bash -e {0}
+2026-01-01T23:21:09.0374004Z env:
+2026-01-01T23:21:09.0374294Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.17-10/x64
+2026-01-01T23:21:09.0374787Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.17-10/x64
+2026-01-01T23:21:09.0375154Z ##[endgroup]
+2026-01-01T23:21:10.3990620Z Downloading https://services.gradle.org/distributions/gradle-8.2-bin.zip
+2026-01-01T23:21:12.8711135Z ............10%............20%............30%.............40%............50%............60%............70%.............80%............90%............100%
+2026-01-01T23:21:14.0657002Z 
+2026-01-01T23:21:14.0659063Z Welcome to Gradle 8.2!
+2026-01-01T23:21:14.0661482Z 
+2026-01-01T23:21:14.0661728Z Here are the highlights of this release:
+2026-01-01T23:21:14.0663892Z  - Kotlin DSL: new reference documentation, assignment syntax by default
+2026-01-01T23:21:14.0666260Z  - Kotlin DSL is now the default with Gradle init
+2026-01-01T23:21:14.0668130Z  - Improved suggestions to resolve errors in console output
+2026-01-01T23:21:14.0668558Z 
+2026-01-01T23:21:14.0668871Z For more details see https://docs.gradle.org/8.2/release-notes.html
+2026-01-01T23:21:14.0669325Z 
+2026-01-01T23:21:14.9608566Z Starting a Gradle Daemon (subsequent builds will be faster)
+2026-01-01T23:22:22.6694520Z 
+2026-01-01T23:22:22.6718685Z FAILURE: Build completed with 2 failures.
+2026-01-01T23:22:22.6719072Z 
+2026-01-01T23:22:22.6719232Z 1: Task failed with an exception.
+2026-01-01T23:22:22.6719624Z -----------
+2026-01-01T23:22:22.6719903Z * Where:
+2026-01-01T23:22:22.6720450Z Build file '/home/runner/work/Flaton/Flaton/android-app/app/build.gradle' line: 24
+2026-01-01T23:22:22.6721159Z 
+2026-01-01T23:22:22.6721283Z * What went wrong:
+2026-01-01T23:22:22.6721636Z A problem occurred evaluating project ':app'.
+2026-01-01T23:22:22.6725151Z > Could not set unknown property 'isMinifyEnabled' for BuildType$AgpDecorated_Decorated{name=release, debuggable=false, testCoverageEnabled=false, jniDebuggable=false, pseudoLocalesEnabled=false, renderscriptDebuggable=false, renderscriptOptimLevel=3, minifyEnabled=false, zipAlignEnabled=true, signingConfig=null, embedMicroApp=true, mBuildConfigFields={}, mResValues={}, mProguardFiles=[], mConsumerProguardFiles=[], mManifestPlaceholders={}} of type com.android.build.gradle.internal.dsl.BuildType$AgpDecorated.
+2026-01-01T23:22:22.6729108Z 
+2026-01-01T23:22:22.6729224Z * Try:
+2026-01-01T23:22:22.6729607Z > Run with --stacktrace option to get the stack trace.
+2026-01-01T23:22:22.6730201Z > Run with --info or --debug option to get more log output.
+2026-01-01T23:22:22.6730746Z > Run with --scan to get full insights.
+2026-01-01T23:22:22.6731255Z > Get more help at https://help.gradle.org.
+2026-01-01T23:22:22.6731735Z ==============================================================================
+2026-01-01T23:22:22.6732065Z 
+2026-01-01T23:22:22.6732210Z 2: Task failed with an exception.
+2026-01-01T23:22:22.6732583Z -----------
+2026-01-01T23:22:22.6732852Z * Where:
+2026-01-01T23:22:22.6733398Z Build file '/home/runner/work/Flaton/Flaton/android-app/app/build.gradle' line: 24
+2026-01-01T23:22:22.6733964Z 
+2026-01-01T23:22:22.6734092Z * What went wrong:
+2026-01-01T23:22:22.6734458Z A problem occurred evaluating project ':app'.
+2026-01-01T23:22:22.6738136Z > Could not set unknown property 'isMinifyEnabled' for BuildType$AgpDecorated_Decorated{name=release, debuggable=false, testCoverageEnabled=false, jniDebuggable=false, pseudoLocalesEnabled=false, renderscriptDebuggable=false, renderscriptOptimLevel=3, minifyEnabled=false, zipAlignEnabled=true, signingConfig=null, embedMicroApp=true, mBuildConfigFields={}, mResValues={}, mProguardFiles=[], mConsumerProguardFiles=[], mManifestPlaceholders={}} of type com.android.build.gradle.internal.dsl.BuildType$AgpDecorated.
+2026-01-01T23:22:22.6741537Z 
+2026-01-01T23:22:22.6741987Z * Try:
+2026-01-01T23:22:22.6742386Z > Run with --stacktrace option to get the stack trace.
+2026-01-01T23:22:22.6742992Z > Run with --info or --debug option to get more log output.
+2026-01-01T23:22:22.6743526Z > Run with --scan to get full insights.
+2026-01-01T23:22:22.6744000Z > Get more help at https://help.gradle.org.
+2026-01-01T23:22:22.6744475Z ==============================================================================
+2026-01-01T23:22:22.6744811Z 
+2026-01-01T23:22:22.6744939Z BUILD FAILED in 1m 12s
+2026-01-01T23:22:23.1533542Z ##[error]Process completed with exit code 1.
+2026-01-01T23:22:23.1633714Z Post job cleanup.
+2026-01-01T23:22:23.3363307Z Post job cleanup.
+2026-01-01T23:22:23.4292111Z [command]/usr/bin/git version
+2026-01-01T23:22:23.4328989Z git version 2.52.0
+2026-01-01T23:22:23.4372613Z Temporarily overriding HOME='/home/runner/work/_temp/d104f534-69a4-4bc9-b915-c683e45a9eb3' before making global git config changes
+2026-01-01T23:22:23.4373900Z Adding repository directory to the temporary git global config as a safe directory
+2026-01-01T23:22:23.4385127Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Flaton/Flaton
+2026-01-01T23:22:23.4417862Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-01-01T23:22:23.4449351Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-01-01T23:22:23.4684018Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-01-01T23:22:23.4704101Z http.https://github.com/.extraheader
+2026-01-01T23:22:23.4716359Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-01-01T23:22:23.4746650Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-01-01T23:22:23.4962326Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-01-01T23:22:23.4992174Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-01-01T23:22:23.5307578Z Cleaning up orphan processes
+2026-01-01T23:22:23.5565585Z Terminate orphan process: pid (2171) (java)
