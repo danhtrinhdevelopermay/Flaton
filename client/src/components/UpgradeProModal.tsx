@@ -79,8 +79,8 @@ export default function UpgradeProModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm pointer-events-none">
-      <div className={`relative mx-4 rounded-2xl p-8 max-w-md pointer-events-auto ${
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className={`relative mx-4 rounded-2xl p-8 max-w-md ${
         theme === 'dark'
           ? 'bg-slate-900 border border-slate-700'
           : 'bg-white border border-slate-200'
