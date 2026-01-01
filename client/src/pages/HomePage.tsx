@@ -480,77 +480,82 @@ export default function HomePage() {
       </section>
 
       <section className="py-24 relative z-10 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="max-w-4xl mx-auto px-4">
           <AnimatedText>
-            <div className="text-center mb-16">
-              <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${
-                theme === 'dark' ? 'text-white' : 'text-slate-900'
-              }`}>
-                Bảng giá dịch vụ <span className="gradient-text">Pro</span>
-              </h2>
-              <p className={`text-lg max-w-2xl mx-auto ${
-                theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
-              }`}>
-                Nâng cấp để trải nghiệm không giới hạn các tính năng AI đỉnh cao
-              </p>
-            </div>
-          </AnimatedText>
+            <div className={`rounded-3xl p-12 relative overflow-hidden ${
+              theme === 'dark'
+                ? 'glass'
+                : 'bg-white border border-slate-200 shadow-xl'
+            }`}>
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5" />
+              
+              <div className="relative z-10">
+                <div className="text-center mb-12">
+                  <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${
+                    theme === 'dark' ? 'text-white' : 'text-slate-900'
+                  }`}>
+                    Bảng giá dịch vụ <span className="gradient-text">Pro</span>
+                  </h2>
+                  <p className={`text-lg ${
+                    theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+                  }`}>
+                    Tất cả gói Pro đều bao gồm đầy đủ tính năng: Tạo ảnh, Video, Nhạc, Word & PowerPoint không giới hạn
+                  </p>
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { duration: '1 Ngày', price: '2.000', label: 'Khám phá' },
-              { duration: '1 Tuần', price: '8.000', label: 'Phổ biến', featured: true },
-              { duration: '1 Tháng', price: '45.000', label: 'Tiết kiệm' },
-              { duration: '1 Năm', price: '90.000', label: 'Siêu rẻ' }
-            ].map((plan, idx) => (
-              <div 
-                key={idx}
-                className={`relative p-8 rounded-3xl transition-all duration-300 hover:scale-105 ${
-                  plan.featured 
-                    ? 'bg-gradient-to-br from-indigo-600 to-purple-700 text-white shadow-xl shadow-indigo-500/20' 
-                    : theme === 'dark' ? 'glass border border-slate-700' : 'bg-white border border-slate-200 shadow-sm'
-                }`}
-              >
-                {plan.featured && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-indigo-900 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                    Phổ biến nhất
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+                  {[
+                    { duration: '1 Ngày', price: '2.000' },
+                    { duration: '1 Tuần', price: '8.000', featured: true },
+                    { duration: '1 Tháng', price: '45.000' },
+                    { duration: '1 Năm', price: '90.000' }
+                  ].map((plan, idx) => (
+                    <div 
+                      key={idx}
+                      className={`p-6 rounded-2xl text-center transition-all ${
+                        plan.featured 
+                          ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg scale-105' 
+                          : theme === 'dark' ? 'bg-white/5 border border-white/10' : 'bg-slate-50 border border-slate-200'
+                      }`}
+                    >
+                      <div className={`text-sm font-medium mb-2 ${plan.featured ? 'text-indigo-100' : 'text-slate-500'}`}>
+                        {plan.duration}
+                      </div>
+                      <div className="text-2xl font-bold">
+                        {plan.price}
+                      </div>
+                      <div className={`text-[10px] mt-1 uppercase tracking-wider ${plan.featured ? 'text-indigo-200' : 'text-slate-400'}`}>
+                        VNĐ
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-col items-center gap-6">
+                  <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">
+                    <div className="flex items-center gap-2 text-sm text-green-500 font-medium">
+                      <CheckCircle className="w-4 h-4" />
+                      Không quảng cáo
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-green-500 font-medium">
+                      <CheckCircle className="w-4 h-4" />
+                      Ưu tiên xử lý
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-green-500 font-medium">
+                      <CheckCircle className="w-4 h-4" />
+                      Hỗ trợ 24/7
+                    </div>
                   </div>
-                )}
-                <div className="text-center">
-                  <h3 className={`text-xl font-bold mb-4 ${!plan.featured && (theme === 'dark' ? 'text-white' : 'text-slate-900')}`}>
-                    {plan.duration}
-                  </h3>
-                  <div className="flex items-baseline justify-center gap-1 mb-6">
-                    <span className="text-4xl font-extrabold">{plan.price}</span>
-                    <span className="text-sm opacity-70">VNĐ</span>
-                  </div>
-                  <ul className={`text-sm space-y-3 mb-8 text-left ${plan.featured ? 'text-indigo-100' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-400" />
-                      Tạo hình ảnh không giới hạn
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-400" />
-                      Tạo video chất lượng HD
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-400" />
-                      Xuất Word/PowerPoint Pro
-                    </li>
-                  </ul>
+                  
                   <Link to="/register">
-                    <button className={`w-full py-3 rounded-xl font-bold transition-all ${
-                      plan.featured 
-                        ? 'bg-white text-indigo-600 hover:bg-indigo-50' 
-                        : 'bg-indigo-500 text-white hover:bg-indigo-600'
-                    }`}>
-                      Chọn gói này
+                    <button className="px-10 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl font-bold text-lg hover:shadow-lg hover:shadow-indigo-500/25 hover:scale-105 transition-all duration-300">
+                      Đăng ký nâng cấp ngay
                     </button>
                   </Link>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          </AnimatedText>
         </div>
       </section>
 
