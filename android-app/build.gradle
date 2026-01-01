@@ -9,9 +9,5 @@ buildscript {
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+// Loại bỏ allprojects repositories ở đây vì đã được định nghĩa trong settings.gradle
+// Điều này sửa lỗi: "Build was configured to prefer settings repositories over project repositories"
