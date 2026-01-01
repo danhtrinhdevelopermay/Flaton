@@ -27,7 +27,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { Document, Packer, Paragraph, HeadingLevel, AlignmentType, TextRun } from 'docx';
+import { Document, Packer, Paragraph, HeadingLevel, AlignmentType, TextRun, ImageRun } from 'docx';
 
 const execPromise = promisify(exec);
 
@@ -1652,12 +1652,9 @@ Requirements:
 Return ONLY the Python code, no explanations or markdown formatting.
 Start with: from pptx import Presentation`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    });
-
-    const pythonCode = response.text || '';
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const pythonCode = response.text() || '';
     console.log('[PowerPoint Gen] Generated code length:', pythonCode.length);
 
     // Return the code for frontend to execute
@@ -1713,7 +1710,7 @@ app.post('/api/lessons/:id/workflows/execute', authMiddleware, async (req: AuthR
     console.log(`[Execute Workflow] Lesson: ${lessonId}`);
     console.log(`[Execute Workflow] Steps: ${steps.length} step(s)`);
     console.log(`[Execute Workflow] Step types: ${steps.map((s: any) => s.type).join(', ')}`);
-    const results = await lessonService.executeWorkflow(lessonId, steps, {}, ai);
+    const results = await lessonService.executeWorkflow(lessonId, steps, {});
     const duration = Date.now() - startTime;
     console.log('\n========== ✅ WORKFLOW EXECUTION COMPLETED ==========');
     console.log(`[Execute Workflow] Duration: ${duration}ms`);
@@ -1823,12 +1820,10 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
       Format as: [{"title": "...", "bullets": ["...", "..."], "imageSearchQuery": "..."}]
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: [{ role: 'user', parts: [{ text: geminiPrompt }] }],
-    });
-
-    const text = response.text || '[]';
+    const model = getGeminiModel();
+    const result = await model.generateContent(geminiPrompt);
+    const response = await result.response;
+    const text = response.text() || '[]';
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     const rawSlides = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
 
@@ -1891,12 +1886,10 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
       Return ONLY the Python code.
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: [{ role: 'user', parts: [{ text: pythonCodePrompt }] }],
-    });
-
-    const pythonCode = response.text || '';
+    const model = getGeminiModel();
+    const result = await model.generateContent(pythonCodePrompt);
+    const response = await result.response;
+    const pythonCode = response.text() || '';
     const cleanPythonCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
     
     const tmpFile = `/tmp/gen_${lessonId}.py`;
@@ -1954,12 +1947,10 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
       try {
         console.log('[PPTX Gen] Generating AI images via Flaton Image V1...');
         // Request image prompts from Gemini first to make them relevant
-        const imagePromptRequest = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: [{ role: 'user', parts: [{ text: `Based on the PowerPoint topic "${prompt}", suggest 3 short, highly descriptive image prompts for an AI image generator. Return ONLY a JSON array of strings.` }] }],
-        });
-        
-        const promptsText = imagePromptRequest.text || '[]';
+        const model = getGeminiModel();
+        const imagePromptRequestResult = await model.generateContent(`Based on the PowerPoint topic "${prompt}", suggest 3 short, highly descriptive image prompts for an AI image generator. Return ONLY a JSON array of strings.`);
+        const imagePromptResponse = await imagePromptRequestResult.response;
+        const promptsText = imagePromptResponse.text() || '[]';
         // Improved parsing for prompt JSON
         let prompts: string[] = [];
         try {
@@ -2461,12 +2452,10 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
       - conclusion: string (kết luận)
     `;
 
-    const geminiResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [{ role: 'user', parts: [{ text: geminiPrompt }] }],
-    });
-
-    const responseText = geminiResponse.text || '{}';
+    const model = getGeminiModel();
+    const geminiResponseResult = await model.generateContent(geminiPrompt);
+    const geminiResponse = await geminiResponseResult.response;
+    const responseText = geminiResponse.text() || '{}';
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     const structuredContent = jsonMatch ? JSON.parse(jsonMatch[0]) : {
       title: 'Tài Liệu',
@@ -2511,15 +2500,16 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
             const imageBuffer = await imageResponse.arrayBuffer();
             const base64Image = Buffer.from(imageBuffer).toString('base64');
             
-            // Embed base64 image directly into Word
             sectionsData.push(new Paragraph({
               children: [
-                new Image({
-                  data: base64Image,
-                  type: 'image/jpeg',
-                  width: { value: 300, type: 'dxa' },
-                  height: { value: 200, type: 'dxa' },
-                } as any),
+                new ImageRun({
+                  data: Buffer.from(base64Image, 'base64'),
+                  transformation: {
+                    width: 300,
+                    height: 200,
+                  },
+                  type: 'png',
+                }),
               ],
               spacing: { after: 400 },
             }));
