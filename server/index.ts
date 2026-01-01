@@ -2484,7 +2484,7 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
           new TextRun({
             text: s.heading || 'Mục',
             bold: true,
-            rFonts: { ascii: 'Times New Roman', highAnsi: 'Times New Roman' },
+            font: 'Times New Roman',
             color: '000000',
           }),
         ],
@@ -2495,7 +2495,7 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
         children: [
           new TextRun({
             text: (s.content || '').substring(0, 1000),
-            rFonts: { ascii: 'Times New Roman', highAnsi: 'Times New Roman' },
+            font: 'Times New Roman',
             color: '000000',
           }),
         ],
@@ -2541,7 +2541,7 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
               new TextRun({
                 text: structuredContent.title || 'Tài Liệu',
                 bold: true,
-                rFonts: { ascii: 'Times New Roman', highAnsi: 'Times New Roman' },
+                font: 'Times New Roman',
                 color: '000000',
               }),
             ],
@@ -2554,7 +2554,7 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
               new TextRun({
                 text: 'Giới Thiệu',
                 bold: true,
-                rFonts: { ascii: 'Times New Roman', highAnsi: 'Times New Roman' },
+                font: 'Times New Roman',
                 color: '000000',
               }),
             ],
@@ -2564,7 +2564,7 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
             children: [
               new TextRun({
                 text: (structuredContent.introduction || '').substring(0, 500),
-                rFonts: { ascii: 'Times New Roman', highAnsi: 'Times New Roman' },
+                font: 'Times New Roman',
                 color: '000000',
               }),
             ],
@@ -2576,7 +2576,7 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
               new TextRun({
                 text: 'Kết Luận',
                 bold: true,
-                rFonts: { ascii: 'Times New Roman', highAnsi: 'Times New Roman' },
+                font: 'Times New Roman',
                 color: '000000',
               }),
             ],
@@ -2586,7 +2586,7 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
             children: [
               new TextRun({
                 text: (structuredContent.conclusion || '').substring(0, 500),
-                rFonts: { ascii: 'Times New Roman', highAnsi: 'Times New Roman' },
+                font: 'Times New Roman',
                 color: '000000',
               }),
             ],
