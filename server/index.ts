@@ -22,6 +22,9 @@ import * as apiKeyManager from './apiKeyManager';
 import * as cloudinaryUtil from './cloudinaryUtil';
 import jwt from 'jsonwebtoken';
 import * as lessonService from './lesson';
+import multer from 'multer';
+
+const upload = multer({ dest: 'uploads/' });
 
 import fs from 'fs';
 import path from 'path';
@@ -682,6 +685,26 @@ app.post('/api/generate/nano-banana', authMiddleware, async (req: AuthRequest, r
     res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'playground' });
   } catch (error: any) {
     await refundCredits(req.userId!, MODEL_CREDITS['nano-banana']);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/upload-video', authMiddleware, upload.single('video'), async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No video file uploaded' });
+    }
+    
+    const result = await cloudinaryUtil.uploadVideoToCloudinary(req.file.path);
+    
+    // Clean up temp file
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    
+    res.json({ videoUrl: result });
+  } catch (error: any) {
+    console.error('Upload video error:', error);
     res.status(500).json({ error: error.message });
   }
 });

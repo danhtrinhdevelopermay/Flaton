@@ -19,6 +19,7 @@ export default function VideoUpscalePage() {
   const [videoUrl, setVideoUrl] = useState('')
   const [upscaleFactor, setUpscaleFactor] = useState('4x')
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [polling, setPolling] = useState(false)
   const [progress, setProgress] = useState(0)
   const [result, setResult] = useState<any>(null)
@@ -28,6 +29,35 @@ export default function VideoUpscalePage() {
       refreshUser()
     }
   }, [isAuthenticated, token])
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('video', file)
+
+    try {
+      const response = await fetch('/api/upload-video', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      })
+      const data = await response.json()
+      if (data.videoUrl) {
+        setVideoUrl(data.videoUrl)
+      } else {
+        alert(data.error || 'Upload thất bại')
+      }
+    } catch (err: any) {
+      alert('Lỗi upload: ' + err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const pollTaskStatus = async (taskId: string) => {
     setPolling(true)
@@ -125,19 +155,43 @@ export default function VideoUpscalePage() {
         <div className={`md:col-span-3 rounded-3xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
           <div className="mb-6">
             <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-              URL Video
+              Video đầu vào
             </label>
-            <div className="relative">
-              <input
-                type="url"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="Dán link video từ Cloudinary, Dropbox, etc."
-                className={`w-full p-4 pr-12 rounded-2xl border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                  theme === 'dark' ? 'bg-slate-800/50 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
-                }`}
-              />
-              <Upload className="absolute right-4 top-4 w-5 h-5 text-slate-400" />
+            <div className="flex flex-col gap-3">
+              <div className="relative">
+                <input
+                  type="url"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder="Dán link hoặc tải file bên dưới"
+                  className={`w-full p-4 pr-12 rounded-2xl border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                    theme === 'dark' ? 'bg-slate-800/50 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                  }`}
+                />
+                <Upload className="absolute right-4 top-4 w-5 h-5 text-slate-400" />
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed cursor-pointer transition-all ${
+                  theme === 'dark' ? 'border-slate-700 hover:border-slate-500 bg-slate-800/30' : 'border-slate-300 hover:border-slate-400 bg-slate-50'
+                }`}>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                  {uploading ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                  ) : (
+                    <Upload className="w-5 h-5 text-blue-500" />
+                  )}
+                  <span className={`text-sm font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                    {uploading ? 'Đang tải lên...' : 'Tải file từ máy tính'}
+                  </span>
+                </label>
+              </div>
             </div>
           </div>
 
