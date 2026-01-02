@@ -715,6 +715,9 @@ app.post('/api/generate/topaz-video', authMiddleware, async (req: AuthRequest, r
     
     const factor = upscaleFactor.replace('x', '');
     
+    // Log the actual calling for debugging
+    console.log('[DEBUG] Calling /playground/createTask with topaz-video-upscale');
+    
     const result = await callKieApi('/playground/createTask', {
       model: 'topaz-video-upscale',
       input: {
@@ -728,6 +731,7 @@ app.post('/api/generate/topaz-video', authMiddleware, async (req: AuthRequest, r
       taskType: 'topaz-video' 
     });
   } catch (error: any) {
+    console.error('[ERROR] Topaz generation failed:', error);
     res.status(500).json({ error: error.message });
   }
 });
