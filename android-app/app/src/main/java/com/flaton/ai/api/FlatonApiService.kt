@@ -13,6 +13,9 @@ data class GenerateResponse(
 interface FlatonApiService {
     @POST("api/generate/nano-banana")
     suspend fun generateImage(@Body request: Map<String, String>): GenerateResponse
+
+    @POST("api/generate/topaz-video")
+    suspend fun upscaleVideo(@Body request: Map<String, String>): GenerateResponse
 }
 
 object ApiClient {

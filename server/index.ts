@@ -187,6 +187,9 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     case 'suno':
       endpoint = `/generate/record-info?taskId=${taskId}`;
       break;
+    case 'topaz-video':
+      endpoint = `/topaz/record-info?taskId=${taskId}`;
+      break;
     case 'gpt4o-image':
       endpoint = `/gpt4o-image/record-info?taskId=${taskId}`;
       break;
@@ -578,6 +581,7 @@ const MODEL_CREDITS: Record<string, number> = {
   'suno': 0,
   'sora2-text': 0,
   'sora2-image': 0,
+  'topaz-video': 72,
   'gpt4o-image': 0,
 };
 
@@ -678,6 +682,26 @@ app.post('/api/generate/nano-banana', authMiddleware, async (req: AuthRequest, r
     res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'playground' });
   } catch (error: any) {
     await refundCredits(req.userId!, MODEL_CREDITS['nano-banana']);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/generate/topaz-video', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { videoUrl, upscaleFactor = '4x' } = req.body;
+    
+    const factor = upscaleFactor.replace('x', '');
+    
+    const result = await callKieApi('/topaz/video-upscale', {
+      video_url: videoUrl,
+      upscale_factor: parseFloat(factor)
+    });
+    
+    res.json({ 
+      taskId: result.task_id || result.data?.taskId, 
+      taskType: 'topaz-video' 
+    });
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
