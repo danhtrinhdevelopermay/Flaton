@@ -55,8 +55,8 @@ export default function VideoGeneratorPage() {
   const [progress, setProgress] = useState(0)
   const [progressMessage, setProgressMessage] = useState('')
   const [showWaterDrop, setShowWaterDrop] = useState(false)
-  const generateButtonRef = useRef<HTMLButtonElement>(null)
-  const loadingAreaRef = useRef<HTMLDivElement>(null)
+  const generateButtonRef = useRef<HTMLButtonElement>(null) as React.MutableRefObject<HTMLButtonElement>
+  const loadingAreaRef = useRef<HTMLDivElement>(null) as React.MutableRefObject<HTMLDivElement>
 
   const currentTool = videoTools.find(t => t.id === selectedTool)
 

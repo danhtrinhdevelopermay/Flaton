@@ -189,7 +189,7 @@ export default function VideoUpscalePage() {
               <div className="flex items-center gap-2 text-green-500 font-semibold">
                 <Check className="w-5 h-5" /> Kết quả hoàn tất
               </div>
-              <VideoPlayer url={result.videoUrl} />
+              <VideoPlayer videoUrl={result.videoUrl} />
               <a
                 href={result.videoUrl}
                 target="_blank"
