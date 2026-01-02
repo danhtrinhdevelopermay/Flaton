@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
-import { Video, Loader2, Zap, Check, RefreshCw, Sparkles, LogIn, Rocket, Crown, Image } from 'lucide-react'
+import { Video, Loader2, Zap, Check, RefreshCw, Sparkles, LogIn, Rocket, Crown, Image as ImageIcon } from 'lucide-react'
 import WaterDropAnimation from '../components/WaterDropAnimation'
 import VideoPlayer from '../components/VideoPlayer'
 import ProFeatureOverlay from '../components/ProFeatureOverlay'

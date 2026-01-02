@@ -17,6 +17,7 @@ import LessonDetailPage from './pages/LessonDetailPage'
 import LessonsListPage from './pages/LessonsListPage'
 import PowerPointGeneratorPage from './pages/PowerPointGeneratorPage'
 import WordGeneratorPage from './pages/WordGeneratorPage'
+import VideoUpscalePage from './pages/VideoUpscalePage'
 import AdminUpgradePage from './pages/AdminUpgradePage'
 import MilestonesPage from './pages/MilestonesPage'
 
@@ -29,6 +30,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/image-generator" element={<ImageGeneratorPage />} />
           <Route path="/video-generator" element={<VideoGeneratorPage />} />
+          <Route path="/video-upscale" element={<VideoUpscalePage />} />
           <Route path="/music-generator" element={<MusicGeneratorPage />} />
           <Route path="/pptx-generator" element={<PowerPointGeneratorPage />} />
           <Route path="/word-generator" element={<WordGeneratorPage />} />

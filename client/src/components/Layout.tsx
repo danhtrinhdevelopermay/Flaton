@@ -73,6 +73,7 @@ export default function Layout({ children }: LayoutProps) {
   const serviceItems = [
     { path: '/image-generator', label: 'Tạo hình ảnh', icon: Image },
     { path: '/video-generator', label: 'Tạo video', icon: Video },
+    { path: '/video-upscale', label: 'Nâng cấp Video (Topaz)', icon: Sparkles },
     { path: '/music-generator', label: 'Tạo nhạc', icon: Music },
     { path: '/pptx-generator', label: 'Tạo PowerPoint', icon: Presentation },
     { path: '/word-generator', label: 'Tạo Word', icon: FileText },
