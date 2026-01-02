@@ -689,7 +689,7 @@ app.post('/api/generate/nano-banana', authMiddleware, async (req: AuthRequest, r
   }
 });
 
-app.post('/api/upload-video', authMiddleware, upload.single('video'), async (req: AuthRequest, res: Response) => {
+app.post('/api/upload-video', authMiddleware, upload.single('video'), async (req: any, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No video file uploaded' });
