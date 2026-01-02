@@ -191,7 +191,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       endpoint = `/generate/record-info?taskId=${taskId}`;
       break;
     case 'topaz-video':
-      endpoint = `/playground/recordInfo?taskId=${taskId}`;
+      endpoint = `/jobs/recordInfo?taskId=${taskId}`;
       break;
     case 'gpt4o-image':
       endpoint = `/gpt4o-image/record-info?taskId=${taskId}`;
@@ -210,7 +210,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
   const result = await response.json();
   console.log(`Task status check for ${taskType}/${taskId}:`, JSON.stringify(result, null, 2));
   
-  if (taskType === 'playground' || taskType === 'seedream') {
+  if (taskType === 'playground' || taskType === 'seedream' || taskType === 'topaz-video') {
     if (result.code !== 200) {
       const errorMsg = result.msg || result.message || 'Failed to check task status';
       throw new Error(errorMsg);
@@ -218,22 +218,23 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     
     const data = result.data;
     if (data.state === 'success') {
-      let images: string[] = [];
+      let videoUrl = null;
       if (data.resultJson) {
         try {
           const resultData = JSON.parse(data.resultJson);
-          const originalImages = resultData.resultUrls || [];
-          images = await Promise.all(originalImages.map((url: string) => cloudinaryUtil.uploadImageToCloudinary(url)));
+          const originalUrl = resultData.resultUrls?.[0] || null;
+          if (originalUrl) {
+            videoUrl = await cloudinaryUtil.uploadVideoToCloudinary(originalUrl);
+          }
         } catch (e) {
           console.error('Failed to parse resultJson:', e);
         }
       }
       return {
         status: 'completed',
-        imageUrl: images[0],
-        images: images,
+        videoUrl: videoUrl,
       };
-    } else if (data.state === 'failed') {
+    } else if (data.state === 'failed' || data.state === 'fail') {
       return {
         status: 'failed',
         error: data.failMsg || 'Generation failed',
@@ -241,7 +242,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     } else {
       return {
         status: 'processing',
-        progress: data.progress,
+        progress: data.state || 'waiting',
       };
     }
   }
@@ -718,11 +719,11 @@ app.post('/api/generate/topaz-video', authMiddleware, async (req: AuthRequest, r
     // Log the actual calling for debugging
     console.log('[DEBUG] Calling /playground/createTask with topaz-video-upscale');
     
-    const result = await callKieApi('/playground/createTask', {
-      model: 'topaz-video-upscale',
+    const result = await callKieApi('/jobs/createTask', {
+      model: 'topaz/video-upscale',
       input: {
         video_url: videoUrl,
-        upscale_factor: parseFloat(factor)
+        upscale_factor: factor
       }
     });
     
