@@ -191,7 +191,7 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       endpoint = `/generate/record-info?taskId=${taskId}`;
       break;
     case 'topaz-video':
-      endpoint = `/topaz/record-info?taskId=${taskId}`;
+      endpoint = `/playground/recordInfo?taskId=${taskId}`;
       break;
     case 'gpt4o-image':
       endpoint = `/gpt4o-image/record-info?taskId=${taskId}`;
@@ -715,9 +715,12 @@ app.post('/api/generate/topaz-video', authMiddleware, async (req: AuthRequest, r
     
     const factor = upscaleFactor.replace('x', '');
     
-    const result = await callKieApi('/topaz/video-upscale', {
-      video_url: videoUrl,
-      upscale_factor: parseFloat(factor)
+    const result = await callKieApi('/playground/createTask', {
+      model: 'topaz-video-upscale',
+      input: {
+        video_url: videoUrl,
+        upscale_factor: parseFloat(factor)
+      }
     });
     
     res.json({ 
