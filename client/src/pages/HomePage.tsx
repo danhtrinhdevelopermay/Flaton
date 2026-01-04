@@ -135,17 +135,16 @@ function FeatureCard({ icon: Icon, title, description, gradient, delay }: {
           : 'opacity-0 translate-y-12 scale-95'
       }`}
     >
-      <div className={`rounded-2xl p-8 h-full group hover:scale-105 transition-transform duration-300 relative overflow-hidden ${
-        theme === 'dark' ? 'glass' : 'bg-white border border-slate-200'
+      <div className={`rounded-[2.5rem] p-8 h-full group hover:scale-105 transition-all duration-300 relative overflow-hidden border-b-8 active:translate-y-1 active:border-b-2 ${
+        theme === 'dark' 
+          ? 'bg-[#2a2d3e] border-[#1e202f] hover:border-[#3a3d4e]' 
+          : 'bg-white border-slate-200 hover:border-slate-300 shadow-[0_8px_0_0_rgba(0,0,0,0.05)]'
       }`}>
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-          <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-10`} />
+        <div className={`w-20 h-20 rounded-[1.5rem] bg-gradient-to-br ${gradient} flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
+          <Icon className="w-10 h-10 text-white drop-shadow-md" />
         </div>
-        <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-          <Icon className="w-8 h-8 text-white" />
-        </div>
-        <h3 className={`text-xl font-bold mb-3 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
-        <p className={`leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{description}</p>
+        <h3 className={`text-2xl font-black mb-3 tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
+        <p className={`text-lg leading-relaxed font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{description}</p>
       </div>
     </div>
   )
@@ -171,8 +170,8 @@ function ToolCard({ tool, index, type }: { tool: typeof tools[0], index: number,
   }, [index])
   
   const gradient = type === 'image' 
-    ? 'from-cyan-500 to-blue-600' 
-    : 'from-purple-500 to-pink-600'
+    ? 'from-[#FF6B6B] to-[#FF8E8E]' 
+    : 'from-[#4D96FF] to-[#6BCBFF]'
   
   const Icon = type === 'image' ? Image : Video
   
@@ -186,48 +185,46 @@ function ToolCard({ tool, index, type }: { tool: typeof tools[0], index: number,
       }`}
     >
       <Link to={`/${type}-generator?tool=${tool.id}`}>
-        <div className={`rounded-2xl p-6 group hover:scale-[1.02] transition-all duration-300 relative overflow-hidden h-full ${
-          theme === 'dark' ? 'glass' : 'bg-white border border-slate-200'
+        <div className={`rounded-[2rem] p-6 group hover:scale-[1.02] transition-all duration-300 relative overflow-hidden h-full border-b-4 active:translate-y-1 active:border-b-0 ${
+          theme === 'dark' 
+            ? 'bg-[#2a2d3e] border-[#1a1c2a]' 
+            : 'bg-white border-slate-100 shadow-xl'
         }`}>
-          <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-            theme === 'dark' ? 'bg-gradient-to-br from-white/5 to-transparent' : 'bg-gradient-to-br from-slate-100 to-transparent'
-          }`} />
-          
           {tool.featured && (
-            <div className="absolute top-4 right-4 flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/30">
-              <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-              <span className="text-xs text-yellow-400 font-medium">HOT</span>
+            <div className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1 rounded-full bg-[#FFD93D] border-b-2 border-[#E6C237] animate-pulse">
+              <Star className="w-3 h-3 text-[#FF8E8E] fill-[#FF8E8E]" />
+              <span className="text-[10px] text-[#6B4E00] font-black uppercase italic">Super!</span>
             </div>
           )}
           
-          <div className="flex items-start gap-4 mb-4">
-            <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-              <Icon className="w-7 h-7 text-white" />
+          <div className="flex items-center gap-4 mb-4">
+            <div className={`w-16 h-16 rounded-[1.2rem] bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-md`}>
+              <Icon className="w-8 h-8 text-white drop-shadow-sm" />
             </div>
             <div>
-              <h3 className={`font-bold text-lg mb-1 transition-colors ${
-                theme === 'dark'
-                  ? 'text-white group-hover:text-white'
-                  : 'text-slate-900 group-hover:text-indigo-600'
+              <h3 className={`font-black text-xl mb-0.5 tracking-tight ${
+                theme === 'dark' ? 'text-white' : 'text-slate-900'
               }`}>{tool.name}</h3>
-              <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{tool.provider}</p>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-[#6BCB77]" />
+                <p className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>{tool.provider}</p>
+              </div>
             </div>
           </div>
           
-          <p className={`mb-6 leading-relaxed ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>{tool.description}</p>
+          <p className={`mb-6 text-sm font-medium leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{tool.description}</p>
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20">
-              <Zap className="w-4 h-4 text-yellow-400" />
-              <span className="text-yellow-400 font-bold">{tool.credits}</span>
-              <span className="text-yellow-400/70 text-sm">credits</span>
+          <div className="flex items-center justify-between mt-auto">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#FFF5E4] border-b-2 border-[#FFE3B3]">
+              <Zap className="w-4 h-4 text-[#FF9F29] fill-[#FF9F29]" />
+              <span className="text-[#FF9F29] font-black text-lg">{tool.credits}</span>
             </div>
-            <div className={`flex items-center gap-2 transition-colors ${
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-black text-sm transition-all ${
               theme === 'dark'
-                ? 'text-slate-400 group-hover:text-white'
-                : 'text-slate-600 group-hover:text-indigo-600'
+                ? 'bg-white/5 text-white group-hover:bg-[#4D96FF]'
+                : 'bg-slate-50 text-slate-900 group-hover:bg-[#4D96FF] group-hover:text-white group-hover:shadow-md'
             }`}>
-              <span className="text-sm font-medium">Dùng ngay</span>
+              <span>PLAY</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
@@ -305,53 +302,41 @@ export default function HomePage() {
           </AnimatedText>
           
           <AnimatedText delay={0.2}>
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight">
-              <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Sáng tạo không giới hạn
+            <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight tracking-tighter">
+              <span className="bg-gradient-to-r from-[#FF6B6B] via-[#4D96FF] to-[#6BCB77] bg-clip-text text-transparent drop-shadow-sm">
+                SÁNG TẠO
               </span>
               <br />
-              <span className={theme === 'dark' ? 'text-white' : 'text-slate-900'}>với AI</span>
+              <span className={theme === 'dark' ? 'text-white' : 'text-slate-900'}>SIÊU TỐC!</span>
             </h1>
           </AnimatedText>
           
           <AnimatedText delay={0.4}>
-            <p className={`text-xl md:text-2xl max-w-2xl mx-auto mb-12 leading-relaxed ${
+            <p className={`text-xl md:text-2xl max-w-2xl mx-auto mb-12 font-bold leading-relaxed ${
               theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
             }`}>
-              Tạo hình ảnh, video và nhạc chất lượng cao chỉ với vài cú nhấp chuột. 
-              Đơn giản, nhanh chóng và tiết kiệm.
+              Biến ý tưởng thành hình ảnh, video và âm nhạc <span className="text-[#4D96FF]">chỉ trong một nốt nhạc!</span> 🚀
             </p>
           </AnimatedText>
           
           <AnimatedText delay={0.6}>
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-6">
               <Link to="/image-generator">
-                <button className="group px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl font-bold text-lg hover:shadow-lg hover:shadow-indigo-500/25 hover:scale-105 transition-all duration-300 flex items-center gap-3">
-                  <Image className="w-5 h-5" />
-                  Tạo hình ảnh
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <button className="group px-10 py-5 bg-[#FF6B6B] border-b-8 border-[#EE5253] text-white rounded-[2rem] font-black text-xl hover:translate-y-1 hover:border-b-4 active:translate-y-2 active:border-b-0 transition-all duration-150 flex items-center gap-3 shadow-xl">
+                  <Image className="w-6 h-6" />
+                  HÌNH ẢNH
                 </button>
               </Link>
               <Link to="/video-generator">
-                <button className={`group px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 flex items-center gap-3 backdrop-blur-sm ${
-                  theme === 'dark'
-                    ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20'
-                    : 'bg-slate-100 border border-slate-200 hover:bg-slate-200 hover:border-slate-300 text-slate-900'
-                }`}>
-                  <Video className="w-5 h-5" />
-                  Tạo video
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <button className="group px-10 py-5 bg-[#4D96FF] border-b-8 border-[#3A7EE6] text-white rounded-[2rem] font-black text-xl hover:translate-y-1 hover:border-b-4 active:translate-y-2 active:border-b-0 transition-all duration-150 flex items-center gap-3 shadow-xl">
+                  <Video className="w-6 h-6" />
+                  VIDEO
                 </button>
               </Link>
               <Link to="/music-generator">
-                <button className={`group px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 flex items-center gap-3 backdrop-blur-sm ${
-                  theme === 'dark'
-                    ? 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20'
-                    : 'bg-slate-100 border border-slate-200 hover:bg-slate-200 hover:border-slate-300 text-slate-900'
-                }`}>
-                  <Music className="w-5 h-5" />
-                  Tạo nhạc
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <button className="group px-10 py-5 bg-[#6BCB77] border-b-8 border-[#56B362] text-white rounded-[2rem] font-black text-xl hover:translate-y-1 hover:border-b-4 active:translate-y-2 active:border-b-0 transition-all duration-150 flex items-center gap-3 shadow-xl">
+                  <Music className="w-6 h-6" />
+                  MUSIC
                 </button>
               </Link>
             </div>
