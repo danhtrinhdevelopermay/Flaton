@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://flaton-ai.onrender.com/sitemap.xml
+Sitemap: https://flaton.io.vn/sitemap.xml
 
 User-agent: Googlebot
 Allow: /
