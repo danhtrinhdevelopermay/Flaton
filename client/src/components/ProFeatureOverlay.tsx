@@ -22,7 +22,27 @@ export default function ProFeatureOverlay({ featureName }: ProFeatureOverlayProp
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center backdrop-blur-md overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden">
+      {/* Dark background with subtle animated elements */}
+      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute bg-white/10 rounded-full blur-sm animate-float"
+              style={{
+                width: Math.random() * 4 + 2 + 'px',
+                height: Math.random() * 4 + 2 + 'px',
+                left: Math.random() * 100 + '%',
+                top: Math.random() * 100 + '%',
+                animationDelay: Math.random() * 5 + 's',
+                animationDuration: Math.random() * 10 + 10 + 's'
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      
       {/* Content */}
       <div className={`relative mx-4 rounded-2xl p-8 max-w-sm shadow-2xl pointer-events-auto ${
         theme === 'dark' ? 'bg-slate-900 border border-slate-700' : 'bg-white border border-slate-200'

@@ -92,7 +92,15 @@ export default function UpgradeProModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center backdrop-blur-xl overflow-hidden p-4">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center overflow-hidden p-4">
+      {/* Background with animated gradient */}
+      <div className="absolute inset-0 bg-[#0f172a]/60 backdrop-blur-2xl">
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500 rounded-full blur-[120px] animate-pulse delay-700" />
+        </div>
+      </div>
+
       <motion.div 
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
