@@ -138,21 +138,30 @@ export default function VideoUpscalePage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 fade-in">
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-          <Sparkles className="w-6 h-6 text-white" />
+        <div className="w-16 h-16 rounded-[1.2rem] bg-gradient-to-br from-[#4D96FF] to-[#6BCBFF] flex items-center justify-center shadow-lg transform rotate-3">
+          <Sparkles className="w-8 h-8 text-white drop-shadow-md" />
         </div>
         <div>
-          <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-            Nâng cấp Video (Topaz)
-          </h1>
-          <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>
-            Sử dụng AI để tăng độ phân giải và chất lượng video của bạn
-          </p>
+          <h1 className={`text-4xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>SIÊU NÂNG CẤP VIDEO</h1>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#6BCB77] animate-pulse" />
+            <p className={`font-bold uppercase tracking-widest text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>TOPAZ AI ENHANCER</p>
+          </div>
         </div>
       </div>
 
       <div className="grid md:grid-cols-5 gap-8">
-        <div className={`md:col-span-3 rounded-3xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
+        <div className={`md:col-span-3 rounded-[2.5rem] p-8 transition-all border-b-8 active:translate-y-1 active:border-b-4 ${
+          theme === 'dark' 
+            ? 'bg-[#2a2d3e] border-[#1e202f] text-white' 
+            : 'bg-white border-slate-200 shadow-xl text-slate-900'
+        }`}>
+          <h2 className="font-black text-2xl tracking-tight mb-6 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#FFD93D] flex items-center justify-center shadow-sm">
+              <Zap className="w-6 h-6 text-[#6B4E00]" />
+            </div>
+            CÀI ĐẶT
+          </h2>
           <div className="mb-6">
             <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
               Video đầu vào

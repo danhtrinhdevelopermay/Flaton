@@ -260,19 +260,31 @@ export default function MusicGeneratorPage() {
         fromButton={generateButtonRef}
         toLoading={loadingAreaRef}
       />
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center">
-          <Music className="w-6 h-6 text-white" />
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-16 h-16 rounded-[1.2rem] bg-gradient-to-br from-[#6BCB77] to-[#56B362] flex items-center justify-center shadow-lg transform -rotate-3">
+          <Music className="w-8 h-8 text-white drop-shadow-md" />
         </div>
         <div>
-          <h1 className={`text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Tạo nhạc AI</h1>
-          <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>Tạo nhạc với Flaton Music</p>
+          <h1 className={`text-4xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>TẠO NHẠC SIÊU ĐỈNH</h1>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#FFD93D] animate-pulse" />
+            <p className={`font-bold uppercase tracking-widest text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>AI MUSICAL GENIUS</p>
+          </div>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
-          <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Cấu hình</h2>
+        <div className={`rounded-[2.5rem] p-8 transition-all border-b-8 active:translate-y-1 active:border-b-4 ${
+          theme === 'dark' 
+            ? 'bg-[#2a2d3e] border-[#1e202f] text-white' 
+            : 'bg-white border-slate-200 shadow-xl text-slate-900'
+        }`}>
+          <h2 className="font-black text-2xl tracking-tight mb-6 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#4D96FF] flex items-center justify-center shadow-sm">
+              <Zap className="w-6 h-6 text-white" />
+            </div>
+            CẤU HÌNH
+          </h2>
 
           <div className="mb-6">
             <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Chọn phiên bản</label>

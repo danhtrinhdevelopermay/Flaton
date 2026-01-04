@@ -101,51 +101,50 @@ export default function WordGeneratorPage() {
         toLoading={loadingAreaRef}
       />
       {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
-          <FileText className="w-6 h-6 text-white" />
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-16 h-16 rounded-[1.2rem] bg-gradient-to-br from-[#4D96FF] to-[#6BCBFF] flex items-center justify-center shadow-lg transform rotate-3">
+          <FileText className="w-8 h-8 text-white drop-shadow-md" />
         </div>
         <div>
-          <h1 className={`text-3xl md:text-4xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-            Word Generator
-          </h1>
-          <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>
-            Tạo tài liệu Word bằng AI từ nội dung hoặc link
-          </p>
+          <h1 className={`text-4xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>SOẠN THẢO SIÊU TỐC</h1>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#6BCB77] animate-pulse" />
+            <p className={`font-bold uppercase tracking-widest text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>AI WORD PROCESSOR</p>
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className={`rounded-xl transition-colors ${
+      <div className={`rounded-[2.5rem] transition-all border-b-8 ${
         theme === 'dark'
-          ? 'glass'
-          : 'bg-white border border-slate-200 shadow-sm'
-      } p-6 md:p-8`}>
+          ? 'bg-[#2a2d3e] border-[#1e202f] text-white'
+          : 'bg-white border-slate-200 shadow-xl text-slate-900'
+      } p-8`}>
         {/* Input Mode Toggle */}
-        <div className="flex gap-4 mb-6">
+        <div className="flex gap-4 mb-8">
           <button
             onClick={() => setUseLink(false)}
-            className={`px-4 py-2 rounded-lg transition-all ${
+            className={`px-6 py-3 rounded-2xl border-b-4 font-black transition-all active:translate-y-1 active:border-b-0 ${
               !useLink
-                ? 'bg-blue-500 text-white'
+                ? 'border-[#4D96FF] bg-[#4D96FF] text-white'
                 : theme === 'dark'
-                  ? 'glass hover:bg-slate-700/50'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  ? 'border-[#1e202f] bg-[#1e202f]/50 hover:bg-[#32354a]'
+                  : 'border-slate-100 bg-slate-50 text-slate-700 hover:bg-slate-100'
             }`}
           >
-            📝 Nhập Nội Dung
+            📝 NHẬP NỘI DUNG
           </button>
           <button
             onClick={() => setUseLink(true)}
-            className={`px-4 py-2 rounded-lg transition-all ${
+            className={`px-6 py-3 rounded-2xl border-b-4 font-black transition-all active:translate-y-1 active:border-b-0 ${
               useLink
-                ? 'bg-blue-500 text-white'
+                ? 'border-[#4D96FF] bg-[#4D96FF] text-white'
                 : theme === 'dark'
-                  ? 'glass hover:bg-slate-700/50'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  ? 'border-[#1e202f] bg-[#1e202f]/50 hover:bg-[#32354a]'
+                  : 'border-slate-100 bg-slate-50 text-slate-700 hover:bg-slate-100'
             }`}
           >
-            🔗 Dán Link
+            🔗 DÁN LINK
           </button>
         </div>
 
@@ -207,21 +206,17 @@ export default function WordGeneratorPage() {
           ref={generateButtonRef}
           onClick={handleGenerate}
           disabled={generating}
-          className={`w-full py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-            generating
-              ? 'bg-slate-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white'
-          }`}
+          className="w-full h-20 bg-[#FF6B6B] border-b-[10px] border-[#EE5253] text-white rounded-[2rem] font-black text-2xl hover:translate-y-1 hover:border-b-4 active:translate-y-2 active:border-b-0 transition-all duration-150 flex items-center justify-center gap-4 shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {generating ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Đang tạo...
+              <Loader2 className="w-8 h-8 animate-spin" />
+              <span className="animate-pulse">ĐANG BIẾN HÌNH...</span>
             </>
           ) : (
             <>
-              <Wand2 className="w-5 h-5" />
-              Tạo Tài Liệu Word
+              <Wand2 className="w-8 h-8" />
+              TẠO VĂN BẢN!
             </>
           )}
         </button>

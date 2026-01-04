@@ -227,6 +227,19 @@ export default function PowerPointGeneratorPage() {
         toLoading={loadingAreaRef}
       />
       
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-16 h-16 rounded-[1.2rem] bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg transform -rotate-3">
+          <Presentation className="w-8 h-8 text-white drop-shadow-md" />
+        </div>
+        <div>
+          <h1 className={`text-4xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>THIẾT KẾ SLIDE SIÊU TỐC</h1>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+            <p className={`font-bold uppercase tracking-widest text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>AI PRESENTATION MASTER</p>
+          </div>
+        </div>
+      </div>
+
       {showHtmlModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className={`w-full max-w-2xl rounded-2xl shadow-2xl p-6 ${theme === 'dark' ? 'bg-slate-900 border border-slate-700' : 'bg-white border border-slate-200'}`}>
@@ -269,36 +282,26 @@ export default function PowerPointGeneratorPage() {
       )}
 
       <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg">
-            <Presentation className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Trình thiết kế Slide AI</h1>
-            <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>Thiết kế và chỉnh sửa slide trực quan</p>
-          </div>
-        </div>
-        
         <div className="flex gap-3">
           <button
             onClick={() => setShowHtmlModal(true)}
-            className={`flex items-center gap-2 px-5 py-3 border-2 rounded-xl font-bold transition-all shadow-md ${
+            className={`flex items-center gap-2 px-5 py-3 border-b-4 rounded-xl font-black transition-all active:translate-y-1 active:border-b-0 shadow-md ${
               theme === 'dark' 
-                ? 'border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-100' 
+                ? 'border-[#1e202f] bg-[#1e202f]/50 hover:bg-[#32354a] text-slate-100' 
                 : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-900'
             }`}
           >
             <Code className="w-5 h-5" />
-            Nhập HTML
+            NHẬP HTML
           </button>
           {slides.length > 0 && (
             <button
               onClick={generateFinalPPTX}
               disabled={generating}
-              className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 text-white rounded-xl font-bold transition-all shadow-lg"
+              className="flex items-center gap-2 px-6 py-3 bg-[#6BCB77] border-b-4 border-[#56B362] hover:bg-[#56B362] disabled:bg-slate-700 text-white rounded-xl font-black transition-all active:translate-y-1 active:border-b-0 shadow-lg"
             >
               {generating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-              Xuất PPTX
+              XUẤT PPTX
             </button>
           )}
         </div>
