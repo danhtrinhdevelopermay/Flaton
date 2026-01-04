@@ -135,16 +135,16 @@ function FeatureCard({ icon: Icon, title, description, gradient, delay }: {
           : 'opacity-0 translate-y-12 scale-95'
       }`}
     >
-      <div className={`rounded-[2.5rem] p-8 h-full group hover:scale-105 transition-all duration-300 relative overflow-hidden border-b-8 active:translate-y-1 active:border-b-2 ${
+      <div className={`rounded-[1.5rem] md:rounded-[2.5rem] p-6 md:p-8 h-full group hover:scale-105 transition-all duration-300 relative overflow-hidden border-b-4 md:border-b-8 active:translate-y-1 active:border-b-2 ${
         theme === 'dark' 
           ? 'bg-[#2a2d3e] border-[#1e202f] hover:border-[#3a3d4e]' 
           : 'bg-white border-slate-200 hover:border-slate-300 shadow-[0_8px_0_0_rgba(0,0,0,0.05)]'
       }`}>
-        <div className={`w-20 h-20 rounded-[1.5rem] bg-gradient-to-br ${gradient} flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
-          <Icon className="w-10 h-10 text-white drop-shadow-md" />
+        <div className={`w-14 h-14 md:w-20 md:h-20 rounded-[1.2rem] md:rounded-[1.5rem] bg-gradient-to-br ${gradient} flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
+          <Icon className="w-7 h-7 md:w-10 md:h-10 text-white drop-shadow-md" />
         </div>
-        <h3 className={`text-2xl font-black mb-3 tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
-        <p className={`text-lg leading-relaxed font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{description}</p>
+        <h3 className={`text-xl md:text-2xl font-black mb-2 md:mb-3 tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
+        <p className={`text-base md:text-lg leading-relaxed font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{description}</p>
       </div>
     </div>
   )
@@ -302,7 +302,7 @@ export default function HomePage() {
           </AnimatedText>
           
           <AnimatedText delay={0.2}>
-            <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight tracking-tighter">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black mb-6 md:mb-8 leading-tight tracking-tighter">
               <span className="bg-gradient-to-r from-[#FF6B6B] via-[#4D96FF] to-[#6BCB77] bg-clip-text text-transparent drop-shadow-sm">
                 SÁNG TẠO
               </span>
@@ -312,7 +312,7 @@ export default function HomePage() {
           </AnimatedText>
           
           <AnimatedText delay={0.4}>
-            <p className={`text-xl md:text-2xl max-w-2xl mx-auto mb-12 font-bold leading-relaxed ${
+            <p className={`text-lg md:text-2xl max-w-2xl mx-auto mb-8 md:mb-12 font-bold leading-relaxed px-4 ${
               theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
             }`}>
               Biến ý tưởng thành hình ảnh, video và âm nhạc <span className="text-[#4D96FF]">chỉ trong một nốt nhạc!</span> 🚀
@@ -320,22 +320,22 @@ export default function HomePage() {
           </AnimatedText>
           
           <AnimatedText delay={0.6}>
-            <div className="flex flex-wrap justify-center gap-6">
-              <Link to="/image-generator">
-                <button className="group px-10 py-5 bg-[#FF6B6B] border-b-8 border-[#EE5253] text-white rounded-[2rem] font-black text-xl hover:translate-y-1 hover:border-b-4 active:translate-y-2 active:border-b-0 transition-all duration-150 flex items-center gap-3 shadow-xl">
-                  <Image className="w-6 h-6" />
+            <div className="flex flex-wrap justify-center gap-3 md:gap-6">
+              <Link to="/image-generator" className="w-full sm:w-auto">
+                <button className="group w-full sm:px-10 py-4 md:py-5 bg-[#FF6B6B] border-b-8 border-[#EE5253] text-white rounded-[1.5rem] md:rounded-[2rem] font-black text-lg md:text-xl hover:translate-y-1 hover:border-b-4 active:translate-y-2 active:border-b-0 transition-all duration-150 flex items-center justify-center gap-3 shadow-xl">
+                  <Image className="w-5 h-5 md:w-6 md:h-6" />
                   HÌNH ẢNH
                 </button>
               </Link>
-              <Link to="/video-generator">
-                <button className="group px-10 py-5 bg-[#4D96FF] border-b-8 border-[#3A7EE6] text-white rounded-[2rem] font-black text-xl hover:translate-y-1 hover:border-b-4 active:translate-y-2 active:border-b-0 transition-all duration-150 flex items-center gap-3 shadow-xl">
-                  <Video className="w-6 h-6" />
+              <Link to="/video-generator" className="w-full sm:w-auto">
+                <button className="group w-full sm:px-10 py-4 md:py-5 bg-[#4D96FF] border-b-8 border-[#3A7EE6] text-white rounded-[1.5rem] md:rounded-[2rem] font-black text-lg md:text-xl hover:translate-y-1 hover:border-b-4 active:translate-y-2 active:border-b-0 transition-all duration-150 flex items-center justify-center gap-3 shadow-xl">
+                  <Video className="w-5 h-5 md:w-6 md:h-6" />
                   VIDEO
                 </button>
               </Link>
-              <Link to="/music-generator">
-                <button className="group px-10 py-5 bg-[#6BCB77] border-b-8 border-[#56B362] text-white rounded-[2rem] font-black text-xl hover:translate-y-1 hover:border-b-4 active:translate-y-2 active:border-b-0 transition-all duration-150 flex items-center gap-3 shadow-xl">
-                  <Music className="w-6 h-6" />
+              <Link to="/music-generator" className="w-full sm:w-auto">
+                <button className="group w-full sm:px-10 py-4 md:py-5 bg-[#6BCB77] border-b-8 border-[#56B362] text-white rounded-[1.5rem] md:rounded-[2rem] font-black text-lg md:text-xl hover:translate-y-1 hover:border-b-4 active:translate-y-2 active:border-b-0 transition-all duration-150 flex items-center justify-center gap-3 shadow-xl">
+                  <Music className="w-5 h-5 md:w-6 md:h-6" />
                   MUSIC
                 </button>
               </Link>
