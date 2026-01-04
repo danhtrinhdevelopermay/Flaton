@@ -173,7 +173,7 @@ function ToolCard({ tool, index, type }: { tool: typeof tools[0], index: number,
     ? 'from-[#FF6B6B] to-[#FF8E8E]' 
     : 'from-[#4D96FF] to-[#6BCBFF]'
   
-  const icon = type === 'image' ? '🖼️' : '🎬'
+  const icon = type === 'image' ? '/icons/image.png' : '/icons/video.png'
   
   return (
     <div
@@ -199,7 +199,7 @@ function ToolCard({ tool, index, type }: { tool: typeof tools[0], index: number,
           
           <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
             <div className={`w-12 h-12 md:w-16 md:h-16 rounded-[1rem] md:rounded-[1.2rem] bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-md`}>
-              <span className="text-2xl md:text-4xl drop-shadow-sm">{icon}</span>
+              <img src={icon} alt={type} className="w-10 h-10 md:w-12 md:h-12 object-contain drop-shadow-sm" />
             </div>
             <div>
               <h3 className={`font-black text-lg md:text-xl mb-0.5 tracking-tight ${

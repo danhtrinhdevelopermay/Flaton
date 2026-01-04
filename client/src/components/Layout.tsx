@@ -65,18 +65,18 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   const navItems = [
-    { path: '/', label: 'Trang chủ', icon: '🏠' },
-    { path: '/explorer', label: 'Explorer', icon: '🧭' },
-    { path: '/status', label: 'Trạng thái', icon: '⚡' },
+    { path: '/', label: 'Trang chủ', icon: '/icons/home.png' },
+    { path: '/explorer', label: 'Explorer', icon: '/icons/explorer.png' },
+    { path: '/status', label: 'Trạng thái', icon: '/icons/status.png' },
   ]
 
   const serviceItems = [
-    { path: '/image-generator', label: 'Tạo hình ảnh', icon: '🖼️' },
-    { path: '/video-generator', label: 'Tạo video', icon: '🎬' },
-    { path: '/video-upscale', label: 'Nâng cấp Video', icon: '💎' },
-    { path: '/music-generator', label: 'Tạo nhạc', icon: '🎵' },
-    { path: '/pptx-generator', label: 'Tạo PowerPoint', icon: '📊' },
-    { path: '/word-generator', label: 'Tạo Word', icon: '📝' },
+    { path: '/image-generator', label: 'Tạo hình ảnh', icon: '/icons/image.png' },
+    { path: '/video-generator', label: 'Tạo video', icon: '/icons/video.png' },
+    { path: '/video-upscale', label: 'Nâng cấp Video', icon: '/icons/image.png' },
+    { path: '/music-generator', label: 'Tạo nhạc', icon: '/icons/music.png' },
+    { path: '/pptx-generator', label: 'Tạo PowerPoint', icon: '/icons/explorer.png' },
+    { path: '/word-generator', label: 'Tạo Word', icon: '/icons/explorer.png' },
   ]
 
   return (
@@ -253,7 +253,7 @@ export default function Layout({ children }: LayoutProps) {
                   transform: showNavModal ? 'translateY(0)' : 'translateY(20px)'
                 }}
               >
-                <span className="text-xl font-bold md:text-2xl">{item.icon}</span>
+                <img src={item.icon} alt={item.label} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
                 <span className="text-[10px] font-black uppercase tracking-tight text-center">{item.label}</span>
               </Link>
             ))}
@@ -284,7 +284,7 @@ export default function Layout({ children }: LayoutProps) {
                     transform: showNavModal ? 'translateX(0)' : 'translateX(20px)'
                   }}
                 >
-                  <span className="text-xl flex-shrink-0">{item.icon}</span>
+                  <img src={item.icon} alt={item.label} className="w-8 h-8 md:w-10 md:h-10 object-contain flex-shrink-0" />
                   <span className="text-sm font-bold truncate">{item.label}</span>
                 </Link>
               ))}
