@@ -65,18 +65,18 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   const navItems = [
-    { path: '/', label: 'Trang chủ', icon: Home },
-    { path: '/explorer', label: 'Explorer', icon: Compass },
-    { path: '/status', label: 'Trạng thái dịch vụ', icon: Activity },
+    { path: '/', label: 'Trang chủ', icon: '🏠' },
+    { path: '/explorer', label: 'Explorer', icon: '🧭' },
+    { path: '/status', label: 'Trạng thái', icon: '⚡' },
   ]
 
   const serviceItems = [
-    { path: '/image-generator', label: 'Tạo hình ảnh', icon: Image },
-    { path: '/video-generator', label: 'Tạo video', icon: Video },
-    { path: '/video-upscale', label: 'Nâng cấp Video (Topaz)', icon: Sparkles },
-    { path: '/music-generator', label: 'Tạo nhạc', icon: Music },
-    { path: '/pptx-generator', label: 'Tạo PowerPoint', icon: Presentation },
-    { path: '/word-generator', label: 'Tạo Word', icon: FileText },
+    { path: '/image-generator', label: 'Tạo hình ảnh', icon: '🖼️' },
+    { path: '/video-generator', label: 'Tạo video', icon: '🎬' },
+    { path: '/video-upscale', label: 'Nâng cấp Video', icon: '💎' },
+    { path: '/music-generator', label: 'Tạo nhạc', icon: '🎵' },
+    { path: '/pptx-generator', label: 'Tạo PowerPoint', icon: '📊' },
+    { path: '/word-generator', label: 'Tạo Word', icon: '📝' },
   ]
 
   return (
@@ -253,7 +253,7 @@ export default function Layout({ children }: LayoutProps) {
                   transform: showNavModal ? 'translateY(0)' : 'translateY(20px)'
                 }}
               >
-                <item.icon className="w-6 h-6" />
+                <span className="text-xl font-bold md:text-2xl">{item.icon}</span>
                 <span className="text-[10px] font-black uppercase tracking-tight text-center">{item.label}</span>
               </Link>
             ))}
@@ -262,7 +262,7 @@ export default function Layout({ children }: LayoutProps) {
           {/* AI Services Grouped */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-4 h-4 text-indigo-500" />
+              <span className="text-lg">✨</span>
               <h2 className="text-xs font-black uppercase tracking-widest opacity-50">Dịch vụ AI</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -284,7 +284,7 @@ export default function Layout({ children }: LayoutProps) {
                     transform: showNavModal ? 'translateX(0)' : 'translateX(20px)'
                   }}
                 >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-xl flex-shrink-0">{item.icon}</span>
                   <span className="text-sm font-bold truncate">{item.label}</span>
                 </Link>
               ))}

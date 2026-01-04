@@ -101,8 +101,8 @@ function AnimatedText({ children, delay = 0 }: { children: React.ReactNode, dela
   )
 }
 
-function FeatureCard({ icon: Icon, title, description, gradient, delay }: {
-  icon: any
+function FeatureCard({ icon, title, description, gradient, delay }: {
+  icon: string
   title: string
   description: string
   gradient: string
@@ -141,7 +141,7 @@ function FeatureCard({ icon: Icon, title, description, gradient, delay }: {
           : 'bg-white border-slate-200 hover:border-slate-300 shadow-[0_8px_0_0_rgba(0,0,0,0.05)]'
       }`}>
         <div className={`w-14 h-14 md:w-20 md:h-20 rounded-[1.2rem] md:rounded-[1.5rem] bg-gradient-to-br ${gradient} flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg`}>
-          <Icon className="w-7 h-7 md:w-10 md:h-10 text-white drop-shadow-md" />
+          <span className="text-3xl md:text-5xl drop-shadow-md">{icon}</span>
         </div>
         <h3 className={`text-xl md:text-2xl font-black mb-2 md:mb-3 tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
         <p className={`text-base md:text-lg leading-relaxed font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{description}</p>
@@ -173,7 +173,7 @@ function ToolCard({ tool, index, type }: { tool: typeof tools[0], index: number,
     ? 'from-[#FF6B6B] to-[#FF8E8E]' 
     : 'from-[#4D96FF] to-[#6BCBFF]'
   
-  const Icon = type === 'image' ? Image : Video
+  const icon = type === 'image' ? '🖼️' : '🎬'
   
   return (
     <div
@@ -199,7 +199,7 @@ function ToolCard({ tool, index, type }: { tool: typeof tools[0], index: number,
           
           <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
             <div className={`w-12 h-12 md:w-16 md:h-16 rounded-[1rem] md:rounded-[1.2rem] bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-md`}>
-              <Icon className="w-6 h-6 md:w-8 md:h-8 text-white drop-shadow-sm" />
+              <span className="text-2xl md:text-4xl drop-shadow-sm">{icon}</span>
             </div>
             <div>
               <h3 className={`font-black text-lg md:text-xl mb-0.5 tracking-tight ${
@@ -392,21 +392,21 @@ export default function HomePage() {
           
           <div className="grid md:grid-cols-3 gap-8">
             <FeatureCard
-              icon={Zap}
+              icon="💰"
               title="Chi phí tiết kiệm"
               description="Tiết kiệm đến 60% so với các nền tảng khác. Hệ thống credit linh hoạt, chỉ trả cho những gì bạn sử dụng."
               gradient="from-yellow-500 to-orange-500"
               delay={0}
             />
             <FeatureCard
-              icon={Sparkles}
+              icon="✨"
               title="Chất lượng đỉnh cao"
               description="Sử dụng các mô hình AI tiên tiến nhất, cho ra kết quả sắc nét, chi tiết và chuyên nghiệp."
               gradient="from-indigo-500 to-purple-500"
               delay={0.1}
             />
             <FeatureCard
-              icon={Play}
+              icon="🎮"
               title="Dễ dàng sử dụng"
               description="Giao diện trực quan, chỉ cần nhập mô tả và nhận kết quả. Không cần kiến thức kỹ thuật."
               gradient="from-cyan-500 to-blue-500"
