@@ -44,6 +44,19 @@ dotenv.config();
 const app = express();
 const PORT = 3001;
 
+// Trust proxy for Render/HTTPS
+app.set('trust proxy', 1);
+
+// HTTPS Redirect Middleware
+app.use((req, res, next) => {
+  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+    return next();
+  }
+  // Redirect to HTTPS version of flaton.io.vn or current host
+  const host = req.headers.host === 'flaton.io.vn' ? 'flaton.io.vn' : req.headers.host;
+  res.redirect(301, `https://${host}${req.url}`);
+});
+
 app.use(cors({
   origin: true,
   credentials: true
