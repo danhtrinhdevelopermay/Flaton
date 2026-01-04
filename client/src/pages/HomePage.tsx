@@ -307,7 +307,7 @@ export default function HomePage() {
                 SÁNG TẠO
               </span>
               <br />
-              <span className={theme === 'dark' ? 'text-white' : 'text-slate-900'}>SIÊU TỐC!</span>
+              <span className={theme === 'dark' ? 'text-white' : 'text-slate-900'}>KHÔNG GIỚI HẠN</span>
             </h1>
           </AnimatedText>
           

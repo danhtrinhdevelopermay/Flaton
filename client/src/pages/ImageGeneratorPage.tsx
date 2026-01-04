@@ -246,23 +246,35 @@ export default function ImageGeneratorPage() {
         fromButton={generateButtonRef}
         toLoading={loadingAreaRef}
       />
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-          <Image className="w-6 h-6 text-white" />
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-16 h-16 rounded-[1.2rem] bg-gradient-to-br from-[#FF6B6B] to-[#FF8E8E] flex items-center justify-center shadow-lg transform -rotate-3 group-hover:rotate-0 transition-transform">
+          <Image className="w-8 h-8 text-white drop-shadow-md" />
         </div>
         <div>
-          <h1 className={`text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Tạo hình ảnh AI</h1>
-          <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>Biến ý tưởng thành hình ảnh với AI</p>
+          <h1 className={`text-4xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>TẠO ẢNH SIÊU CẤP</h1>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#6BCB77] animate-pulse" />
+            <p className={`font-bold uppercase tracking-widest text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>AI POWERED MAGIC</p>
+          </div>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
-          <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Cấu hình</h2>
+        <div className={`rounded-[2.5rem] p-8 transition-all border-b-8 active:translate-y-1 active:border-b-4 ${
+          theme === 'dark' 
+            ? 'bg-[#2a2d3e] border-[#1e202f] text-white' 
+            : 'bg-white border-slate-200 shadow-xl text-slate-900'
+        }`}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-[#FFD93D] flex items-center justify-center shadow-sm">
+              <Zap className="w-6 h-6 text-[#6B4E00]" />
+            </div>
+            <h2 className="font-black text-2xl tracking-tight">CẤU HÌNH</h2>
+          </div>
 
-          <div className="mb-6">
-            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Chọn mô hình AI</label>
-            <div className="grid grid-cols-1 gap-3">
+          <div className="mb-8">
+            <label className={`block text-sm font-black uppercase tracking-wider mb-3 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>1. CHỌN MÁY CHỦ AI</label>
+            <div className="grid grid-cols-1 gap-4">
               {imageTools.map((tool) => {
                 const IconComponent = tool.icon;
                 const isSelected = selectedTool === tool.id;
@@ -270,29 +282,29 @@ export default function ImageGeneratorPage() {
                   <button
                     key={tool.id}
                     onClick={() => setSelectedTool(tool.id)}
-                    className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+                    className={`flex items-center justify-between p-5 rounded-[1.5rem] border-b-4 transition-all active:translate-y-1 active:border-b-0 ${
                       isSelected
-                        ? 'border-indigo-500 bg-indigo-500/10'
+                        ? 'border-[#4D96FF] bg-[#4D96FF]/10 ring-4 ring-[#4D96FF]/20'
                         : theme === 'dark' 
-                          ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50' 
-                          : 'border-slate-300 hover:border-slate-400 bg-slate-100 shadow-sm'
+                          ? 'border-[#1e202f] bg-[#1e202f]/50 hover:bg-[#32354a]' 
+                          : 'border-slate-100 bg-slate-50 hover:bg-slate-100'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-white shadow-inner'} ${tool.color}`}>
-                        <IconComponent className="w-5 h-5" />
+                    <div className="flex items-center gap-4">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${isSelected ? 'bg-[#4D96FF] text-white' : 'bg-white ' + tool.color}`}>
+                        <IconComponent className="w-7 h-7" />
                       </div>
                       <div className="text-left">
-                        <div className={`font-medium flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          {tool.name}
-                          {isSelected && <Check className="w-4 h-4 text-indigo-400" />}
+                        <div className="font-black text-lg flex items-center gap-2">
+                          {tool.name.toUpperCase()}
+                          {isSelected && <div className="w-2 h-2 rounded-full bg-[#6BCB77]" />}
                         </div>
-                        <div className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{tool.provider}</div>
+                        <div className={`text-xs font-bold uppercase tracking-tighter ${isSelected ? 'text-[#4D96FF]' : 'text-slate-400'}`}>{tool.provider}</div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-yellow-500">
-                      <Zap className="w-4 h-4" />
-                      <span className="font-semibold">{tool.credits}</span>
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#FFF5E4] border-b-2 border-[#FFE3B3]">
+                      <Zap className="w-4 h-4 text-[#FF9F29] fill-[#FF9F29]" />
+                      <span className="text-[#FF9F29] font-black text-xl">{tool.credits}</span>
                     </div>
                   </button>
                 );
@@ -300,37 +312,37 @@ export default function ImageGeneratorPage() {
             </div>
           </div>
 
-          <div className="mb-6">
-            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Tỷ lệ khung hình</label>
-            <div className="grid grid-cols-3 gap-2">
+          <div className="mb-8">
+            <label className={`block text-sm font-black uppercase tracking-wider mb-3 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>2. TỶ LỆ KHUNG HÌNH</label>
+            <div className="grid grid-cols-3 gap-3">
               {aspectRatios.map((ratio) => (
                 <button
                   key={ratio.value}
                   onClick={() => setAspectRatio(ratio.value)}
-                  className={`p-3 rounded-xl border text-sm transition-all ${
+                  className={`p-4 rounded-2xl border-b-4 font-black transition-all active:translate-y-1 active:border-b-0 ${
                     aspectRatio === ratio.value
-                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-600 font-bold'
+                      ? 'border-[#6BCB77] bg-[#6BCB77]/10 text-[#56B362] ring-4 ring-[#6BCB77]/20'
                       : theme === 'dark'
-                        ? 'border-slate-600 hover:border-slate-500 bg-slate-800/50 text-slate-300'
-                        : 'border-slate-300 hover:border-slate-400 bg-slate-100 text-slate-700 shadow-sm'
+                        ? 'border-[#1e202f] bg-[#1e202f]/50 text-slate-400'
+                        : 'border-slate-100 bg-slate-50 text-slate-600'
                   }`}
                 >
-                  {ratio.label}
+                  {ratio.value}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="mb-6">
-            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Mô tả hình ảnh (Prompt)</label>
+          <div className="mb-8">
+            <label className={`block text-sm font-black uppercase tracking-wider mb-3 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>3. Ý TƯỞNG CỦA BẠN</label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Mô tả chi tiết hình ảnh bạn muốn tạo... Ví dụ: A cute cat sitting on a window, soft afternoon light, watercolor style"
-              className={`w-full h-32 p-4 border rounded-xl focus:outline-none focus:border-indigo-500 resize-none transition-colors ${
+              placeholder="Nhập phép màu tại đây... ✨"
+              className={`w-full h-40 p-6 border-4 rounded-[2rem] font-bold text-lg focus:outline-none focus:border-[#4D96FF] resize-none transition-all shadow-inner ${
                 theme === 'dark'
-                  ? 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-400'
-                  : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 shadow-sm'
+                  ? 'bg-[#1e202f] border-[#32354a] text-white placeholder-slate-600'
+                  : 'bg-slate-50 border-slate-100 text-slate-900 placeholder-slate-400'
               }`}
             />
           </div>
@@ -339,25 +351,31 @@ export default function ImageGeneratorPage() {
             ref={generateButtonRef}
             onClick={handleGenerate}
             disabled={loading || !prompt.trim()}
-            className="w-full bubble-btn btn-primary py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
+            className="w-full h-20 bg-[#FF6B6B] border-b-[10px] border-[#EE5253] text-white rounded-[2rem] font-black text-2xl hover:translate-y-1 hover:border-b-4 active:translate-y-2 active:border-b-0 transition-all duration-150 flex items-center justify-center gap-4 shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                {polling ? 'Đang xử lý...' : 'Đang gửi yêu cầu...'}
+                <Loader2 className="w-8 h-8 animate-spin" />
+                <span className="animate-pulse">{polling ? 'ĐANG BIẾN HÌNH...' : 'ĐANG KẾT NỐI...'}</span>
               </>
             ) : (
               <>
-                <Image className="w-5 h-5" />
-                Tạo hình ảnh ({currentTool?.credits} credits)
+                <Rocket className="w-8 h-8" />
+                TẠO NGAY!
               </>
             )}
           </button>
         </div>
 
-        <div ref={loadingAreaRef} className={`rounded-2xl p-6 transition-all ${theme === 'dark' ? 'glass border border-slate-700' : 'bg-white shadow-xl border border-slate-200'}`}>
-          <h2 className={`font-semibold text-lg mb-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Kết quả</h2>
-
+        <div ref={loadingAreaRef} className={`rounded-[2.5rem] p-8 transition-all border-b-8 ${
+          theme === 'dark' ? 'bg-[#2a2d3e] border-[#1e202f]' : 'bg-white border-slate-200 shadow-xl'
+        }`}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-[#6BCB77] flex items-center justify-center shadow-sm">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <h2 className={`font-black text-2xl tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>KẾT QUẢ</h2>
+          </div>
           {!result && !loading && (
             <div className={`flex flex-col items-center justify-center h-64 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-300'}`}>
               <Image className="w-16 h-16 mb-4 opacity-50" />
@@ -385,19 +403,26 @@ export default function ImageGeneratorPage() {
               </div>
               
               {polling && (
-                <div className="w-full max-w-md space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-300">{progressMessage}</span>
-                    <span className="text-cyan-400 font-semibold">{progress}%</span>
-                  </div>
-                  <div className="progress-bar-container-image">
-                    <div 
-                      className="progress-bar-fill-image" 
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
+            <div className="flex flex-col items-center justify-center w-full max-w-md space-y-6">
+              <div className="flex items-center justify-between w-full">
+                <span className={`font-black text-xl italic uppercase ${theme === 'dark' ? 'text-[#4D96FF]' : 'text-indigo-600'}`}>{progressMessage}</span>
+                <span className="bg-[#4D96FF] text-white px-4 py-1 rounded-full font-black text-2xl shadow-lg">{progress}%</span>
+              </div>
+              <div className="h-10 w-full bg-[#FFF5E4] rounded-full p-2 border-b-4 border-[#FFE3B3] shadow-inner overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-[#4D96FF] to-[#6BCBFF] rounded-full transition-all duration-500 ease-out border-r-4 border-white shadow-md relative" 
+                  style={{ width: `${progress}%` }}
+                >
+                  <div className="absolute inset-0 bg-white/20 animate-pulse" />
                 </div>
-              )}
+              </div>
+              <div className="flex justify-center">
+                <div className="animate-bounce">
+                  <Rocket className="w-12 h-12 text-[#FF6B6B]" />
+                </div>
+              </div>
+            </div>
+          )}
               
               {!polling && (
                 <p className="text-slate-300">Đang kết nối...</p>
