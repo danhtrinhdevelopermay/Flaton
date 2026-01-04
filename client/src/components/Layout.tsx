@@ -232,80 +232,84 @@ export default function Layout({ children }: LayoutProps) {
           </button>
         </div>
         
-        <nav className="flex flex-col px-10 pt-10 space-y-4">
-          <div className="mb-10">
-            <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-40 mb-6">Main Menu</h2>
-            <div className="grid grid-cols-1 gap-3 md:gap-4">
-              {navItems.map((item, index) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setShowNavModal(false)}
-                  className={`group relative overflow-hidden px-6 py-4 md:px-8 md:py-6 rounded-2xl md:rounded-3xl border-b-4 md:border-b-8 font-black text-2xl md:text-4xl uppercase tracking-tighter transition-all active:translate-y-1 md:active:translate-y-2 active:border-b-0 ${
-                    location.pathname === item.path
-                      ? 'bg-[#4D96FF] border-[#3A7EE6] text-white'
-                      : theme === 'dark'
-                        ? 'bg-[#2a2d3e] border-[#1e202f] text-white hover:bg-[#32354a]'
-                        : 'bg-slate-50 border-slate-200 text-slate-900 hover:bg-slate-100'
-                  }`}
-                  style={{
-                    transitionDelay: showNavModal ? `${100 + index * 50}ms` : '0ms',
-                    opacity: showNavModal ? 1 : 0,
-                    transform: showNavModal ? 'translateX(0)' : 'translateX(-40px)'
-                  }}
-                >
-                  <div className="flex items-center gap-4 md:gap-6">
-                    <item.icon className="w-8 h-8 md:w-10 md:h-10" />
-                    {item.label}
-                  </div>
-                </Link>
-              ))}
-            </div>
+        <nav className="flex-1 overflow-y-auto px-6 py-4 space-y-8">
+          {/* Main Quick Links */}
+          <div className="grid grid-cols-3 gap-3">
+            {navItems.map((item, index) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setShowNavModal(false)}
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-b-4 transition-all active:translate-y-1 active:border-b-0 ${
+                  location.pathname === item.path
+                    ? 'bg-[#4D96FF] border-[#3A7EE6] text-white'
+                    : theme === 'dark'
+                      ? 'bg-[#2a2d3e] border-[#1e202f] text-white'
+                      : 'bg-slate-50 border-slate-200 text-slate-900'
+                }`}
+                style={{
+                  transitionDelay: showNavModal ? `${100 + index * 50}ms` : '0ms',
+                  opacity: showNavModal ? 1 : 0,
+                  transform: showNavModal ? 'translateY(0)' : 'translateY(20px)'
+                }}
+              >
+                <item.icon className="w-6 h-6" />
+                <span className="text-[10px] font-black uppercase tracking-tight text-center">{item.label}</span>
+              </Link>
+            ))}
           </div>
 
+          {/* AI Services Grouped */}
           <div>
-            <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-40 mb-4 md:mb-6">Dịch vụ AI</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-4 h-4 text-indigo-500" />
+              <h2 className="text-xs font-black uppercase tracking-widest opacity-50">Dịch vụ AI</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               {serviceItems.map((item, index) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={() => setShowNavModal(false)}
-                  className={`flex items-center gap-3 md:gap-4 px-5 py-3 md:px-6 md:py-4 rounded-xl md:rounded-2xl border-b-2 md:border-b-4 font-black text-lg md:text-xl uppercase transition-all active:translate-y-1 active:border-b-0 ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border-l-4 transition-all active:scale-95 ${
                     location.pathname === item.path
-                      ? 'bg-[#6BCB77] border-[#56B362] text-white'
+                      ? 'bg-[#6BCB77]/10 border-[#6BCB77] text-[#6BCB77]'
                       : theme === 'dark'
-                        ? 'bg-[#2a2d3e] border-[#1e202f] text-white hover:bg-[#32354a]'
-                        : 'bg-slate-50 border-slate-200 text-slate-900 hover:bg-slate-100'
+                        ? 'bg-[#2a2d3e] border-slate-700 text-slate-300'
+                        : 'bg-white border-slate-200 text-slate-600 shadow-sm'
                   }`}
                   style={{
                     transitionDelay: showNavModal ? `${300 + index * 40}ms` : '0ms',
                     opacity: showNavModal ? 1 : 0,
-                    transform: showNavModal ? 'translateY(0)' : 'translateY(20px)'
+                    transform: showNavModal ? 'translateX(0)' : 'translateX(20px)'
                   }}
                 >
-                  <item.icon className="w-5 h-5 md:w-6 md:h-6" />
-                  {item.label}
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm font-bold truncate">{item.label}</span>
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* Theme Toggle */}
-          <div className="flex items-center justify-between py-6 md:py-10 border-t-4 border-dashed border-slate-200/20 mt-6 md:mt-10">
-            <span className={`text-xl md:text-2xl font-black uppercase tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-              Theme Mode
-            </span>
-            <button
-              onClick={toggleTheme}
-              className={`w-14 h-14 md:w-20 md:h-20 rounded-full flex items-center justify-center border-b-4 md:border-b-8 transition-all active:translate-y-1 md:active:translate-y-2 active:border-b-0 ${
-                theme === 'dark'
-                  ? 'bg-[#FFD93D] border-[#FF9F29] text-[#6B4E00]'
-                  : 'bg-[#4D96FF] border-[#3A7EE6] text-white'
-              }`}
-            >
-              {theme === 'dark' ? <Sun className="w-7 h-7 md:w-10 md:h-10" /> : <Moon className="w-7 h-7 md:w-10 md:h-10" />}
-            </button>
+          {/* Settings & Extras */}
+          <div className="pt-4 border-t border-dashed border-slate-700/20">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-500/5">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-white shadow-sm'}`}>
+                  {theme === 'dark' ? <Moon className="w-5 h-5 text-indigo-400" /> : <Sun className="w-5 h-5 text-amber-500" />}
+                </div>
+                <div>
+                  <p className="text-sm font-black uppercase tracking-tight">Giao diện</p>
+                  <p className="text-[10px] opacity-50 font-bold uppercase">{theme === 'dark' ? 'Chế độ tối' : 'Chế độ sáng'}</p>
+                </div>
+              </div>
+              <button
+                onClick={toggleTheme}
+                className={`relative w-12 h-6 rounded-full transition-colors ${theme === 'dark' ? 'bg-indigo-500' : 'bg-slate-300'}`}
+              >
+                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${theme === 'dark' ? 'left-7' : 'left-1'}`} />
+              </button>
+            </div>
           </div>
         </nav>
       </div>
