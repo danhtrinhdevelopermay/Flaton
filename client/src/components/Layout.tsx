@@ -235,13 +235,13 @@ export default function Layout({ children }: LayoutProps) {
         <nav className="flex flex-col px-10 pt-10 space-y-4">
           <div className="mb-10">
             <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-40 mb-6">Main Menu</h2>
-            <div className="grid gap-4">
+            <div className="grid grid-cols-1 gap-3 md:gap-4">
               {navItems.map((item, index) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={() => setShowNavModal(false)}
-                  className={`group relative overflow-hidden px-8 py-6 rounded-3xl border-b-8 font-black text-4xl uppercase tracking-tighter transition-all active:translate-y-2 active:border-b-0 ${
+                  className={`group relative overflow-hidden px-6 py-4 md:px-8 md:py-6 rounded-2xl md:rounded-3xl border-b-4 md:border-b-8 font-black text-2xl md:text-4xl uppercase tracking-tighter transition-all active:translate-y-1 md:active:translate-y-2 active:border-b-0 ${
                     location.pathname === item.path
                       ? 'bg-[#4D96FF] border-[#3A7EE6] text-white'
                       : theme === 'dark'
@@ -254,8 +254,8 @@ export default function Layout({ children }: LayoutProps) {
                     transform: showNavModal ? 'translateX(0)' : 'translateX(-40px)'
                   }}
                 >
-                  <div className="flex items-center gap-6">
-                    <item.icon className="w-10 h-10" />
+                  <div className="flex items-center gap-4 md:gap-6">
+                    <item.icon className="w-8 h-8 md:w-10 md:h-10" />
                     {item.label}
                   </div>
                 </Link>
@@ -264,14 +264,14 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           <div>
-            <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-40 mb-6">Dịch vụ AI</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-40 mb-4 md:mb-6">Dịch vụ AI</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               {serviceItems.map((item, index) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={() => setShowNavModal(false)}
-                  className={`flex items-center gap-4 px-6 py-4 rounded-2xl border-b-4 font-black text-xl uppercase transition-all active:translate-y-1 active:border-b-0 ${
+                  className={`flex items-center gap-3 md:gap-4 px-5 py-3 md:px-6 md:py-4 rounded-xl md:rounded-2xl border-b-2 md:border-b-4 font-black text-lg md:text-xl uppercase transition-all active:translate-y-1 active:border-b-0 ${
                     location.pathname === item.path
                       ? 'bg-[#6BCB77] border-[#56B362] text-white'
                       : theme === 'dark'
@@ -284,7 +284,7 @@ export default function Layout({ children }: LayoutProps) {
                     transform: showNavModal ? 'translateY(0)' : 'translateY(20px)'
                   }}
                 >
-                  <item.icon className="w-6 h-6" />
+                  <item.icon className="w-5 h-5 md:w-6 md:h-6" />
                   {item.label}
                 </Link>
               ))}
@@ -292,19 +292,19 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Theme Toggle */}
-          <div className="flex items-center justify-between py-10 border-t-4 border-dashed border-slate-200/20 mt-10">
-            <span className={`text-2xl font-black uppercase tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+          <div className="flex items-center justify-between py-6 md:py-10 border-t-4 border-dashed border-slate-200/20 mt-6 md:mt-10">
+            <span className={`text-xl md:text-2xl font-black uppercase tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
               Theme Mode
             </span>
             <button
               onClick={toggleTheme}
-              className={`w-20 h-20 rounded-full flex items-center justify-center border-b-8 transition-all active:translate-y-2 active:border-b-0 ${
+              className={`w-14 h-14 md:w-20 md:h-20 rounded-full flex items-center justify-center border-b-4 md:border-b-8 transition-all active:translate-y-1 md:active:translate-y-2 active:border-b-0 ${
                 theme === 'dark'
                   ? 'bg-[#FFD93D] border-[#FF9F29] text-[#6B4E00]'
                   : 'bg-[#4D96FF] border-[#3A7EE6] text-white'
               }`}
             >
-              {theme === 'dark' ? <Sun className="w-10 h-10" /> : <Moon className="w-10 h-10" />}
+              {theme === 'dark' ? <Sun className="w-7 h-7 md:w-10 md:h-10" /> : <Moon className="w-7 h-7 md:w-10 md:h-10" />}
             </button>
           </div>
         </nav>
