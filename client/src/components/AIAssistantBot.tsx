@@ -206,98 +206,83 @@ export default function AIAssistantBot() {
           >
             {/* Header */}
             <motion.div
-              className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-6 shadow-2xl"
+              className="bg-[#4D96FF] border-b-8 border-[#3A7EE6] text-white p-8 shadow-2xl"
               initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.1, duration: 0.3 }}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <motion.div
-                    className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center"
-                    animate={{
-                      scale: [1, 1.05, 1],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                    }}
+                    className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-inner transform -rotate-6"
+                    animate={{ rotate: [-6, 6, -6] }}
+                    transition={{ duration: 4, repeat: Infinity }}
                   >
-                    <Brain className="w-6 h-6 text-white" />
+                    <Brain className="w-8 h-8 text-white drop-shadow-md" />
                   </motion.div>
                   <div>
-                    <h2 className="text-xl font-bold">Flaton AI</h2>
-                    <p className="text-xs text-white/80">Trợ lý sáng tạo của bạn</p>
+                    <h2 className="text-3xl font-black uppercase tracking-tight">FLATON AI</h2>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#6BCB77] animate-pulse" />
+                      <p className="text-xs font-bold uppercase tracking-widest opacity-80">Online & Ready!</p>
+                    </div>
                   </div>
                 </div>
                 <motion.button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-all"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all active:scale-90"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-8 h-8" />
                 </motion.button>
               </div>
             </motion.div>
 
             {/* Messages Container */}
             <motion.div
-              className={`flex-1 overflow-y-auto p-6 space-y-4 ${
-                theme === 'dark' ? 'bg-slate-900/50' : 'bg-white/50'
+              className={`flex-1 overflow-y-auto p-8 space-y-6 ${
+                theme === 'dark' ? 'bg-[#1e202f]' : 'bg-slate-50'
               }`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
             >
               {messages.length === 1 && messages[0].role === 'assistant' && (
-                <motion.div
-                  className="text-center py-8 space-y-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <div className="flex gap-4 justify-center flex-wrap">
-                    {quickActions.map((action) => {
-                      const Icon = action.icon
-                      return (
-                        <motion.button
-                          key={action.label}
-                          onClick={() => handleQuickAction(action.label)}
-                          className={`flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br ${action.color} text-white font-semibold shadow-lg transition-all`}
-                          whileHover={{ scale: 1.05, y: -5 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Icon className="w-6 h-6" />
-                          <span className="text-xs">{action.label}</span>
-                        </motion.button>
-                      )
-                    })}
-                  </div>
-                </motion.div>
+                <div className="grid grid-cols-2 gap-4 pb-8">
+                  {quickActions.map((action) => {
+                    const Icon = action.icon
+                    return (
+                      <motion.button
+                        key={action.label}
+                        onClick={() => handleQuickAction(action.label)}
+                        className={`flex flex-col items-center justify-center gap-3 p-6 rounded-[1.5rem] bg-white border-b-4 border-slate-200 text-slate-900 font-black shadow-lg transition-all active:translate-y-1 active:border-b-0 hover:border-[#4D96FF] hover:bg-[#4D96FF]/5`}
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center shadow-md`}>
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-sm uppercase tracking-tighter">{action.label}</span>
+                      </motion.button>
+                    )
+                  })}
+                </div>
               )}
 
               {messages.map((message, index) => (
                 <motion.div
                   key={message.id}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  initial={{ opacity: 0, x: message.role === 'user' ? 20 : -20 }}
+                  animate={{ opacity: 1, x: 0 }}
                 >
                   {message.role === 'assistant' && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm mr-3 flex-shrink-0 mt-2">
-                      <Brain className="w-5 h-5" />
+                    <div className="w-10 h-10 rounded-xl bg-[#4D96FF] border-b-4 border-[#3A7EE6] flex items-center justify-center text-white mr-4 flex-shrink-0 mt-1 shadow-md">
+                      <Brain className="w-6 h-6" />
                     </div>
                   )}
                   
                   <div
-                    className={`max-w-xl px-4 py-3 rounded-2xl whitespace-pre-wrap break-words shadow-md backdrop-blur ${
+                    className={`max-w-[85%] px-6 py-4 rounded-[1.5rem] font-bold text-lg shadow-xl ${
                       message.role === 'user'
-                        ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-br-none'
+                        ? 'bg-[#4D96FF] border-b-4 border-[#3A7EE6] text-white rounded-br-none'
                         : theme === 'dark'
-                        ? 'bg-slate-800/80 text-slate-100 rounded-bl-none'
-                        : 'bg-white text-slate-900 border border-slate-200 rounded-bl-none'
+                        ? 'bg-[#2a2d3e] border-b-4 border-[#1e202f] text-white rounded-bl-none'
+                        : 'bg-white border-b-4 border-slate-200 text-slate-900 rounded-bl-none'
                     }`}
                   >
                     {message.content}
@@ -306,92 +291,57 @@ export default function AIAssistantBot() {
               ))}
 
               {isLoading && (
-                <motion.div
-                  className="flex justify-start"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm mr-3 flex-shrink-0">
-                    <Brain className="w-5 h-5" />
+                <div className="flex justify-start">
+                  <div className="w-10 h-10 rounded-xl bg-[#4D96FF] border-b-4 border-[#3A7EE6] flex items-center justify-center text-white mr-4 flex-shrink-0 shadow-md">
+                    <Brain className="w-6 h-6" />
                   </div>
-                  <div
-                    className={`px-4 py-3 rounded-2xl flex items-center gap-2 rounded-bl-none backdrop-blur ${
-                      theme === 'dark'
-                        ? 'bg-slate-800/80 text-slate-100'
-                        : 'bg-white text-slate-900 border border-slate-200'
-                    }`}
-                  >
-                    <motion.div
-                      className="flex gap-1"
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                      <div className="w-2 h-2 rounded-full bg-purple-500" />
-                      <div className="w-2 h-2 rounded-full bg-pink-500" />
-                    </motion.div>
+                  <div className={`px-6 py-4 rounded-[1.5rem] bg-white border-b-4 border-slate-200 flex items-center gap-2 rounded-bl-none shadow-xl`}>
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-[#4D96FF] animate-bounce" />
+                      <div className="w-3 h-3 rounded-full bg-[#FF6B6B] animate-bounce [animation-delay:0.2s]" />
+                      <div className="w-3 h-3 rounded-full bg-[#6BCB77] animate-bounce [animation-delay:0.4s]" />
+                    </div>
                   </div>
-                </motion.div>
+                </div>
               )}
-
               <div ref={messagesEndRef} />
             </motion.div>
-
-            {/* Error Message */}
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  className="mx-6 mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                >
-                  ⚠️ {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             {/* Input Section */}
             <motion.form
               onSubmit={handleSendMessage}
-              className={`p-6 border-t backdrop-blur ${
-                theme === 'dark' ? 'border-slate-700 bg-slate-900/50' : 'border-slate-200 bg-white/50'
+              className={`p-8 border-t-8 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] ${
+                theme === 'dark' ? 'border-[#1e202f] bg-[#2a2d3e]' : 'border-slate-100 bg-white'
               }`}
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
             >
-              <div className="flex gap-3">
-                <motion.input
+              <div className="flex gap-4">
+                <input
                   type="text"
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  placeholder="Hỏi tôi điều gì..."
+                  placeholder="Chat gì đó đi bạn ơi... 🎮"
                   disabled={isLoading}
-                  className={`flex-1 px-4 py-3 rounded-full outline-none transition-all font-medium ${
+                  className={`flex-1 px-6 h-16 rounded-2xl font-bold text-lg outline-none transition-all shadow-inner border-4 ${
                     theme === 'dark'
-                      ? 'bg-slate-800 text-white placeholder-slate-500 border-2 border-slate-700 focus:border-indigo-500 focus:bg-slate-700'
-                      : 'bg-white text-slate-900 placeholder-slate-400 border-2 border-slate-200 focus:border-indigo-500 focus:bg-slate-50'
+                      ? 'bg-[#1e202f] text-white placeholder-slate-600 border-[#32354a] focus:border-[#4D96FF]'
+                      : 'bg-slate-50 text-slate-900 placeholder-slate-400 border-slate-100 focus:border-[#4D96FF]'
                   } disabled:opacity-50`}
-                  whileFocus={{ scale: 1.02 }}
                 />
-                <motion.button
+                <button
                   type="submit"
                   disabled={isLoading || !input.trim()}
-                  className={`p-3 rounded-full transition-all font-bold flex items-center justify-center ${
+                  className={`w-16 h-16 rounded-2xl font-bold flex items-center justify-center transition-all shadow-xl ${
                     isLoading || !input.trim()
-                      ? 'opacity-50 cursor-not-allowed bg-slate-400'
-                      : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg'
+                      ? 'opacity-50 cursor-not-allowed bg-slate-400 border-b-4 border-slate-500'
+                      : 'bg-[#FF6B6B] border-b-8 border-[#EE5253] text-white hover:translate-y-1 hover:border-b-4 active:translate-y-2 active:border-b-0'
                   }`}
-                  whileHover={!isLoading && input.trim() ? { scale: 1.05 } : {}}
-                  whileTap={!isLoading && input.trim() ? { scale: 0.95 } : {}}
                 >
                   {isLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-8 h-8 animate-spin" />
                   ) : (
-                    <Send className="w-5 h-5" />
+                    <Send className="w-8 h-8" />
                   )}
-                </motion.button>
+                </button>
               </div>
             </motion.form>
           </motion.div>

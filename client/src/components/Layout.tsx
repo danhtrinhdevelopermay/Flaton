@@ -211,125 +211,101 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       <div 
-        className={`fixed inset-0 z-[60] flex flex-col transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          theme === 'dark' ? 'bg-black' : 'bg-white'
+        className={`fixed inset-0 z-[100] flex flex-col transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+          theme === 'dark' ? 'bg-[#1e202f]' : 'bg-white'
         } ${
           showNavModal 
             ? 'opacity-100 translate-y-0 pointer-events-auto' 
             : 'opacity-0 -translate-y-full pointer-events-none'
         }`}
       >
-        <div className="flex justify-end p-4">
+        <div className="flex justify-end p-8">
           <button
             onClick={() => setShowNavModal(false)}
-            className={`p-2 transition-all duration-300 ${
+            className={`p-3 rounded-2xl border-b-4 transition-all active:translate-y-1 active:border-b-0 ${
               theme === 'dark'
-                ? 'text-gray-400 hover:text-white'
-                : 'text-gray-600 hover:text-slate-900'
+                ? 'bg-[#2a2d3e] border-[#1e202f] text-white'
+                : 'bg-slate-100 border-slate-200 text-slate-900'
             }`}
           >
-            <X className="w-6 h-6" />
+            <X className="w-8 h-8" />
           </button>
         </div>
         
-        <nav className="flex flex-col px-6 pt-4">
-          {navItems.map((item, index) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setShowNavModal(false)}
-              className={`py-3 text-2xl font-medium transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                location.pathname === item.path
-                  ? 'text-indigo-400'
-                  : theme === 'dark'
-                    ? 'text-white hover:text-indigo-400'
-                    : 'text-slate-900 hover:text-indigo-500'
-              }`}
-              style={{
-                transitionDelay: showNavModal ? `${150 + index * 80}ms` : '0ms',
-                opacity: showNavModal ? 1 : 0,
-                transform: showNavModal ? 'translateY(0)' : 'translateY(-20px)'
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav className="flex flex-col px-10 pt-10 space-y-4">
+          <div className="mb-10">
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-40 mb-6">Main Menu</h2>
+            <div className="grid gap-4">
+              {navItems.map((item, index) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setShowNavModal(false)}
+                  className={`group relative overflow-hidden px-8 py-6 rounded-3xl border-b-8 font-black text-4xl uppercase tracking-tighter transition-all active:translate-y-2 active:border-b-0 ${
+                    location.pathname === item.path
+                      ? 'bg-[#4D96FF] border-[#3A7EE6] text-white'
+                      : theme === 'dark'
+                        ? 'bg-[#2a2d3e] border-[#1e202f] text-white hover:bg-[#32354a]'
+                        : 'bg-slate-50 border-slate-200 text-slate-900 hover:bg-slate-100'
+                  }`}
+                  style={{
+                    transitionDelay: showNavModal ? `${100 + index * 50}ms` : '0ms',
+                    opacity: showNavModal ? 1 : 0,
+                    transform: showNavModal ? 'translateX(0)' : 'translateX(-40px)'
+                  }}
+                >
+                  <div className="flex items-center gap-6">
+                    <item.icon className="w-10 h-10" />
+                    {item.label}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
 
-          {/* Services Dropdown */}
-          <button
-            onClick={() => setShowServicesDropdown(!showServicesDropdown)}
-            className={`py-3 text-2xl font-medium transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center gap-2 ${
-              theme === 'dark'
-                ? 'text-white hover:text-indigo-400'
-                : 'text-slate-900 hover:text-indigo-500'
-            }`}
-            style={{
-              transitionDelay: showNavModal ? `${150 + navItems.length * 80}ms` : '0ms',
-              opacity: showNavModal ? 1 : 0,
-              transform: showNavModal ? 'translateY(0)' : 'translateY(-20px)'
-            }}
-          >
-            Dịch vụ
-            <ChevronDown
-              className={`w-5 h-5 transition-transform duration-300 ${showServicesDropdown ? 'rotate-180' : ''}`}
-            />
-          </button>
-
-          {/* Services Items */}
-          {showServicesDropdown && (
-            <div className="flex flex-col pl-4">
+          <div>
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-40 mb-6">Dịch vụ AI</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {serviceItems.map((item, index) => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => {
-                    setShowNavModal(false)
-                    setShowServicesDropdown(false)
-                  }}
-                  className={`py-2 text-lg font-medium transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center gap-2 ${
+                  onClick={() => setShowNavModal(false)}
+                  className={`flex items-center gap-4 px-6 py-4 rounded-2xl border-b-4 font-black text-xl uppercase transition-all active:translate-y-1 active:border-b-0 ${
                     location.pathname === item.path
-                      ? 'text-indigo-400'
+                      ? 'bg-[#6BCB77] border-[#56B362] text-white'
                       : theme === 'dark'
-                        ? 'text-slate-300 hover:text-indigo-400'
-                        : 'text-slate-700 hover:text-indigo-500'
+                        ? 'bg-[#2a2d3e] border-[#1e202f] text-white hover:bg-[#32354a]'
+                        : 'bg-slate-50 border-slate-200 text-slate-900 hover:bg-slate-100'
                   }`}
                   style={{
-                    transitionDelay: showServicesDropdown ? `${100 + index * 60}ms` : '0ms',
-                    opacity: showServicesDropdown ? 1 : 0,
-                    transform: showServicesDropdown ? 'translateY(0)' : 'translateY(-10px)'
+                    transitionDelay: showNavModal ? `${300 + index * 40}ms` : '0ms',
+                    opacity: showNavModal ? 1 : 0,
+                    transform: showNavModal ? 'translateY(0)' : 'translateY(20px)'
                   }}
                 >
-                  <item.icon className="w-5 h-5" />
+                  <item.icon className="w-6 h-6" />
                   {item.label}
                 </Link>
               ))}
             </div>
-          )}
+          </div>
 
           {/* Theme Toggle */}
-          <div className="flex items-center justify-between py-4 border-t border-slate-700/30 mt-8">
-            <span className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-              Chế độ sáng
+          <div className="flex items-center justify-between py-10 border-t-4 border-dashed border-slate-200/20 mt-10">
+            <span className={`text-2xl font-black uppercase tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+              Theme Mode
             </span>
-            <label className="switch">
-              <input 
-                type="checkbox" 
-                checked={theme === 'light'} 
-                onChange={toggleTheme}
-              />
-              <span className="slider">
-                <div className="star star_1"></div>
-                <div className="star star_2"></div>
-                <div className="star star_3"></div>
-                <svg viewBox="0 0 16 16" className="cloud_1 cloud">
-                  <path
-                    transform="matrix(.77976 0 0 .78395-299.99-418.63)"
-                    fill="#fff"
-                    d="m391.84 540.91c-.421-.329-.949-.524-1.523-.524-1.351 0-2.451 1.084-2.485 2.435-1.395.526-2.388 1.88-2.388 3.466 0 1.874 1.385 3.423 3.182 3.667v.034h12.73v-.006c1.775-.104 3.182-1.584 3.182-3.395 0-1.747-1.309-3.186-2.994-3.379.007-.106.011-.214.011-.322 0-2.707-2.271-4.901-5.072-4.901-2.073 0-3.856 1.202-4.643 2.925"
-                  ></path>
-                </svg>
-              </span>
-            </label>
+            <button
+              onClick={toggleTheme}
+              className={`w-20 h-20 rounded-full flex items-center justify-center border-b-8 transition-all active:translate-y-2 active:border-b-0 ${
+                theme === 'dark'
+                  ? 'bg-[#FFD93D] border-[#FF9F29] text-[#6B4E00]'
+                  : 'bg-[#4D96FF] border-[#3A7EE6] text-white'
+              }`}
+            >
+              {theme === 'dark' ? <Sun className="w-10 h-10" /> : <Moon className="w-10 h-10" />}
+            </button>
           </div>
         </nav>
       </div>

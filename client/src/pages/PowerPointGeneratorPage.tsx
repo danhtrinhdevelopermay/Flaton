@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Presentation, Loader2, Download, Wand2, Type, Image as ImageIcon, Move, ChevronLeft, ChevronRight, Code } from 'lucide-react';
+import { Presentation, Loader2, Download, Wand2, Type, Image as ImageIcon, Move, ChevronLeft, ChevronRight, Code, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 import WaterDropAnimation from '../components/WaterDropAnimation';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -241,43 +242,55 @@ export default function PowerPointGeneratorPage() {
       </div>
 
       {showHtmlModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className={`w-full max-w-2xl rounded-2xl shadow-2xl p-6 ${theme === 'dark' ? 'bg-slate-900 border border-slate-700' : 'bg-white border border-slate-200'}`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <Code className="w-6 h-6 text-orange-500" />
-                <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Nhập mã HTML/CSS</h2>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-xl">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={`w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-10 border-b-8 ${
+              theme === 'dark' ? 'bg-[#2a2d3e] border-[#1e202f] text-white' : 'bg-white border-slate-200 text-slate-900'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#4D96FF] flex items-center justify-center shadow-lg transform -rotate-6">
+                  <Code className="w-7 h-7 text-white" />
+                </div>
+                <h2 className="text-3xl font-black uppercase tracking-tight">NHẬP MÃ HTML</h2>
               </div>
-              <button onClick={() => setShowHtmlModal(false)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400">✕</button>
+              <button
+                onClick={() => setShowHtmlModal(false)}
+                className="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl transition-all active:scale-90"
+              >
+                <X className="w-6 h-6 text-slate-500" />
+              </button>
             </div>
-            <p className={`text-sm mb-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Dán mã HTML/CSS chứa nội dung bài giảng của bạn vào đây. AI sẽ tự động tách slide và tạo file PPTX.</p>
+            
+            <p className="font-bold opacity-60 mb-6 uppercase tracking-widest text-xs">Dán mã HTML slide của bạn vào đây</p>
+            
             <textarea
               value={htmlContent}
               onChange={(e) => setHtmlContent(e.target.value)}
-              placeholder="Paste <html> or CSS/HTML snippets here..."
-              className={`w-full h-64 border rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-colors ${
-                theme === 'dark'
-                  ? 'bg-slate-800 border-slate-700 text-slate-100'
-                  : 'bg-slate-50 border-slate-300 text-slate-900'
+              placeholder="Paste your slide HTML here... 💻"
+              className={`w-full h-80 p-6 border-4 rounded-[2rem] font-mono text-sm focus:outline-none focus:border-[#4D96FF] resize-none mb-8 shadow-inner ${
+                theme === 'dark' ? 'bg-[#1e202f] border-[#32354a] text-blue-400' : 'bg-slate-50 border-slate-100 text-blue-600'
               }`}
             />
-            <div className="flex justify-end gap-3 mt-6">
-              <button 
+            
+            <div className="flex justify-end gap-4">
+              <button
                 onClick={() => setShowHtmlModal(false)}
-                className={`px-6 py-2 rounded-xl font-medium ${theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
+                className="px-8 py-4 rounded-2xl font-black uppercase tracking-tight transition-all active:translate-y-1 active:border-b-0 border-b-4 border-slate-200 bg-slate-100 text-slate-500"
               >
-                Hủy
+                HỦY BỎ
               </button>
               <button
                 onClick={handleGenerateFromHtml}
-                disabled={generating || !htmlContent}
-                className="flex items-center gap-2 px-8 py-2 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold rounded-xl shadow-lg transition-all"
+                className="px-10 py-4 rounded-2xl font-black uppercase tracking-tight transition-all active:translate-y-1 active:border-b-0 bg-[#4D96FF] border-b-8 border-[#3A7EE6] text-white shadow-xl"
               >
-                {generating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-                Tạo PowerPoint ngay
+                NHẬP NGAY!
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
