@@ -65,18 +65,18 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   const navItems = [
-    { path: '/', label: 'Trang chủ', icon: '/icons/home.png' },
-    { path: '/explorer', label: 'Explorer', icon: '/icons/explorer.png' },
-    { path: '/status', label: 'Trạng thái', icon: '/icons/status.png' },
+    { path: '/', label: 'Trang chủ', icon: Home, color: 'text-red-500' },
+    { path: '/explorer', label: 'Explorer', icon: Compass, color: 'text-blue-500' },
+    { path: '/status', label: 'Trạng thái', icon: Activity, color: 'text-yellow-500' },
   ]
 
   const serviceItems = [
-    { path: '/image-generator', label: 'Tạo hình ảnh', icon: '/icons/image.png' },
-    { path: '/video-generator', label: 'Tạo video', icon: '/icons/video.png' },
-    { path: '/video-upscale', label: 'Nâng cấp Video', icon: '/icons/image.png' },
-    { path: '/music-generator', label: 'Tạo nhạc', icon: '/icons/music.png' },
-    { path: '/pptx-generator', label: 'Tạo PowerPoint', icon: '/icons/explorer.png' },
-    { path: '/word-generator', label: 'Tạo Word', icon: '/icons/explorer.png' },
+    { path: '/image-generator', label: 'Tạo hình ảnh', icon: Image, color: 'text-green-500' },
+    { path: '/video-generator', label: 'Tạo video', icon: Video, color: 'text-purple-500' },
+    { path: '/video-upscale', label: 'Nâng cấp Video', icon: Sparkles, color: 'text-cyan-500' },
+    { path: '/music-generator', label: 'Tạo nhạc', icon: Music, color: 'text-pink-500' },
+    { path: '/pptx-generator', label: 'Tạo PowerPoint', icon: Presentation, color: 'text-orange-500' },
+    { path: '/word-generator', label: 'Tạo Word', icon: FileText, color: 'text-indigo-500' },
   ]
 
   return (
@@ -253,7 +253,7 @@ export default function Layout({ children }: LayoutProps) {
                   transform: showNavModal ? 'translateY(0)' : 'translateY(20px)'
                 }}
               >
-                <img src={item.icon} alt={item.label} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
+                <item.icon className={`w-8 h-8 md:w-10 md:h-10 ${item.color} drop-shadow-sm`} />
                 <span className="text-[10px] font-black uppercase tracking-tight text-center">{item.label}</span>
               </Link>
             ))}
@@ -262,7 +262,7 @@ export default function Layout({ children }: LayoutProps) {
           {/* AI Services Grouped */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-lg">✨</span>
+              <Sparkles className="w-4 h-4 text-indigo-500" />
               <h2 className="text-xs font-black uppercase tracking-widest opacity-50">Dịch vụ AI</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -284,7 +284,7 @@ export default function Layout({ children }: LayoutProps) {
                     transform: showNavModal ? 'translateX(0)' : 'translateX(20px)'
                   }}
                 >
-                  <img src={item.icon} alt={item.label} className="w-8 h-8 md:w-10 md:h-10 object-contain flex-shrink-0" />
+                  <item.icon className={`w-5 h-5 md:w-6 md:h-6 flex-shrink-0 ${item.color}`} />
                   <span className="text-sm font-bold truncate">{item.label}</span>
                 </Link>
               ))}
