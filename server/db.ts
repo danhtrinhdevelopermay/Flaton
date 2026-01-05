@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 
 const pool = new Pool({
-  connectionString: 'postgresql://danhtrinh:MiIkrtq70adcDWXo-6hfow@flaton-19206.j77.aws-ap-southeast-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full',
+  connectionString: 'postgresql://neondb_owner:npg_fhTopO0XsNI2@ep-wandering-thunder-a1sup1mc-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require',
   ssl: {
     rejectUnauthorized: false
   }
