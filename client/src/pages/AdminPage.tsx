@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Shield, Key, Plus, Trash2, RefreshCw, Loader2, AlertTriangle, CheckCircle, Lock, LogOut, Zap } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
 
 interface ApiKey {
   id: number;
@@ -29,7 +28,6 @@ interface Alert {
 }
 
 export default function AdminPage() {
-  const { theme } = useTheme();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState('');
   const [adminToken, setAdminToken] = useState('');
@@ -161,10 +159,13 @@ export default function AdminPage() {
     if (!confirm('Bạn có chắc muốn xóa API key này?')) return;
     
     try {
+      console.log('Deleting API key with id:', id);
       const res = await fetch(`/api/admin/api-keys/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${adminToken}` }
       });
+
+      console.log('Delete response status:', res.status);
       
       if (res.ok) {
         setSuccess('Đã xóa API key');
@@ -172,9 +173,11 @@ export default function AdminPage() {
         setTimeout(() => setSuccess(''), 3000);
       } else {
         const data = await res.json();
+        console.error('Delete error:', data);
         setError(data.error || 'Không thể xóa API key');
       }
     } catch (err: any) {
+      console.error('Delete exception:', err);
       setError(err.message);
     }
   };
@@ -283,47 +286,43 @@ export default function AdminPage() {
     return (
       <div className="min-h-[80vh] flex items-center justify-center fade-in">
         <div className="w-full max-w-md">
-          <div className={`rounded-2xl p-8 ${theme === 'dark' ? 'glass' : 'bg-white border border-slate-200 shadow-xl'}`}>
+          <div className="glass rounded-2xl p-8">
             <div className="flex items-center justify-center gap-3 mb-8">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
                 <Shield className="w-6 h-6 text-white" />
               </div>
-              <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Admin Login</h1>
+              <h1 className="text-3xl font-bold">Bảng điều khiển Admin</h1>
             </div>
 
             {error && (
-              <div className={`mb-6 p-4 rounded-xl border ${theme === 'dark' ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-red-50 border-red-200 text-red-600'}`}>
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleLogin} className="space-y-6">
               <div>
-                <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Mật khẩu Admin
                 </label>
                 <div className="relative">
-                  <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`} />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className={`w-full pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 transition-all ${
-                      theme === 'dark'
-                        ? 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-400'
-                        : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 shadow-inner'
-                    }`}
+                    className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-red-500"
                   />
                 </div>
-                <p className={`mt-2 text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Mật khẩu mặc định: admin123</p>
+                <p className="mt-2 text-xs text-slate-500">Mật khẩu mặc định: admin123</p>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all shadow-lg"
+                className="w-full bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all"
               >
                 {loading ? (
                   <>
@@ -345,30 +344,28 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="fade-in space-y-6 pb-20">
+    <div className="fade-in space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center shadow-lg">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
             <Shield className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Admin Dashboard</h1>
-            <p className={`${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Quản lý hệ thống API & Credits</p>
+            <h1 className="text-3xl font-bold">Bảng điều khiển Admin</h1>
+            <p className="text-slate-400">Quản lý API Keys Kie.ai</p>
           </div>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowChangePassword(!showChangePassword)}
-            className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all ${
-              theme === 'dark' ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm'
-            }`}
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl flex items-center gap-2 transition-all"
           >
             <Lock className="w-4 h-4" />
             Đổi mật khẩu
           </button>
           <button
             onClick={handleLogout}
-            className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-500 rounded-xl flex items-center gap-2 transition-all font-bold"
+            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl flex items-center gap-2 transition-all"
           >
             <LogOut className="w-4 h-4" />
             Đăng xuất
@@ -377,18 +374,14 @@ export default function AdminPage() {
       </div>
 
       {error && (
-        <div className={`p-4 rounded-xl flex items-center gap-2 border animate-bounce-short ${
-          theme === 'dark' ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-red-50 border-red-200 text-red-600'
-        }`}>
+        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5" />
           {error}
         </div>
       )}
 
       {success && (
-        <div className={`p-4 rounded-xl flex items-center gap-2 border ${
-          theme === 'dark' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-green-50 border-green-200 text-green-600'
-        }`}>
+        <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 flex items-center gap-2">
           <CheckCircle className="w-5 h-5" />
           {success}
         </div>
@@ -397,18 +390,14 @@ export default function AdminPage() {
       {alerts.length > 0 && (
         <div className="space-y-2">
           {alerts.map(alert => (
-            <div key={alert.id} className={`p-4 rounded-xl flex items-center justify-between border ${
-              theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-amber-50 border-amber-200 text-amber-600'
-            }`}>
+            <div key={alert.id} className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-400 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
-                <span className="font-bold">{alert.message}</span>
+                {alert.message}
               </div>
               <button
                 onClick={() => markAlertRead(alert.id)}
-                className={`px-3 py-1 rounded-lg text-xs font-black uppercase ${
-                  theme === 'dark' ? 'bg-amber-500/20 hover:bg-amber-500/30' : 'bg-white border border-amber-200 hover:bg-amber-50'
-                }`}
+                className="px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 rounded-lg text-sm"
               >
                 Đã đọc
               </button>
@@ -418,262 +407,213 @@ export default function AdminPage() {
       )}
 
       {showChangePassword && (
-        <div className={`rounded-3xl p-8 border-b-4 transition-all ${theme === 'dark' ? 'bg-[#1e202f] border-[#151621]' : 'bg-white border-slate-200 shadow-sm'}`}>
-          <h2 className={`text-xl font-black uppercase tracking-tight mb-6 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Đổi mật khẩu Admin</h2>
+        <div className="glass rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">Đổi mật khẩu Admin</h2>
           <form onSubmit={changePassword} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className={`block text-xs font-black uppercase tracking-widest mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Mật khẩu hiện tại</label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-500/20 ${
-                    theme === 'dark' ? 'bg-slate-800/50 border border-slate-700 text-white' : 'bg-slate-50 border border-slate-200 text-slate-900'
-                  }`}
-                  required
-                />
-              </div>
-              <div>
-                <label className={`block text-sm font-bold mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Mật khẩu mới</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-500/20 ${
-                    theme === 'dark' ? 'bg-slate-800/50 border border-slate-700 text-white' : 'bg-slate-50 border border-slate-200 text-slate-900'
-                  }`}
-                  required
-                />
-              </div>
-              <div>
-                <label className={`block text-sm font-bold mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Xác nhận mật khẩu</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-500/20 ${
-                    theme === 'dark' ? 'bg-slate-800/50 border border-slate-700 text-white' : 'bg-slate-50 border border-slate-200 text-slate-900'
-                  }`}
-                  required
-                />
-              </div>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Mật khẩu hiện tại</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-4 py-2 bg-slate-800/50 border border-slate-600 rounded-xl focus:outline-none focus:border-indigo-500"
+                required
+              />
             </div>
-            <div className="flex justify-end pt-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-black uppercase tracking-widest text-white shadow-lg active:scale-95 transition-all"
-              >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                Lưu mật khẩu mới
-              </button>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Mật khẩu mới</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-2 bg-slate-800/50 border border-slate-600 rounded-xl focus:outline-none focus:border-indigo-500"
+                required
+              />
             </div>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Xác nhận mật khẩu mới</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-2 bg-slate-800/50 border border-slate-600 rounded-xl focus:outline-none focus:border-indigo-500"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-xl font-medium flex items-center gap-2"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+              Đổi mật khẩu
+            </button>
           </form>
         </div>
       )}
 
       {systemStatus && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className={`rounded-2xl p-6 border-b-4 ${theme === 'dark' ? 'bg-[#2a2d3e] border-[#1e202f]' : 'bg-white border-slate-200 shadow-sm'}`}>
-            <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Tổng API Keys</div>
-            <div className={`text-3xl font-black ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{systemStatus.totalKeys}</div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="glass rounded-xl p-4">
+            <div className="text-sm text-slate-400 mb-1">Tổng API Keys</div>
+            <div className="text-2xl font-bold">{systemStatus.totalKeys}</div>
           </div>
-          <div className={`rounded-2xl p-6 border-b-4 ${theme === 'dark' ? 'bg-[#2a2d3e] border-[#1e202f]' : 'bg-white border-slate-200 shadow-sm'}`}>
-            <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Keys hoạt động</div>
-            <div className="text-3xl font-black text-emerald-500">{systemStatus.activeKeys}</div>
+          <div className="glass rounded-xl p-4">
+            <div className="text-sm text-slate-400 mb-1">Keys hoạt động</div>
+            <div className="text-2xl font-bold text-green-400">{systemStatus.activeKeys}</div>
           </div>
-          <div className={`rounded-2xl p-6 border-b-4 ${theme === 'dark' ? 'bg-[#2a2d3e] border-[#1e202f]' : 'bg-white border-slate-200 shadow-sm'}`}>
-            <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Tổng Credits</div>
-            <div className="text-3xl font-black text-indigo-500">{systemStatus.totalCredits.toFixed(1)}</div>
+          <div className="glass rounded-xl p-4">
+            <div className="text-sm text-slate-400 mb-1">Tổng Credits</div>
+            <div className="text-2xl font-bold text-indigo-400">{systemStatus.totalCredits.toFixed(2)}</div>
           </div>
-          <div className={`rounded-2xl p-6 border-b-4 ${theme === 'dark' ? 'bg-[#2a2d3e] border-[#1e202f]' : 'bg-white border-slate-200 shadow-sm'}`}>
-            <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Key đang dùng</div>
-            <div className="text-xl font-black text-amber-500 truncate">
-              {systemStatus.currentKey?.name || 'CHƯA CẤU HÌNH'}
+          <div className="glass rounded-xl p-4">
+            <div className="text-sm text-slate-400 mb-1">Key đang dùng</div>
+            <div className="text-lg font-bold text-yellow-400">
+              {systemStatus.currentKey?.name || systemStatus.currentKey?.api_key || 'Chưa có'}
             </div>
           </div>
         </div>
       )}
 
-      <div className={`rounded-3xl p-8 border-b-4 ${theme === 'dark' ? 'bg-[#1e202f] border-[#151621]' : 'bg-white border-slate-200 shadow-sm'}`}>
-        <div className="flex items-center justify-between mb-8">
-          <h2 className={`text-2xl font-black uppercase tracking-tight flex items-center gap-3 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-            <Key className="w-8 h-8 text-indigo-500" />
+      <div className="glass rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Key className="w-5 h-5" />
             Thêm API Key mới
           </h2>
         </div>
         
-        <form onSubmit={addApiKey} className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          <div className="md:col-span-3">
-            <input
-              type="text"
-              value={newKeyName}
-              onChange={(e) => setNewKeyName(e.target.value)}
-              placeholder="Tên gợi nhớ..."
-              className={`w-full px-5 py-4 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-500/20 font-bold ${
-                theme === 'dark' ? 'bg-[#2a2d3e] border-2 border-[#1e202f] text-white' : 'bg-slate-50 border-2 border-slate-100 text-slate-900'
-              }`}
-            />
-          </div>
-          <div className="md:col-span-6">
-            <input
-              type="text"
-              value={newApiKey}
-              onChange={(e) => setNewApiKey(e.target.value)}
-              placeholder="Dán API key từ kie.ai tại đây..."
-              className={`w-full px-5 py-4 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-500/20 font-mono text-sm ${
-                theme === 'dark' ? 'bg-[#2a2d3e] border-2 border-[#1e202f] text-white' : 'bg-slate-50 border-2 border-slate-100 text-slate-900'
-              }`}
-              required
-            />
-          </div>
-          <div className="md:col-span-3">
-            <button
-              type="submit"
-              disabled={addingKey}
-              className="w-full h-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all border-b-4 border-indigo-900 active:border-b-0"
-            >
-              {addingKey ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : <div className="flex items-center justify-center gap-2"><Plus className="w-6 h-6" /> THÊM NGAY</div>}
-            </button>
-          </div>
+        <form onSubmit={addApiKey} className="flex gap-4 flex-wrap">
+          <input
+            type="text"
+            value={newKeyName}
+            onChange={(e) => setNewKeyName(e.target.value)}
+            placeholder="Tên key (tùy chọn)"
+            className="flex-1 min-w-[150px] px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl focus:outline-none focus:border-indigo-500"
+          />
+          <input
+            type="text"
+            value={newApiKey}
+            onChange={(e) => setNewApiKey(e.target.value)}
+            placeholder="Nhập API key..."
+            className="flex-[2] min-w-[300px] px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl focus:outline-none focus:border-indigo-500"
+            required
+          />
+          <button
+            type="submit"
+            disabled={addingKey}
+            className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-xl font-medium flex items-center gap-2 transition-all"
+          >
+            {addingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            Thêm Key
+          </button>
         </form>
       </div>
 
-      <div className={`rounded-3xl overflow-hidden border-b-4 ${theme === 'dark' ? 'bg-[#1e202f] border-[#151621]' : 'bg-white border-slate-200 shadow-sm'}`}>
-        <div className="p-8 flex items-center justify-between border-b border-dashed border-slate-700/20">
-          <h2 className={`text-2xl font-black uppercase tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Danh sách API Keys</h2>
+      <div className="glass rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">Danh sách API Keys</h2>
           <button
             onClick={refreshAllKeys}
             disabled={loading}
-            className={`px-6 py-3 rounded-2xl flex items-center gap-3 font-black uppercase tracking-widest text-xs transition-all ${
-              theme === 'dark' ? 'bg-[#2a2d3e] hover:bg-slate-700 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-            }`}
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl flex items-center gap-2 transition-all"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            Refresh All
+            Làm mới tất cả
           </button>
         </div>
 
-        <div className="p-0">
-          {apiKeys.length === 0 ? (
-            <div className={`text-center py-20 ${theme === 'dark' ? 'text-slate-600' : 'text-slate-300'}`}>
-              <Key className="w-20 h-20 mx-auto mb-4 opacity-10" />
-              <p className="font-black uppercase tracking-widest">Hệ thống đang trống...</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto px-6 pb-6">
-              <table className="w-full min-w-[800px]">
-                <thead>
-                  <tr className={`text-left ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                    <th className="py-6 px-4 font-black uppercase text-[10px] tracking-widest">THÔNG TIN KEY</th>
-                    <th className="py-6 px-4 font-black uppercase text-[10px] tracking-widest">MÃ API</th>
-                    <th className="py-6 px-4 font-black uppercase text-[10px] tracking-widest">CREDITS</th>
-                    <th className="py-6 px-4 font-black uppercase text-[10px] tracking-widest text-center">TRẠNG THÁI</th>
-                    <th className="py-6 px-4 font-black uppercase text-[10px] tracking-widest text-right">HÀNH ĐỘNG</th>
+        {apiKeys.length === 0 ? (
+          <div className="text-center py-8 text-slate-400">
+            Chưa có API key nào. Thêm key mới để bắt đầu.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-slate-400 border-b border-slate-700">
+                  <th className="pb-3 px-2">Tên</th>
+                  <th className="pb-3 px-2">API Key</th>
+                  <th className="pb-3 px-2">Credits</th>
+                  <th className="pb-3 px-2">Trạng thái</th>
+                  <th className="pb-3 px-2">Lần check cuối</th>
+                  <th className="pb-3 px-2 text-right">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {apiKeys.map(key => (
+                  <tr key={key.id} className="border-b border-slate-700/50">
+                    <td className="py-3 px-2">{key.name || '-'}</td>
+                    <td className="py-3 px-2 font-mono text-sm text-slate-400">{key.api_key}</td>
+                    <td className="py-3 px-2">
+                      <span className={`font-bold ${key.credits < 10 ? 'text-red-400' : 'text-green-400'}`}>
+                        {key.credits}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2">
+                      <div className="flex gap-2">
+                        {key.is_current && (
+                          <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full flex items-center gap-1">
+                            <Zap className="w-3 h-3" /> Đang dùng
+                          </span>
+                        )}
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          key.is_active 
+                            ? 'bg-green-500/20 text-green-400' 
+                            : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {key.is_active ? 'Hoạt động' : 'Vô hiệu'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-2 text-sm text-slate-400">
+                      {key.last_checked ? new Date(key.last_checked).toLocaleString('vi-VN') : '-'}
+                    </td>
+                    <td className="py-3 px-2">
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => refreshKey(key.id)}
+                          className="p-2 hover:bg-slate-700 rounded-lg transition-all"
+                          title="Làm mới credit"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </button>
+                        {!key.is_current && key.is_active && (
+                          <button
+                            onClick={() => setCurrentKey(key.id)}
+                            className="p-2 hover:bg-yellow-500/20 text-yellow-400 rounded-lg transition-all"
+                            title="Đặt làm key chính"
+                          >
+                            <Zap className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => deleteApiKey(key.id)}
+                          className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-all"
+                          title="Xóa key"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-dashed divide-slate-700/30">
-                  {apiKeys.map(key => (
-                    <tr key={key.id} className={`${theme === 'dark' ? 'hover:bg-indigo-500/5' : 'hover:bg-slate-50'} transition-colors group`}>
-                      <td className="py-5 px-4">
-                        <div className="flex flex-col">
-                          <span className={`font-black text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{key.name || 'Không tên'}</span>
-                          <span className="text-[10px] font-bold text-slate-500 uppercase">Thêm: {new Date(key.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </td>
-                      <td className="py-5 px-4">
-                        <div className={`px-3 py-2 rounded-xl font-mono text-xs inline-block ${theme === 'dark' ? 'bg-slate-800 text-indigo-400' : 'bg-slate-100 text-indigo-600'}`}>
-                          {key.api_key.substring(0, 12)}...{key.api_key.substring(key.api_key.length - 6)}
-                        </div>
-                      </td>
-                      <td className="py-5 px-4">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${key.credits < 20 ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'}`} />
-                          <span className={`text-xl font-black ${key.credits < 20 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                            {key.credits.toFixed(1)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-5 px-4">
-                        <div className="flex flex-col items-center gap-2">
-                          {key.is_current && (
-                            <span className="px-3 py-1 bg-amber-500 text-white text-[9px] font-black uppercase rounded-full shadow-lg shadow-amber-500/20 flex items-center gap-1 animate-pulse">
-                              <Zap className="w-3 h-3 fill-current" /> Đang sử dụng
-                            </span>
-                          )}
-                          <span className={`px-3 py-1 text-[9px] font-black uppercase rounded-full border-2 ${
-                            key.is_active 
-                              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
-                              : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                          }`}>
-                            {key.is_active ? 'Sẵn sàng' : 'Hết hạn'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-5 px-4 text-right">
-                        <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => refreshKey(key.id)}
-                            className={`p-3 rounded-2xl transition-all ${theme === 'dark' ? 'bg-slate-800 hover:bg-indigo-500/20 text-white' : 'bg-slate-100 hover:bg-indigo-100 text-slate-600'}`}
-                            title="Check Credit"
-                          >
-                            <RefreshCw className="w-5 h-5" />
-                          </button>
-                          {!key.is_current && key.is_active && (
-                            <button
-                              onClick={() => setCurrentKey(key.id)}
-                              className={`p-3 rounded-2xl transition-all ${theme === 'dark' ? 'bg-amber-500/20 hover:bg-amber-500 text-amber-500 hover:text-white' : 'bg-amber-50 hover:bg-amber-500 text-amber-600 hover:text-white'}`}
-                              title="Set Active"
-                            >
-                              <Zap className="w-5 h-5" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => deleteApiKey(key.id)}
-                            className={`p-3 rounded-2xl transition-all ${theme === 'dark' ? 'bg-rose-500/20 hover:bg-rose-500 text-rose-500 hover:text-white' : 'bg-rose-50 hover:bg-rose-500 text-rose-600 hover:text-white'}`}
-                            title="Xóa vĩnh viễn"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      <div className={`rounded-3xl p-8 border-b-4 border-dashed ${theme === 'dark' ? 'bg-indigo-500/5 border-indigo-500/30' : 'bg-slate-50 border-slate-200'}`}>
-        <h2 className={`text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-3 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-          <AlertTriangle className="w-5 h-5 text-amber-500" />
-          Protocol vận hành hệ thống
-        </h2>
-        <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 text-[11px] font-black uppercase leading-relaxed tracking-wider ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-          <div className="space-y-4">
-            <div className="flex gap-3">
-              <span className="text-indigo-500 text-lg">01.</span>
-              <p>Tự động giám sát credits định kỳ mỗi 30 phút. Quản trị viên có thể ép buộc kiểm tra thủ công bằng nút Refresh.</p>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div className="flex gap-3">
-              <span className="text-indigo-500 text-lg">02.</span>
-              <p>Cơ chế Fail-over: Hệ thống tự động kích hoạt Key dự phòng khi Key chính xuống dưới ngưỡng an toàn (10 credits).</p>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div className="flex gap-3">
-              <span className="text-indigo-500 text-lg">03.</span>
-              <p>Tính sẵn sàng cao: Admin có thể chủ động đặt bất kỳ Key nào làm Key chính (Current) để tối ưu hóa chi phí và hiệu năng.</p>
-            </div>
-          </div>
+      <div className="glass rounded-2xl p-6">
+        <h2 className="text-xl font-bold mb-4">Hướng dẫn</h2>
+        <div className="space-y-2 text-slate-400 text-sm">
+          <p>• Hệ thống sẽ tự động kiểm tra credit của API key đang sử dụng.</p>
+          <p>• Nếu API key có dưới 10 credits, hệ thống sẽ tự động chuyển sang key khác.</p>
+          <p>• Các key có dưới 10 credits sẽ được đánh dấu "Vô hiệu" và không được sử dụng.</p>
+          <p>• Khi tất cả keys đều dưới 10 credits, bạn sẽ nhận được cảnh báo để thêm keys mới.</p>
+          <p>• Nhấn "Làm mới" để cập nhật credit mới nhất cho từng key.</p>
         </div>
       </div>
     </div>
   );
 }
-import { Save } from 'lucide-react';

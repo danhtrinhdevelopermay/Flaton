@@ -19,7 +19,6 @@ import WordGeneratorPage from './pages/WordGeneratorPage'
 import PowerPointGeneratorPage from './pages/PowerPointGeneratorPage'
 import AdminPage from './pages/AdminPage'
 import AdminUpgradePage from './pages/AdminUpgradePage'
-import KieApiPage from './pages/KieApiPage'
 import LessonsListPage from './pages/LessonsListPage'
 import LessonDetailPage from './pages/LessonDetailPage'
 import MilestonesPage from './pages/MilestonesPage'
@@ -47,8 +46,6 @@ export default function App() {
             <Route path="/word-generator" element={<ProtectedRoute><WordGeneratorPage /></ProtectedRoute>} />
             <Route path="/ppt-generator" element={<ProtectedRoute><PowerPointGeneratorPage /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
-            <Route path="/admin/kie" element={<ProtectedRoute><KieApiPage /></ProtectedRoute>} />
-            <Route path="/flaton-admin-secret" element={<ProtectedRoute><AdminUpgradePage /></ProtectedRoute>} />
             <Route path="/admin/upgrade" element={<ProtectedRoute><AdminUpgradePage /></ProtectedRoute>} />
             <Route path="/lessons" element={<ProtectedRoute><LessonsListPage /></ProtectedRoute>} />
             <Route path="/lesson/:id" element={<ProtectedRoute><LessonDetailPage /></ProtectedRoute>} />

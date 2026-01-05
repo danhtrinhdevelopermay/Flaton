@@ -2998,34 +2998,6 @@ function startKeepAlive() {
   console.log(`[Keep-Alive] Started - pinging ${RENDER_URL} every ${INTERVAL / 1000}s`);
 }
 
-// Admin endpoints for API Keys
-app.get('/api/admin/kie-key', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const result = await pool.query('SELECT key_value FROM api_keys WHERE key_name = $1', ['KIE_API_KEY']);
-    res.json({ key: result.rows[0]?.key_value || '' });
-  } catch (err) {
-    res.status(500).json({ error: 'Lỗi lấy key' });
-  }
-});
-
-app.post('/api/admin/kie-key', authMiddleware, async (req: AuthRequest, res: Response) => {
-  const { key } = req.body;
-  try {
-    await pool.query(`
-      INSERT INTO api_keys (key_name, key_value) 
-      VALUES ($1, $2) 
-      ON CONFLICT (key_name) DO UPDATE SET key_value = EXCLUDED.key_value
-    `, ['KIE_API_KEY', key]);
-    
-    // Also update current process env for immediate effect
-    process.env.KIE_API_KEY = key;
-    
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Lỗi cập nhật key' });
-  }
-});
-
 async function startServer() {
   try {
     await initDatabase();

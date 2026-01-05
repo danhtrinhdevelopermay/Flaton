@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift, Compass, BookOpen, Presentation, FileText, Sun, Moon, ChevronDown, Shield } from 'lucide-react'
+import { Sparkles, Image, Video, Home, Music, History, LogIn, UserPlus, LogOut, User, Menu, X, Activity, Coins, Gift, Compass, BookOpen, Presentation, FileText, Sun, Moon, ChevronDown } from 'lucide-react'
 import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -68,7 +68,6 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/', label: 'Trang chủ', icon: Home, color: 'text-red-500' },
     { path: '/explorer', label: 'Explorer', icon: Compass, color: 'text-blue-500' },
     { path: '/status', label: 'Trạng thái', icon: Activity, color: 'text-yellow-500' },
-    { path: '/admin/kie', label: 'Quản lý API', icon: Shield, color: 'text-rose-500' },
   ]
 
   const serviceItems = [
