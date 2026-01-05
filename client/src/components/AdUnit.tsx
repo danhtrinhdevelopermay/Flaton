@@ -28,7 +28,7 @@ export default function AdUnit({ adSlot, adFormat = 'auto', className = '', styl
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '10px 0',
+        padding: '0',
         ...style
       }}
     >
@@ -36,7 +36,7 @@ export default function AdUnit({ adSlot, adFormat = 'auto', className = '', styl
         className="adsbygoogle"
         style={{
           display: 'block',
-          minHeight: '100px',
+          minHeight: '20px',
           opacity: theme === 'dark' ? 0.9 : 1,
           filter: theme === 'dark' ? 'brightness(0.95)' : 'none'
         }}

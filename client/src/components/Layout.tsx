@@ -314,9 +314,9 @@ export default function Layout({ children }: LayoutProps) {
         </nav>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-6">
         {/* Top Advertisement */}
-        <div className="mb-8">
+        <div className="mb-4">
           <AdUnit adSlot="1234567890" adFormat="auto" />
         </div>
 
