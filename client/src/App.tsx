@@ -46,6 +46,7 @@ export default function App() {
             <Route path="/word-generator" element={<ProtectedRoute><WordGeneratorPage /></ProtectedRoute>} />
             <Route path="/ppt-generator" element={<ProtectedRoute><PowerPointGeneratorPage /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+            <Route path="/flaton-admin-secret" element={<ProtectedRoute><AdminUpgradePage /></ProtectedRoute>} />
             <Route path="/admin/upgrade" element={<ProtectedRoute><AdminUpgradePage /></ProtectedRoute>} />
             <Route path="/lessons" element={<ProtectedRoute><LessonsListPage /></ProtectedRoute>} />
             <Route path="/lesson/:id" element={<ProtectedRoute><LessonDetailPage /></ProtectedRoute>} />
