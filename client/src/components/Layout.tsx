@@ -315,11 +315,6 @@ export default function Layout({ children }: LayoutProps) {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
-        {/* Adterrat Native Container */}
-        <div className="mb-8 flex justify-center">
-          <div id="container-5c6ac6345c3ba70ac76c8934181a65cd"></div>
-        </div>
-
         {/* Top Advertisement */}
         <div className="mb-8">
           <AdUnit adSlot="1234567890" adFormat="auto" />
