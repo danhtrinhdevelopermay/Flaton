@@ -1,0 +1,50 @@
+2026-01-05T13:18:19.88045527Z     at async startServer (/opt/render/project/src/server/index.ts:3003:5) {
+2026-01-05T13:18:19.88045888Z   length: 277,
+2026-01-05T13:18:19.880463321Z   severity: 'ERROR',
+2026-01-05T13:18:19.880467051Z   code: '53300',
+2026-01-05T13:18:19.880470801Z   detail: undefined,
+2026-01-05T13:18:19.880475221Z   hint: 'the maximum number of allowed connections is 0',
+2026-01-05T13:18:19.880479062Z   position: undefined,
+2026-01-05T13:18:19.880483242Z   internalPosition: undefined,
+2026-01-05T13:18:19.880486832Z   internalQuery: undefined,
+2026-01-05T13:18:19.880490332Z   where: undefined,
+2026-01-05T13:18:19.880494693Z   schema: undefined,
+2026-01-05T13:18:19.880498793Z   table: undefined,
+2026-01-05T13:18:19.880502883Z   column: undefined,
+2026-01-05T13:18:19.880506583Z   dataType: undefined,
+2026-01-05T13:18:19.880510634Z   constraint: undefined,
+2026-01-05T13:18:19.880525104Z   file: 'conn_executor.go',
+2026-01-05T13:18:19.880528944Z   line: '962',
+2026-01-05T13:18:19.880533135Z   routine: 'IncrementConnectionCount'
+2026-01-05T13:18:19.880536695Z }
+2026-01-05T13:18:25.448507594Z ==> Exited with status 1
+2026-01-05T13:18:25.611685733Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+2026-01-05T13:18:32.035193729Z ==> Running 'npm start'
+2026-01-05T13:18:33.140108253Z 
+2026-01-05T13:18:33.140133264Z > workspace@1.0.0 start
+2026-01-05T13:18:33.140136785Z > NODE_ENV=production tsx server/index.ts
+2026-01-05T13:18:33.140139745Z 
+2026-01-05T13:18:41.938533753Z [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-01-05T13:18:42.536866897Z Failed to start server: error: This cluster has reached its Request Unit limit for the month and is now disabled. You can increase your resource limits to continue using this cluster.
+2026-01-05T13:18:42.536888178Z     at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
+2026-01-05T13:18:42.536893879Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-01-05T13:18:42.536898219Z     at async initDatabase (/opt/render/project/src/server/db.ts:11:18)
+2026-01-05T13:18:42.536902489Z     at async startServer (/opt/render/project/src/server/index.ts:3003:5) {
+2026-01-05T13:18:42.53690751Z   length: 277,
+2026-01-05T13:18:42.53691233Z   severity: 'ERROR',
+2026-01-05T13:18:42.53691665Z   code: '53300',
+2026-01-05T13:18:42.53692061Z   detail: undefined,
+2026-01-05T13:18:42.53692538Z   hint: 'the maximum number of allowed connections is 0',
+2026-01-05T13:18:42.536929681Z   position: undefined,
+2026-01-05T13:18:42.536934491Z   internalPosition: undefined,
+2026-01-05T13:18:42.536939221Z   internalQuery: undefined,
+2026-01-05T13:18:42.536943212Z   where: undefined,
+2026-01-05T13:18:42.536945892Z   schema: undefined,
+2026-01-05T13:18:42.536948552Z   table: undefined,
+2026-01-05T13:18:42.536952072Z   column: undefined,
+2026-01-05T13:18:42.536956822Z   dataType: undefined,
+2026-01-05T13:18:42.536960982Z   constraint: undefined,
+2026-01-05T13:18:42.536964923Z   file: 'conn_executor.go',
+2026-01-05T13:18:42.536968703Z   line: '962',
+2026-01-05T13:18:42.536972813Z   routine: 'IncrementConnectionCount'
+2026-01-05T13:18:42.536976533Z }
