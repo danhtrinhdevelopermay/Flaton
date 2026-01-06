@@ -1273,6 +1273,7 @@ app.post('/api/products/image', authMiddleware, async (req: AuthRequest, res: Re
       [req.userId, imageUrl, prompt, model, aspectRatio]
     );
 
+    console.log('[Save Image] Successfully saved to database:', { id: result.rows[0].id, userId: req.userId });
     res.json({ success: true, product: result.rows[0] });
   } catch (error: any) {
     console.error('Save image error:', error);
@@ -1289,6 +1290,7 @@ app.post('/api/products/video', authMiddleware, async (req: AuthRequest, res: Re
       [req.userId, videoUrl, prompt, imageUrl, model, aspectRatio]
     );
 
+    console.log('[Save Video] Successfully saved to database:', { id: result.rows[0].id, userId: req.userId });
     res.json({ success: true, product: result.rows[0] });
   } catch (error: any) {
     console.error('Save video error:', error);
@@ -1305,6 +1307,7 @@ app.post('/api/products/music', authMiddleware, async (req: AuthRequest, res: Re
       [req.userId, audioUrl, title, prompt, style, model]
     );
 
+    console.log('[Save Music] Successfully saved to database:', { id: result.rows[0].id, userId: req.userId });
     res.json({ success: true, product: result.rows[0] });
   } catch (error: any) {
     console.error('Save music error:', error);
