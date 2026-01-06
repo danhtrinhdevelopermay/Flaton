@@ -1268,13 +1268,19 @@ app.post('/api/products/image', authMiddleware, async (req: AuthRequest, res: Re
   try {
     const { imageUrl, prompt, model, aspectRatio } = req.body;
     
+    console.log('[Save Image] Attempting to save to database for user:', req.userId, { imageUrl, prompt: prompt?.substring(0, 20), model });
     const result = await pool.query(
       'INSERT INTO generated_images (user_id, image_url, prompt, model, aspect_ratio) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [req.userId, imageUrl, prompt, model, aspectRatio]
     );
 
-    console.log('[Save Image] Successfully saved to database:', { id: result.rows[0].id, userId: req.userId });
-    res.json({ success: true, product: result.rows[0] });
+    if (result.rows.length > 0) {
+      console.log('[Save Image] Successfully saved to database:', { id: result.rows[0].id, userId: req.userId });
+      res.json({ success: true, product: result.rows[0] });
+    } else {
+      console.error('[Save Image] Failed to save - no row returned');
+      res.status(500).json({ error: 'Failed to save image' });
+    }
   } catch (error: any) {
     console.error('Save image error:', error);
     res.status(500).json({ error: error.message });
@@ -1285,13 +1291,19 @@ app.post('/api/products/video', authMiddleware, async (req: AuthRequest, res: Re
   try {
     const { videoUrl, prompt, imageUrl, model, aspectRatio } = req.body;
     
+    console.log('[Save Video] Attempting to save to database for user:', req.userId, { videoUrl, prompt: prompt?.substring(0, 20), model });
     const result = await pool.query(
       'INSERT INTO generated_videos (user_id, video_url, prompt, image_url, model, aspect_ratio) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [req.userId, videoUrl, prompt, imageUrl, model, aspectRatio]
     );
 
-    console.log('[Save Video] Successfully saved to database:', { id: result.rows[0].id, userId: req.userId });
-    res.json({ success: true, product: result.rows[0] });
+    if (result.rows.length > 0) {
+      console.log('[Save Video] Successfully saved to database:', { id: result.rows[0].id, userId: req.userId });
+      res.json({ success: true, product: result.rows[0] });
+    } else {
+      console.error('[Save Video] Failed to save - no row returned');
+      res.status(500).json({ error: 'Failed to save video' });
+    }
   } catch (error: any) {
     console.error('Save video error:', error);
     res.status(500).json({ error: error.message });
@@ -1302,13 +1314,19 @@ app.post('/api/products/music', authMiddleware, async (req: AuthRequest, res: Re
   try {
     const { audioUrl, title, prompt, style, model } = req.body;
     
+    console.log('[Save Music] Attempting to save to database for user:', req.userId, { audioUrl, title, model });
     const result = await pool.query(
       'INSERT INTO generated_music (user_id, audio_url, title, prompt, style, model) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [req.userId, audioUrl, title, prompt, style, model]
     );
 
-    console.log('[Save Music] Successfully saved to database:', { id: result.rows[0].id, userId: req.userId });
-    res.json({ success: true, product: result.rows[0] });
+    if (result.rows.length > 0) {
+      console.log('[Save Music] Successfully saved to database:', { id: result.rows[0].id, userId: req.userId });
+      res.json({ success: true, product: result.rows[0] });
+    } else {
+      console.error('[Save Music] Failed to save - no row returned');
+      res.status(500).json({ error: 'Failed to save music' });
+    }
   } catch (error: any) {
     console.error('Save music error:', error);
     res.status(500).json({ error: error.message });
