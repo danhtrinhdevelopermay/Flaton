@@ -270,19 +270,11 @@ export async function getSystemStatus(): Promise<{
   const currentResult = await pool.query('SELECT * FROM api_keys WHERE is_current = true LIMIT 1');
   const alerts = await getAdminAlerts();
   
-  let maskedCurrentKey = null;
-  if (currentResult.rows[0]) {
-    maskedCurrentKey = {
-      ...currentResult.rows[0],
-      key_value: maskApiKey(currentResult.rows[0].key_value)
-    };
-  }
-  
   return {
     totalKeys: parseInt(totalResult.rows[0].count),
     activeKeys: parseInt(activeResult.rows[0].count),
     totalCredits: parseFloat(creditsResult.rows[0].total) || 0,
-    currentKey: maskedCurrentKey,
+    currentKey: currentResult.rows[0] || null,
     alerts,
   };
 }
