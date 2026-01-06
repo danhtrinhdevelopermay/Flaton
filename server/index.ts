@@ -2895,6 +2895,13 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
             try {
               const userId = parseInt(String(req.userId), 10);
               console.log(`[AI Assistant] Saving image to database. UserId: ${userId}, ImageUrl: ${imageUrl}`);
+              if (imageUrl) {
+                try {
+                  imageUrl = await cloudinaryUtil.uploadImageToCloudinary(imageUrl);
+                } catch (cloudErr) {
+                  console.error('[AI Assistant] Cloudinary upload failed:', cloudErr);
+                }
+              }
               const saveResult = await pool.query(
                 'INSERT INTO generated_images (user_id, image_url, prompt, model, aspect_ratio) VALUES ($1, $2, $3, $4, $5) RETURNING id',
                 [userId, imageUrl, message, 'nano-banana', '1:1']

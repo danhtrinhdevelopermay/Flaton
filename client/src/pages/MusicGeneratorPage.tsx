@@ -257,8 +257,8 @@ export default function MusicGeneratorPage() {
     <div className="fade-in">
       <WaterDropAnimation 
         isActive={showWaterDrop}
-        fromButton={generateButtonRef}
-        toLoading={loadingAreaRef}
+        fromButton={generateButtonRef as any}
+        toLoading={loadingAreaRef as any}
       />
       <div className="flex items-center gap-4 mb-8">
         <div className="w-16 h-16 rounded-[1.2rem] bg-gradient-to-br from-[#6BCB77] to-[#56B362] flex items-center justify-center shadow-lg transform -rotate-3">
