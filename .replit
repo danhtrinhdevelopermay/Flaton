@@ -43,3 +43,4 @@ externalPort = 80
 [userenv]
 
 [userenv.shared]
+KIE_AI_API_KEY = "dd61aaf77d9a324b820cf59f1c92a2ed"
