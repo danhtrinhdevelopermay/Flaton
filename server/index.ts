@@ -231,13 +231,18 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     
     const data = result.data;
     if (data.state === 'success') {
-      let videoUrl = null;
+      let mediaUrl = null;
       if (data.resultJson) {
         try {
           const resultData = JSON.parse(data.resultJson);
           const originalUrl = resultData.resultUrls?.[0] || null;
           if (originalUrl) {
-            videoUrl = await cloudinaryUtil.uploadVideoToCloudinary(originalUrl);
+            // Use image upload for playground (images), video upload for others
+            if (taskType === 'playground') {
+              mediaUrl = await cloudinaryUtil.uploadImageToCloudinary(originalUrl);
+            } else {
+              mediaUrl = await cloudinaryUtil.uploadVideoToCloudinary(originalUrl);
+            }
           }
         } catch (e) {
           console.error('Failed to parse resultJson:', e);
@@ -245,7 +250,9 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       }
       return {
         status: 'completed',
-        videoUrl: videoUrl,
+        [taskType === 'playground' ? 'imageUrl' : 'videoUrl']: mediaUrl,
+        imageUrl: taskType === 'playground' ? mediaUrl : undefined,
+        videoUrl: taskType !== 'playground' ? mediaUrl : undefined,
       };
     } else if (data.state === 'failed' || data.state === 'fail') {
       return {
@@ -2899,7 +2906,13 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
               // Only upload to Cloudinary if it's not already a Cloudinary URL
               if (imageUrl && !imageUrl.includes('cloudinary.com')) {
                 try {
-                  imageUrl = await cloudinaryUtil.uploadImageToCloudinary(imageUrl);
+                  console.log('[AI Assistant] Triggering Cloudinary upload for:', imageUrl);
+                  // IMPORTANT: Must use uploadImageToCloudinary for images!
+                  const cloudUrl = await cloudinaryUtil.uploadImageToCloudinary(imageUrl);
+                  if (cloudUrl && cloudUrl !== imageUrl) {
+                    imageUrl = cloudUrl;
+                    console.log('[AI Assistant] URL updated to Cloudinary:', imageUrl);
+                  }
                 } catch (cloudErr: any) {
                   console.error(`[AI Assistant] Cloudinary upload failed:`, cloudErr.message);
                 }
@@ -2941,7 +2954,7 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
               type: 'image',
               content: '⏱️ Hình ảnh đang được xử lý. Vui lòng kiểm tra lịch sử tạo sau vài giây.',
               action: 'image-processing',
-              taskId,
+              taskId: taskId, // Fixed shorthand property
               prompt: message
             };
           }

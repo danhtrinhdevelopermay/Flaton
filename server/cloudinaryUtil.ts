@@ -8,16 +8,19 @@ cloudinary.config({
 
 export async function uploadImageToCloudinary(imageUrl: string): Promise<string> {
   try {
+    console.log('[Cloudinary] Starting upload for:', imageUrl);
+    // Remove format: 'jpg' to allow Cloudinary to auto-detect or keep original format (like PNG)
     const result = await cloudinary.uploader.upload(imageUrl, {
       resource_type: 'image',
       folder: 'flaton/images',
-      format: 'jpg',
       quality: 'auto',
+      fetch_format: 'auto' // Use auto format detection
     });
+    console.log('[Cloudinary] Upload success:', result.secure_url);
     return result.secure_url;
-  } catch (error) {
-    console.error('Error uploading image to Cloudinary:', error);
-    return imageUrl; // Return original URL if upload fails
+  } catch (error: any) {
+    console.error('[Cloudinary] Upload failed:', error.message || error);
+    return imageUrl;
   }
 }
 
