@@ -127,6 +127,7 @@ export default function AdminPage() {
     
     setAddingKey(true);
     setError('');
+    console.log('[Admin] Attempting to add API key:', { name: newKeyName, key: newApiKey.substring(0, 5) + '...' });
     
     try {
       const res = await fetch(`/api/admin/api-keys`, {
@@ -138,17 +139,22 @@ export default function AdminPage() {
         body: JSON.stringify({ apiKey: newApiKey, name: newKeyName })
       });
 
+      console.log('[Admin] Add API key response status:', res.status);
+      const data = await res.json();
+
       if (res.ok) {
+        console.log('[Admin] API key added successfully');
         setNewApiKey('');
         setNewKeyName('');
         setSuccess('Thêm API key thành công!');
         loadData();
         setTimeout(() => setSuccess(''), 3000);
       } else {
-        const data = await res.json();
+        console.error('[Admin] Add API key failed:', data);
         setError(data.error || 'Không thể thêm API key');
       }
     } catch (err: any) {
+      console.error('[Admin] Add API key exception:', err);
       setError(err.message);
     } finally {
       setAddingKey(false);
