@@ -121,8 +121,8 @@ export async function initDatabase() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS api_keys (
         id SERIAL PRIMARY KEY,
-        api_key TEXT NOT NULL,
-        name VARCHAR(255),
+        key_name VARCHAR(255),
+        key_value TEXT NOT NULL,
         credits DECIMAL(10, 2) DEFAULT 0,
         is_active BOOLEAN DEFAULT true,
         is_current BOOLEAN DEFAULT false,

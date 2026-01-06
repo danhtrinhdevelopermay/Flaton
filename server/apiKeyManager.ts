@@ -15,8 +15,8 @@ const FALLBACK_API_KEYS = [
 
 export interface ApiKey {
   id: number;
-  api_key: string;
-  name: string;
+  key_value: string;
+  key_name: string;
   credits: number;
   is_active: boolean;
   is_current: boolean;
@@ -35,16 +35,15 @@ export async function checkCreditForKey(apiKey: string): Promise<number> {
     });
     const result = await response.json();
     console.log('Credit check response:', JSON.stringify(result));
+    
+    // The API returns the credit number directly in result.data
     if (result.code === 200 && result.data !== undefined) {
-      // data is directly the credit number, not an object
       if (typeof result.data === 'number') {
         return result.data;
       }
-      // fallback for object format (in case API changes)
-      if (typeof result.data === 'object') {
-        return result.data.credit || result.data.credits || 0;
+      if (typeof result.data === 'object' && result.data !== null) {
+        return (result.data as any).credit || (result.data as any).credits || 0;
       }
-      return 0;
     }
     return 0;
   } catch (error) {
@@ -57,25 +56,25 @@ export async function getCurrentApiKey(): Promise<string | null> {
   try {
     // Try to get current key from database
     const result = await pool.query(
-      'SELECT api_key FROM api_keys WHERE is_current = true AND is_active = true LIMIT 1'
+      'SELECT key_value FROM api_keys WHERE is_current = true AND is_active = true LIMIT 1'
     );
     
     if (result.rows.length > 0) {
       console.log('[API Key] Using current key from database');
-      return result.rows[0].api_key;
+      return result.rows[0].key_value;
     }
     
     // Try to get best available key from database
     const fallbackResult = await pool.query(
-      'SELECT api_key FROM api_keys WHERE is_active = true AND credits >= $1 ORDER BY credits DESC LIMIT 1',
+      'SELECT key_value FROM api_keys WHERE is_active = true AND credits >= $1 ORDER BY credits DESC LIMIT 1',
       [MIN_CREDITS_THRESHOLD]
     );
     
     if (fallbackResult.rows.length > 0) {
       console.log('[API Key] Using fallback key from database');
       await pool.query('UPDATE api_keys SET is_current = false WHERE is_current = true');
-      await pool.query('UPDATE api_keys SET is_current = true WHERE api_key = $1', [fallbackResult.rows[0].api_key]);
-      return fallbackResult.rows[0].api_key;
+      await pool.query('UPDATE api_keys SET is_current = true WHERE key_value = $1', [fallbackResult.rows[0].key_value]);
+      return fallbackResult.rows[0].key_value;
     }
   } catch (error) {
     console.error('[API Key] Database error, using hardcoded fallback:', error);
@@ -89,10 +88,10 @@ export async function getCurrentApiKey(): Promise<string | null> {
 }
 
 export async function updateAllApiKeyCredits(): Promise<void> {
-  const result = await pool.query('SELECT id, api_key FROM api_keys');
+  const result = await pool.query('SELECT id, key_value FROM api_keys');
   
   for (const row of result.rows) {
-    const credits = await checkCreditForKey(row.api_key);
+    const credits = await checkCreditForKey(row.key_value);
     const isActive = credits >= MIN_CREDITS_THRESHOLD;
     
     await pool.query(
@@ -111,14 +110,14 @@ export async function switchToNextApiKey(): Promise<string | null> {
   await pool.query('UPDATE api_keys SET is_current = false WHERE is_current = true');
   
   const result = await pool.query(
-    'SELECT id, api_key FROM api_keys WHERE is_active = true AND credits >= $1 ORDER BY credits DESC LIMIT 1',
+    'SELECT id, key_value FROM api_keys WHERE is_active = true AND credits >= $1 ORDER BY credits DESC LIMIT 1',
     [MIN_CREDITS_THRESHOLD]
   );
   
   if (result.rows.length > 0) {
     await pool.query('UPDATE api_keys SET is_current = true WHERE id = $1', [result.rows[0].id]);
     console.log(`Switched to API key ID: ${result.rows[0].id}`);
-    return result.rows[0].api_key;
+    return result.rows[0].key_value;
   }
   
   await createLowCreditAlert();
@@ -140,7 +139,7 @@ export async function createLowCreditAlert(): Promise<void> {
 
 export async function checkAndSwitchApiKeyIfNeeded(): Promise<string | null> {
   const currentKeyResult = await pool.query(
-    'SELECT id, api_key, credits FROM api_keys WHERE is_current = true AND is_active = true LIMIT 1'
+    'SELECT id, key_value, credits FROM api_keys WHERE is_current = true AND is_active = true LIMIT 1'
   );
   
   if (currentKeyResult.rows.length === 0) {
@@ -148,7 +147,7 @@ export async function checkAndSwitchApiKeyIfNeeded(): Promise<string | null> {
   }
   
   const currentKey = currentKeyResult.rows[0];
-  const currentCredits = await checkCreditForKey(currentKey.api_key);
+  const currentCredits = await checkCreditForKey(currentKey.key_value);
   
   await pool.query(
     'UPDATE api_keys SET credits = $1, last_checked = NOW(), updated_at = NOW() WHERE id = $2',
@@ -160,7 +159,7 @@ export async function checkAndSwitchApiKeyIfNeeded(): Promise<string | null> {
     return await switchToNextApiKey();
   }
   
-  return currentKey.api_key;
+  return currentKey.key_value;
 }
 
 export async function addApiKey(apiKey: string, name: string = ''): Promise<ApiKey> {
@@ -170,7 +169,7 @@ export async function addApiKey(apiKey: string, name: string = ''): Promise<ApiK
   const isCurrent = parseInt(existingKeys.rows[0].count) === 0;
   
   const result = await pool.query(
-    'INSERT INTO api_keys (api_key, name, credits, is_current, last_checked) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
+    'INSERT INTO api_keys (key_value, key_name, credits, is_current, last_checked) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
     [apiKey, name, credits, isCurrent]
   );
   
@@ -224,13 +223,13 @@ export async function setAdminPassword(password: string): Promise<void> {
 }
 
 export async function refreshApiKey(id: number): Promise<number> {
-  const result = await pool.query('SELECT api_key FROM api_keys WHERE id = $1', [id]);
+  const result = await pool.query('SELECT key_value FROM api_keys WHERE id = $1', [id]);
   
   if (result.rows.length === 0) {
     throw new Error('API key not found');
   }
   
-  const credits = await checkCreditForKey(result.rows[0].api_key);
+  const credits = await checkCreditForKey(result.rows[0].key_value);
   const isActive = credits >= MIN_CREDITS_THRESHOLD;
   
   await pool.query(
@@ -275,7 +274,7 @@ export async function getSystemStatus(): Promise<{
   if (currentResult.rows[0]) {
     maskedCurrentKey = {
       ...currentResult.rows[0],
-      api_key: maskApiKey(currentResult.rows[0].api_key)
+      key_value: maskApiKey(currentResult.rows[0].key_value)
     };
   }
   
