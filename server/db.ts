@@ -121,7 +121,7 @@ export async function initDatabase() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS api_keys (
         id SERIAL PRIMARY KEY,
-        key_name VARCHAR(255),
+        name VARCHAR(255),
         key_value TEXT NOT NULL,
         credits DECIMAL(10, 2) DEFAULT 0,
         is_active BOOLEAN DEFAULT true,
@@ -131,6 +131,12 @@ export async function initDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    
+    // Log table structure for debugging
+    const columns = await client.query(`
+      SELECT column_name FROM information_schema.columns WHERE table_name = 'api_keys'
+    `);
+    console.log('[Database] api_keys columns:', columns.rows.map(r => r.column_name).join(', '));
 
     // Create admin_settings table for admin password
     await client.query(`

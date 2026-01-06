@@ -168,8 +168,10 @@ export async function addApiKey(apiKey: string, name: string = ''): Promise<ApiK
   const existingKeys = await pool.query('SELECT COUNT(*) as count FROM api_keys');
   const isCurrent = parseInt(existingKeys.rows[0].count) === 0;
   
+  console.log('[API Key Manager] Adding key with values:', { apiKey: apiKey.substring(0, 5) + '...', name, credits, isCurrent });
+  
   const result = await pool.query(
-    'INSERT INTO api_keys (key_value, key_name, credits, is_current, last_checked) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
+    'INSERT INTO api_keys (key_value, name, credits, is_current, last_checked) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
     [apiKey, name, credits, isCurrent]
   );
   
