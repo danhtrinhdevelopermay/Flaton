@@ -3,8 +3,8 @@ import { Shield, Key, Plus, Trash2, RefreshCw, Loader2, AlertTriangle, CheckCirc
 
 interface ApiKey {
   id: number;
-  api_key: string;
-  name: string;
+  key_value: string;
+  key_name: string;
   credits: number;
   is_active: boolean;
   is_current: boolean;
@@ -469,7 +469,7 @@ export default function AdminPage() {
           <div className="glass rounded-xl p-4">
             <div className="text-sm text-slate-400 mb-1">Key đang dùng</div>
             <div className="text-lg font-bold text-yellow-400">
-              {systemStatus.currentKey?.name || systemStatus.currentKey?.api_key || 'Chưa có'}
+              {systemStatus.currentKey?.key_name || systemStatus.currentKey?.key_value || 'Chưa có'}
             </div>
           </div>
         </div>
@@ -543,8 +543,8 @@ export default function AdminPage() {
               <tbody>
                 {apiKeys.map(key => (
                   <tr key={key.id} className="border-b border-slate-700/50">
-                    <td className="py-3 px-2">{key.name || '-'}</td>
-                    <td className="py-3 px-2 font-mono text-sm text-slate-400">{key.api_key}</td>
+                    <td className="py-3 px-2">{key.key_name || '-'}</td>
+                    <td className="py-3 px-2 font-mono text-sm text-slate-400">{key.key_value}</td>
                     <td className="py-3 px-2">
                       <span className={`font-bold ${key.credits < 10 ? 'text-red-400' : 'text-green-400'}`}>
                         {key.credits}
