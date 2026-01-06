@@ -1071,8 +1071,8 @@ app.get('/api/admin/api-keys', adminAuthMiddleware, async (req: Request, res: Re
     const keys = await apiKeyManager.getAllApiKeys();
     const maskedKeys = keys.map(key => ({
       ...key,
-      api_key: key.api_key.length > 12 
-        ? key.api_key.substring(0, 8) + '...' + key.api_key.substring(key.api_key.length - 4)
+      api_key: (key.key_value || '').length > 12 
+        ? (key.key_value || '').substring(0, 8) + '...' + (key.key_value || '').substring((key.key_value || '').length - 4)
         : '****'
     }));
     res.json(maskedKeys);
@@ -1090,8 +1090,8 @@ app.post('/api/admin/api-keys', adminAuthMiddleware, async (req: Request, res: R
     const newKey = await apiKeyManager.addApiKey(apiKey, name || '');
     res.json({
       ...newKey,
-      api_key: newKey.api_key.length > 12 
-        ? newKey.api_key.substring(0, 8) + '...' + newKey.api_key.substring(newKey.api_key.length - 4)
+      api_key: (newKey.key_value || '').length > 12 
+        ? (newKey.key_value || '').substring(0, 8) + '...' + (newKey.key_value || '').substring((newKey.key_value || '').length - 4)
         : '****'
     });
   } catch (error: any) {
@@ -1172,8 +1172,8 @@ app.post('/api/admin/refresh-all', adminAuthMiddleware, async (req: Request, res
     const keys = await apiKeyManager.getAllApiKeys();
     const maskedKeys = keys.map(key => ({
       ...key,
-      api_key: key.api_key.length > 12 
-        ? key.api_key.substring(0, 8) + '...' + key.api_key.substring(key.api_key.length - 4)
+      api_key: (key.key_value || '').length > 12 
+        ? (key.key_value || '').substring(0, 8) + '...' + (key.key_value || '').substring((key.key_value || '').length - 4)
         : '****'
     }));
     res.json({ success: true, keys: maskedKeys });
