@@ -1068,15 +1068,12 @@ app.post('/api/admin/change-password', adminAuthMiddleware, async (req: Request,
 
 app.get('/api/admin/api-keys', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {
+    console.log('[Admin API] GET /api/admin/api-keys request received');
     const keys = await apiKeyManager.getAllApiKeys();
-    const maskedKeys = keys.map(key => ({
-      ...key,
-      api_key: (key.key_value || '').length > 12 
-        ? (key.key_value || '').substring(0, 8) + '...' + (key.key_value || '').substring((key.key_value || '').length - 4)
-        : '****'
-    }));
-    res.json(maskedKeys);
+    console.log('[Admin API] Returning keys to client, count:', keys.length);
+    res.json(keys);
   } catch (error: any) {
+    console.error('[Admin API] Error in GET /api/admin/api-keys:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -1084,17 +1081,18 @@ app.get('/api/admin/api-keys', adminAuthMiddleware, async (req: Request, res: Re
 app.post('/api/admin/api-keys', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const { apiKey, name } = req.body;
+    console.log('[Admin API] POST /api/admin/api-keys request received:', { name, keyLength: apiKey?.length });
+    
     if (!apiKey) {
+      console.error('[Admin API] Missing API key in request');
       return res.status(400).json({ error: 'API key is required' });
     }
+    
     const newKey = await apiKeyManager.addApiKey(apiKey, name || '');
-    res.json({
-      ...newKey,
-      api_key: (newKey.key_value || '').length > 12 
-        ? (newKey.key_value || '').substring(0, 8) + '...' + (newKey.key_value || '').substring((newKey.key_value || '').length - 4)
-        : '****'
-    });
+    console.log('[Admin API] Successfully added key, ID:', newKey.id);
+    res.json(newKey);
   } catch (error: any) {
+    console.error('[Admin API] Error in POST /api/admin/api-keys:', error);
     res.status(500).json({ error: error.message });
   }
 });

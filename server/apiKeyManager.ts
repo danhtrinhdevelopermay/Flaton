@@ -188,7 +188,9 @@ export async function removeApiKey(id: number): Promise<void> {
 }
 
 export async function getAllApiKeys(): Promise<ApiKey[]> {
+  console.log('[API Key Manager] Fetching all keys from database');
   const result = await pool.query('SELECT * FROM api_keys ORDER BY is_current DESC, credits DESC');
+  console.log('[API Key Manager] Found keys count:', result.rows.length);
   return result.rows;
 }
 
