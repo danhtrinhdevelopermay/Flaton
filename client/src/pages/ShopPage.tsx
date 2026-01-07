@@ -41,7 +41,7 @@ export default function ShopPage() {
             <span className="text-sm font-medium">Filters (0)</span>
           </button>
         </div>
-        <p className="text-sm opacity-50 mb-6 font-medium">50 models found</p>
+        <p className="text-sm opacity-50 mb-6 font-medium">{MODELS.length} models found</p>
 
         {/* Search Bar */}
         <div className="relative mb-8">
