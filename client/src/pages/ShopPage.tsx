@@ -1,7 +1,8 @@
-import { ShoppingBag, CreditCard, Sparkles, Zap, Trophy, CheckCircle2 } from 'lucide-react';
+import { ShoppingBag, CreditCard, Sparkles, Zap, Trophy, CheckCircle2, Wand2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 export default function ShopPage() {
   const { theme } = useTheme();
@@ -37,6 +38,21 @@ export default function ShopPage() {
   return (
     <div className={`min-h-screen py-12 px-4 ${theme === 'dark' ? 'bg-[#0f111a] text-white' : 'bg-slate-50 text-slate-900'}`}>
       <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col items-center gap-6 mb-12">
+          <Link
+            to="/kling-motion"
+            className="flex items-center gap-4 px-8 py-4 rounded-[2rem] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black shadow-xl hover:scale-105 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center group-hover:rotate-12 transition-transform">
+              <Wand2 className="w-6 h-6" />
+            </div>
+            <div className="text-left">
+              <p className="text-xs opacity-80 uppercase font-bold tracking-widest">Tính năng mới</p>
+              <p className="text-lg">KLING MOTION CONTROL</p>
+            </div>
+          </Link>
+        </div>
+
         <div className="text-center mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

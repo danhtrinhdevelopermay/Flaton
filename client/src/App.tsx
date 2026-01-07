@@ -18,6 +18,7 @@ import HistoryPage from './pages/HistoryPage'
 import WordGeneratorPage from './pages/WordGeneratorPage'
 import PowerPointGeneratorPage from './pages/PowerPointGeneratorPage'
 import ShopPage from './pages/ShopPage'
+import KlingMotionControlPage from './pages/KlingMotionControlPage'
 import AdminPage from './pages/AdminPage'
 import AdminUpgradePage from './pages/AdminUpgradePage'
 import LessonsListPage from './pages/LessonsListPage'
@@ -53,6 +54,7 @@ export default function App() {
             <Route path="/milestones" element={<ProtectedRoute><MilestonesPage /></ProtectedRoute>} />
             <Route path="/video-upscale" element={<ProtectedRoute><VideoUpscalePage /></ProtectedRoute>} />
             <Route path="/shop" element={<ProtectedRoute><ShopPage /></ProtectedRoute>} />
+            <Route path="/kling-motion" element={<ProtectedRoute><KlingMotionControlPage /></ProtectedRoute>} />
 
             {/* Catch all */}
             <Route path="*" element={<Navigate to="/" replace />} />

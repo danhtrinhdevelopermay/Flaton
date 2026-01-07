@@ -200,6 +200,9 @@ async function checkTaskStatus(taskId: string, taskType: string) {
     case 'sora2':
       endpoint = `/jobs/recordInfo?taskId=${taskId}`;
       break;
+    case 'kling':
+      endpoint = `/jobs/recordInfo?taskId=${taskId}`;
+      break;
     case 'suno':
       endpoint = `/generate/record-info?taskId=${taskId}`;
       break;
@@ -338,6 +341,44 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       return {
         status: 'failed',
         error: data.failMsg || 'Video generation failed',
+      };
+    } else {
+      return {
+        status: 'processing',
+        progress: data.state || 'waiting',
+      };
+    }
+  }
+
+  // Handle Kling Motion Control
+  if (taskType === 'kling') {
+    if (result.code !== 200) {
+      const errorMsg = result.msg || result.message || 'Failed to check task status';
+      throw new Error(errorMsg);
+    }
+    
+    const data = result.data;
+    if (data.state === 'success') {
+      let videoUrl = null;
+      if (data.resultJson) {
+        try {
+          const resultData = JSON.parse(data.resultJson);
+          const originalUrl = resultData.resultUrls?.[0] || null;
+          if (originalUrl) {
+            videoUrl = await cloudinaryUtil.uploadVideoToCloudinary(originalUrl);
+          }
+        } catch (e) {
+          console.error('Failed to parse Kling resultJson:', e);
+        }
+      }
+      return {
+        status: 'completed',
+        videoUrl: videoUrl,
+      };
+    } else if (data.state === 'fail' || data.state === 'failed') {
+      return {
+        status: 'failed',
+        error: data.failMsg || 'Kling generation failed',
       };
     } else {
       return {
@@ -605,6 +646,7 @@ const MODEL_CREDITS: Record<string, number> = {
   'suno': 0,
   'sora2-text': 0,
   'sora2-image': 0,
+  'kling-motion': 85,
   'topaz-video': 72,
   'gpt4o-image': 0,
 };
@@ -832,6 +874,31 @@ app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res
 });
 
 // Sora 2 Text to Video
+app.post('/api/generate/kling-motion', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { prompt, input_urls, video_urls, mode } = req.body;
+    if (!input_urls || !video_urls) return res.status(400).json({ error: 'Image and Video URLs are required' });
+    
+    const creditsNeeded = MODEL_CREDITS['kling-motion'];
+    const hasCredits = await deductCredits(req.userId!, creditsNeeded);
+    if (!hasCredits) return res.status(402).json({ error: 'Không đủ credits!' });
+
+    const result = await callKieApi('/jobs/createTask', {
+      model: 'kling-2.6/motion-control',
+      input: {
+        prompt: prompt || 'The cartoon character is dancing.',
+        input_urls: Array.isArray(input_urls) ? input_urls : [input_urls],
+        video_urls: Array.isArray(video_urls) ? video_urls : [video_urls],
+        mode: mode || '720p'
+      }
+    });
+
+    res.json({ taskId: result.data.taskId, taskType: 'kling' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/generate/sora2-text', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     // Check if user is pro
