@@ -3,8 +3,18 @@ import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import cors from 'cors';
 
-function getGeminiModel() {
-  const apiKey = process.env.AI_INTEGRATIONS_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+async function getGeminiModel() {
+  let apiKey = process.env.AI_INTEGRATIONS_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+  
+  try {
+    const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'gemini_api_key' LIMIT 1");
+    if (result.rows.length > 0 && result.rows[0].setting_value) {
+      apiKey = result.rows[0].setting_value;
+    }
+  } catch (error) {
+    console.error('Error fetching Gemini API key from database:', error);
+  }
+
   const genAI = new GoogleGenerativeAI(apiKey);
   return genAI.getGenerativeModel({ 
     model: "gemini-1.5-flash"
@@ -70,7 +80,7 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
   try {
     const { prompt, style } = req.body;
     
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const systemPrompt = `Bạn là một chuyên gia thiết kế bài thuyết trình. 
     Hãy tạo nội dung cho một bài thuyết trình về chủ đề: "${prompt}" với phong cách "${style}".
     Trả về định dạng JSON theo cấu trúc:
@@ -1820,7 +1830,7 @@ Requirements:
 Return ONLY the Python code, no explanations or markdown formatting.
 Start with: from pptx import Presentation`;
 
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const pythonCode = response.text() || '';
@@ -1989,7 +1999,7 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
       Format as: [{"title": "...", "bullets": ["...", "..."], "imageSearchQuery": "..."}]
     `;
 
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const result = await model.generateContent(geminiPrompt);
     const response = await result.response;
     const text = response.text() || '[]';
@@ -2055,7 +2065,7 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
       Return ONLY the Python code.
     `;
 
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const result = await model.generateContent(pythonCodePrompt);
     const response = await result.response;
     const pythonCode = response.text() || '';
@@ -2116,7 +2126,7 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
       try {
         console.log('[PPTX Gen] Generating AI images via Flaton Image V1...');
         // Request image prompts from Gemini first to make them relevant
-        const model = getGeminiModel();
+        const model = await getGeminiModel();
         const imagePromptRequestResult = await model.generateContent(`Based on the PowerPoint topic "${prompt}", suggest 3 short, highly descriptive image prompts for an AI image generator. Return ONLY a JSON array of strings.`);
         const imagePromptResponse = await imagePromptRequestResult.response;
         const promptsText = imagePromptResponse.text() || '[]';
@@ -2243,7 +2253,7 @@ from pptx.dml.color import RGBColor
 
 Save final presentation to: /tmp/generated_presentation.pptx`;
 
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const result = await model.generateContent(aiPrompt);
     const response = await result.response;
     let pythonCode = response.text() || '';
@@ -2619,7 +2629,7 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
       - conclusion: string (kết luận)
     `;
 
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const geminiResponseResult = await model.generateContent(geminiPrompt);
     const geminiResponse = await geminiResponseResult.response;
     const responseText = geminiResponse.text() || '{}';

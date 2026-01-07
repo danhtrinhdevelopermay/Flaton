@@ -1,8 +1,18 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import pool from './db';
 
-function getGeminiModel() {
-  const apiKey = process.env.AI_INTEGRATIONS_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+async function getGeminiModel() {
+  let apiKey = process.env.AI_INTEGRATIONS_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+  
+  try {
+    const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'gemini_api_key' LIMIT 1");
+    if (result.rows.length > 0 && result.rows[0].setting_value) {
+      apiKey = result.rows[0].setting_value;
+    }
+  } catch (error) {
+    console.error('Error fetching Gemini API key from database:', error);
+  }
+
   const genAI = new GoogleGenerativeAI(apiKey);
   return genAI.getGenerativeModel({ 
     model: "gemini-1.5-flash"
@@ -35,7 +45,7 @@ export async function generateLessonScript(
   `;
 
   try {
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text() || '';
@@ -64,7 +74,7 @@ export async function generateLessonSlides(
   `;
 
   try {
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const result = await model.generateContent(prompt);
     const response = await result.response;
 
