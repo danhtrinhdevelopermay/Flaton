@@ -11,28 +11,6 @@ const MODELS = [
     tags: ['Motion Control', 'Professional'],
     image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800',
     path: '/kling-motion'
-  },
-  {
-    id: 1,
-    name: 'Kling 2.6 Motion Control',
-    provider: 'Kling',
-    tags: ['Video to Video'],
-    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=800',
-    secondImage: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=800'
-  },
-  {
-    id: 2,
-    name: 'Seedance 1.5 Pro',
-    provider: 'ByteDance',
-    tags: ['Text to Video', 'Image to Video'],
-    image: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=800'
-  },
-  {
-    id: 3,
-    name: 'Animate Anyone',
-    provider: 'Alibaba',
-    tags: ['Image to Video'],
-    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=800'
   }
 ];
 
