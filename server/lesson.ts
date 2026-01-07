@@ -18,7 +18,7 @@ async function getGeminiModel() {
 
   const genAI = new GoogleGenerativeAI(apiKey);
   return genAI.getGenerativeModel({ 
-    model: "gemini-1.5-pro"
+    model: "gemini-1.5-flash-latest"
   });
 }
 
