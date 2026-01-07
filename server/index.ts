@@ -646,7 +646,7 @@ const MODEL_CREDITS: Record<string, number> = {
   'suno': 0,
   'sora2-text': 0,
   'sora2-image': 0,
-  'kling-motion': 85,
+  'kling-motion': 48,
   'topaz-video': 72,
   'gpt4o-image': 0,
 };

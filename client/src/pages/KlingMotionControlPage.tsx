@@ -221,7 +221,7 @@ export default function KlingMotionControlPage() {
               className="w-full py-5 rounded-[2rem] bg-indigo-500 text-white font-black text-xl shadow-lg shadow-indigo-500/30 hover:bg-indigo-600 transition-all active:scale-95 flex items-center justify-center gap-3"
             >
               {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Rocket className="w-6 h-6" />}
-              BẮT ĐẦU TẠO (85 CREDITS)
+              BẮT ĐẦU TẠO (48 CREDITS)
             </button>
           </div>
         </div>
