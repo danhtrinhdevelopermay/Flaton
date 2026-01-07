@@ -65,7 +65,7 @@ export default function ShopPage() {
             >
               {/* Image Container */}
               <div className="absolute inset-0 flex">
-                <div className={`relative flex-1 h-full overflow-hidden ${model.secondImage ? 'w-1/2' : 'w-full'}`}>
+                <div className="relative flex-1 h-full overflow-hidden w-full">
                   <img 
                     src={model.image} 
                     alt={model.name}
@@ -73,16 +73,6 @@ export default function ShopPage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 </div>
-                {model.secondImage && (
-                  <div className="relative flex-1 h-full overflow-hidden w-1/2">
-                    <img 
-                      src={model.secondImage} 
-                      alt={model.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  </div>
-                )}
               </div>
 
               {/* Content */}
