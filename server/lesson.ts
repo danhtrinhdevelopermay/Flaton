@@ -19,7 +19,7 @@ async function getGeminiModel() {
   const genAI = new GoogleGenerativeAI(apiKey);
   return genAI.getGenerativeModel({ 
     model: "gemini-1.5-flash-latest"
-  });
+  }, { apiVersion: 'v1' });
 }
 
 export async function generateLessonScript(

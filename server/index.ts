@@ -14,7 +14,7 @@ async function getGeminiModel() {
         const genAI = new GoogleGenerativeAI(apiKey);
         return genAI.getGenerativeModel({ 
           model: "gemini-1.5-flash-latest"
-        });
+        }, { apiVersion: 'v1' });
       }
     }
   } catch (error) {
@@ -29,7 +29,7 @@ async function getGeminiModel() {
     const genAI = new GoogleGenerativeAI(cleanedKey);
     return genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash-latest"
-    });
+    }, { apiVersion: 'v1' });
   }
 
   console.error('[Gemini] CRITICAL: No API Key found in env or database!');
