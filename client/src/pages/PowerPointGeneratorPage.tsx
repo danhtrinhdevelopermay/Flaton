@@ -40,10 +40,12 @@ export default function PowerPointGeneratorPage() {
     const autoPrompt = searchParams.get('autoPrompt')
     if (autoPrompt && !generating) {
       setTimeout(() => {
-        handleGenerate()
+        if (typeof handleGenerate === 'function') {
+          handleGenerate()
+        }
       }, 800)
     }
-  }, [])
+  }, [searchParams, generating])
 
   const templates = [
     {
