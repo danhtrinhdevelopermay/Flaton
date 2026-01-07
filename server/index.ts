@@ -4,37 +4,38 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import cors from 'cors';
 
 async function getGeminiModel() {
-  let apiKey = process.env.AI_INTEGRATIONS_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
-  
+  // prioritize database
   try {
     const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'gemini_api_key' LIMIT 1");
     console.log('[Gemini] DB Query result rows:', result.rows.length);
     if (result.rows.length > 0 && result.rows[0].setting_value) {
-      apiKey = result.rows[0].setting_value.trim().replace(/^['"]|['"]$/g, '');
-      console.log('[Gemini] API Key from database loaded and cleaned. Key starts with:', apiKey.substring(0, 4));
-    } else {
-      console.log('[Gemini] No API key found in database, falling back to env');
+      const apiKey = result.rows[0].setting_value.trim().replace(/^['"]|['"]$/g, '');
+      console.log('[Gemini] API Key from database loaded. Starts with:', apiKey.substring(0, 4));
+      const genAI = new GoogleGenerativeAI(apiKey);
+      return genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash"
+      }, {
+        baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
+      });
     }
   } catch (error) {
     console.error('Error fetching Gemini API key from database:', error);
   }
 
-  if (!apiKey || apiKey === '') {
-    console.error('[Gemini] CRITICAL: No API Key found in env or database!');
-    return null;
-  }
-
-  try {
-    const genAI = new GoogleGenerativeAI(apiKey);
+  // fallback to env
+  const envKey = process.env.AI_INTEGRATIONS_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  if (envKey) {
+    console.log('[Gemini] Falling back to environment variable');
+    const genAI = new GoogleGenerativeAI(envKey);
     return genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash"
     }, {
       baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
     });
-  } catch (initError) {
-    console.error('[Gemini] Initialization error:', initError);
-    return null;
   }
+
+  console.error('[Gemini] CRITICAL: No API Key found in env or database!');
+  return null;
 }
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
