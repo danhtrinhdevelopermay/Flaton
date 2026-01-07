@@ -67,7 +67,11 @@ export default function KlingMotionControlPage() {
         if (data.status === 'completed' || data.status === 'success') {
           setProgress(100)
           setProgressMessage('Hoàn thành!')
-          return { status: 'completed', videoUrl: data.videoUrl }
+          // Extract video URL correctly from response
+          // data is the root response from /api/task/kling/:taskId
+          // In server/index.ts, checkTaskStatus for kling returns { status: 'completed', videoUrl: ... }
+          const videoUrl = data.videoUrl || data.data?.videoUrl;
+          return { status: 'completed', videoUrl: videoUrl }
         }
 
         if (data.status === 'failed') return { error: 'Xử lý thất bại' }
