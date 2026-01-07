@@ -8,9 +8,12 @@ async function getGeminiModel() {
   
   try {
     const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'gemini_api_key' LIMIT 1");
+    console.log('[Gemini] DB Query result rows:', result.rows.length);
     if (result.rows.length > 0 && result.rows[0].setting_value) {
       apiKey = result.rows[0].setting_value.trim().replace(/^['"]|['"]$/g, '');
-      console.log('[Gemini] API Key from database loaded and cleaned');
+      console.log('[Gemini] API Key from database loaded and cleaned. Key starts with:', apiKey.substring(0, 4));
+    } else {
+      console.log('[Gemini] No API key found in database, falling back to env');
     }
   } catch (error) {
     console.error('Error fetching Gemini API key from database:', error);
@@ -18,14 +21,20 @@ async function getGeminiModel() {
 
   if (!apiKey || apiKey === '') {
     console.error('[Gemini] CRITICAL: No API Key found in env or database!');
+    return null;
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  return genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash"
-  }, {
-    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
-  });
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    return genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash"
+    }, {
+      baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
+    });
+  } catch (initError) {
+    console.error('[Gemini] Initialization error:', initError);
+    return null;
+  }
 }
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
@@ -2932,8 +2941,8 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
     // Initialize Gemini model using the helper that fetches from database
     const model = await getGeminiModel();
     if (!model) {
-       console.error('[AI Assistant] Failed to initialize Gemini model');
-       return res.status(500).json({ error: 'Lỗi khởi tạo AI Assistant' });
+       console.error('[AI Assistant] Failed to initialize Gemini model - no API key found');
+       return res.status(500).json({ error: 'Lỗi khởi tạo AI Assistant: Thiếu cấu hình API Key' });
     }
 
     // Check if user is asking for specific services
