@@ -192,8 +192,8 @@ export default function PowerPointGeneratorPage() {
         },
         body: JSON.stringify({ 
           slides: slides.map(s => ({
-            title: s.elements.find((el: any) => el.id === 'title')?.content || s.title,
-            content: (s.elements.find((el: any) => el.id === 'content')?.content || '').split('\n').filter((p: string) => p.trim())
+            title: s.elements.find((el: any) => el.id.startsWith('title'))?.content || s.title,
+            content: (s.elements.find((el: any) => el.id.startsWith('content'))?.content || '').split('\n').filter((p: string) => p.trim())
           }))
         }),
       });
@@ -224,8 +224,8 @@ export default function PowerPointGeneratorPage() {
     <div className={`max-w-6xl mx-auto py-8 px-4 fade-in ${theme === 'light' ? 'bg-white/50' : ''}`}>
       <WaterDropAnimation 
         isActive={showWaterDrop}
-        fromButton={generateButtonRef}
-        toLoading={loadingAreaRef}
+        fromButton={generateButtonRef as any}
+        toLoading={loadingAreaRef as any}
       />
       
       <div className="flex items-center gap-4 mb-8">
@@ -513,7 +513,7 @@ export default function PowerPointGeneratorPage() {
                            top: el.y, 
                            width: el.width, 
                            height: el.height,
-                           backgroundColor: el.id === 'title' ? '#cbd5e1' : '#f1f5f9',
+                           backgroundColor: el.id.startsWith('title') ? '#cbd5e1' : '#f1f5f9',
                            borderRadius: '4px'
                          }}
                        />
