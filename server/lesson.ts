@@ -19,8 +19,6 @@ async function getGeminiModel() {
   const genAI = new GoogleGenerativeAI(apiKey);
   return genAI.getGenerativeModel({ 
     model: "gemini-1.5-flash"
-  }, {
-    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
   });
 }
 
