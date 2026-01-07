@@ -7,26 +7,28 @@ async function getGeminiModel() {
   // prioritize database
   try {
     const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'gemini_api_key' LIMIT 1");
-    console.log('[Gemini] DB Query result rows:', result.rows.length);
     if (result.rows.length > 0 && result.rows[0].setting_value) {
       const apiKey = result.rows[0].setting_value.trim().replace(/^['"]|['"]$/g, '');
-      console.log('[Gemini] API Key from database loaded. Starts with:', apiKey.substring(0, 4));
-      const genAI = new GoogleGenerativeAI(apiKey);
-      return genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash"
-      }, {
-        baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
-      });
+      if (apiKey && apiKey !== '') {
+        console.log('[Gemini] Using API Key from database');
+        const genAI = new GoogleGenerativeAI(apiKey);
+        return genAI.getGenerativeModel({ 
+          model: "gemini-1.5-flash"
+        }, {
+          baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
+        });
+      }
     }
   } catch (error) {
     console.error('Error fetching Gemini API key from database:', error);
   }
 
   // fallback to env
-  const envKey = process.env.AI_INTEGRATIONS_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  const envKey = process.env.GEMINI_API_KEY || process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
   if (envKey) {
-    console.log('[Gemini] Falling back to environment variable');
-    const genAI = new GoogleGenerativeAI(envKey);
+    const cleanedKey = envKey.trim().replace(/^['"]|['"]$/g, '');
+    console.log('[Gemini] Using API Key from environment variables');
+    const genAI = new GoogleGenerativeAI(cleanedKey);
     return genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash"
     }, {
