@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, ChangeEvent } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { Video, Loader2, Zap, Check, Rocket, Shield, Wand2, Info } from 'lucide-react'
+import { Video, Loader2, Zap, Check, Rocket, Shield, Wand2, Info, Upload } from 'lucide-react'
 import { motion } from 'framer-motion'
 import WaterDropAnimation from '../components/WaterDropAnimation'
 import VideoPlayer from '../components/VideoPlayer'
@@ -26,6 +26,8 @@ export default function KlingMotionControlPage() {
   const [mode, setMode] = useState<'720p' | '1080p'>('720p')
   
   const [loading, setLoading] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadingVideo, setUploadingVideo] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [polling, setPolling] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -34,12 +36,46 @@ export default function KlingMotionControlPage() {
   
   const generateButtonRef = useRef<HTMLButtonElement>(null) as React.MutableRefObject<HTMLButtonElement>
   const loadingAreaRef = useRef<HTMLDivElement>(null) as React.MutableRefObject<HTMLDivElement>
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (isAuthenticated && token) {
       refreshUser();
     }
   }, [isAuthenticated, token]);
+
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (type === 'image') setUploadingImage(true);
+    else setUploadingVideo(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const endpoint = type === 'image' ? '/api/upload-image' : '/api/upload-video';
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      const data = await res.json();
+      if (data.url) {
+        if (type === 'image') setImageUrl(data.url);
+        else setVideoUrl(data.url);
+      } else {
+        alert('Upload failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Upload error: ' + err);
+    } finally {
+      if (type === 'image') setUploadingImage(false);
+      else setUploadingVideo(false);
+    }
+  };
 
   const pollTaskStatus = async (taskId: string, taskType: string) => {
     setPolling(true)
@@ -67,9 +103,6 @@ export default function KlingMotionControlPage() {
         if (data.status === 'completed' || data.status === 'success') {
           setProgress(100)
           setProgressMessage('Hoàn thành!')
-          // Extract video URL correctly from response
-          // data is the root response from /api/task/kling/:taskId
-          // In server/index.ts, checkTaskStatus for kling returns { status: 'completed', videoUrl: ... }
           const videoUrl = data.videoUrl || data.data?.videoUrl;
           return { status: 'completed', videoUrl: videoUrl }
         }
@@ -176,26 +209,64 @@ export default function KlingMotionControlPage() {
 
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <label className="block text-sm font-bold mb-2 opacity-70 uppercase tracking-wider">URL Hình ảnh gốc</label>
-                <input
-                  type="text"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className={`w-full p-4 rounded-xl border-2 focus:border-indigo-500 focus:outline-none transition-all ${
-                    theme === 'dark' ? 'bg-[#1e202f] border-[#32354a]' : 'bg-slate-50 border-slate-100'
-                  }`}
-                />
+                <label className="block text-sm font-bold mb-2 opacity-70 uppercase tracking-wider">Hình ảnh gốc</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="URL Hình ảnh..."
+                    className={`flex-1 p-4 rounded-xl border-2 focus:border-indigo-500 focus:outline-none transition-all ${
+                      theme === 'dark' ? 'bg-[#1e202f] border-[#32354a]' : 'bg-slate-50 border-slate-100'
+                    }`}
+                  />
+                  <input
+                    type="file"
+                    ref={imageInputRef}
+                    onChange={(e) => handleFileUpload(e, 'image')}
+                    className="hidden"
+                    accept="image/*"
+                  />
+                  <button
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className={`px-4 rounded-xl border-2 border-dashed transition-all flex items-center justify-center ${
+                      theme === 'dark' ? 'border-[#32354a] hover:border-indigo-500 text-slate-400' : 'border-slate-200 hover:border-indigo-500 text-slate-500'
+                    }`}
+                  >
+                    {uploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-bold mb-2 opacity-70 uppercase tracking-wider">URL Video mẫu (Motion)</label>
-                <input
-                  type="text"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  className={`w-full p-4 rounded-xl border-2 focus:border-indigo-500 focus:outline-none transition-all ${
-                    theme === 'dark' ? 'bg-[#1e202f] border-[#32354a]' : 'bg-slate-50 border-slate-100'
-                  }`}
-                />
+                <label className="block text-sm font-bold mb-2 opacity-70 uppercase tracking-wider">Video mẫu (Motion)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="URL Video mẫu..."
+                    className={`flex-1 p-4 rounded-xl border-2 focus:border-indigo-500 focus:outline-none transition-all ${
+                      theme === 'dark' ? 'bg-[#1e202f] border-[#32354a]' : 'bg-slate-50 border-slate-100'
+                    }`}
+                  />
+                  <input
+                    type="file"
+                    ref={videoInputRef}
+                    onChange={(e) => handleFileUpload(e, 'video')}
+                    className="hidden"
+                    accept="video/*"
+                  />
+                  <button
+                    onClick={() => videoInputRef.current?.click()}
+                    disabled={uploadingVideo}
+                    className={`px-4 rounded-xl border-2 border-dashed transition-all flex items-center justify-center ${
+                      theme === 'dark' ? 'border-[#32354a] hover:border-indigo-500 text-slate-400' : 'border-slate-200 hover:border-indigo-500 text-slate-500'
+                    }`}
+                  >
+                    {uploadingVideo ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -294,3 +365,4 @@ export default function KlingMotionControlPage() {
     </div>
   )
 }
+

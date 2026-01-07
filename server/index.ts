@@ -3107,6 +3107,28 @@ function startKeepAlive() {
   console.log(`[Keep-Alive] Started - pinging ${RENDER_URL} every ${INTERVAL / 1000}s`);
 }
 
+app.post('/api/upload-image', authMiddleware, upload.single('file'), async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const result = await cloudinaryUtil.uploadImageToCloudinary(req.file.path);
+    fs.unlinkSync(req.file.path);
+    res.json({ url: result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/upload-video', authMiddleware, upload.single('file'), async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const result = await cloudinaryUtil.uploadVideoToCloudinary(req.file.path);
+    fs.unlinkSync(req.file.path);
+    res.json({ url: result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 async function startServer() {
   try {
     await initDatabase();
