@@ -1,8 +1,17 @@
 import { Search, SlidersHorizontal, ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 
 const MODELS = [
+  {
+    id: 'kling-motion',
+    name: 'Kling 2.6 Motion Control',
+    provider: 'Kling',
+    tags: ['Motion Control', 'Professional'],
+    image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800',
+    path: '/kling-motion'
+  },
   {
     id: 1,
     name: 'Kling 2.6 Motion Control',
@@ -29,6 +38,7 @@ const MODELS = [
 
 export default function ShopPage() {
   const { theme } = useTheme();
+  const navigate = useNavigate();
 
   return (
     <div className={`min-h-screen pb-20 transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0f172a] text-white' : 'bg-slate-50 text-slate-900'}`}>
@@ -70,6 +80,7 @@ export default function ShopPage() {
               key={model.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              onClick={() => model.path && navigate(model.path)}
               className={`group relative overflow-hidden rounded-[2.5rem] aspect-[4/3] cursor-pointer border transition-all duration-300 ${
                 theme === 'dark' ? 'border-white/5 bg-[#161922]' : 'border-slate-200 bg-white shadow-lg'
               }`}
