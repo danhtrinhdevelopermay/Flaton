@@ -13,7 +13,7 @@ async function getGeminiModel() {
         console.log('[Gemini] Using API Key from database');
         const genAI = new GoogleGenerativeAI(apiKey);
         return genAI.getGenerativeModel({ 
-          model: "gemini-1.5-flash-latest"
+          model: "gemini-2.0-flash"
         }, { apiVersion: 'v1' });
       }
     }
@@ -28,7 +28,7 @@ async function getGeminiModel() {
     console.log('[Gemini] Using API Key from environment variables');
     const genAI = new GoogleGenerativeAI(cleanedKey);
     return genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash-latest"
+      model: "gemini-2.0-flash"
     }, { apiVersion: 'v1' });
   }
 
