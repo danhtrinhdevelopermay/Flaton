@@ -210,16 +210,7 @@ export default function KlingMotionControlPage() {
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-bold mb-2 opacity-70 uppercase tracking-wider">Hình ảnh gốc</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="URL Hình ảnh..."
-                    className={`flex-1 p-4 rounded-xl border-2 focus:border-indigo-500 focus:outline-none transition-all ${
-                      theme === 'dark' ? 'bg-[#1e202f] border-[#32354a]' : 'bg-slate-50 border-slate-100'
-                    }`}
-                  />
+                <div className="flex flex-col gap-2">
                   <input
                     type="file"
                     ref={imageInputRef}
@@ -230,26 +221,32 @@ export default function KlingMotionControlPage() {
                   <button
                     onClick={() => imageInputRef.current?.click()}
                     disabled={uploadingImage}
-                    className={`px-4 rounded-xl border-2 border-dashed transition-all flex items-center justify-center ${
-                      theme === 'dark' ? 'border-[#32354a] hover:border-indigo-500 text-slate-400' : 'border-slate-200 hover:border-indigo-500 text-slate-500'
+                    className={`w-full py-8 rounded-2xl border-4 border-dashed transition-all flex flex-col items-center justify-center gap-2 ${
+                      theme === 'dark' 
+                        ? 'bg-[#1e202f] border-[#32354a] hover:border-indigo-500 text-slate-400' 
+                        : 'bg-slate-50 border-slate-200 hover:border-indigo-500 text-slate-500'
                     }`}
                   >
-                    {uploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                    {uploadingImage ? (
+                      <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-indigo-500" />
+                        <span className="text-sm font-bold">NHẤN ĐỂ TẢI ẢNH</span>
+                      </>
+                    )}
                   </button>
+                  {imageUrl && (
+                    <div className="flex items-center gap-2 p-2 rounded-xl bg-indigo-500/10 text-xs font-medium text-indigo-400 truncate">
+                      <Check className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{imageUrl}</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-bold mb-2 opacity-70 uppercase tracking-wider">Video mẫu (Motion)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="URL Video mẫu..."
-                    className={`flex-1 p-4 rounded-xl border-2 focus:border-indigo-500 focus:outline-none transition-all ${
-                      theme === 'dark' ? 'bg-[#1e202f] border-[#32354a]' : 'bg-slate-50 border-slate-100'
-                    }`}
-                  />
+                <div className="flex flex-col gap-2">
                   <input
                     type="file"
                     ref={videoInputRef}
@@ -260,12 +257,27 @@ export default function KlingMotionControlPage() {
                   <button
                     onClick={() => videoInputRef.current?.click()}
                     disabled={uploadingVideo}
-                    className={`px-4 rounded-xl border-2 border-dashed transition-all flex items-center justify-center ${
-                      theme === 'dark' ? 'border-[#32354a] hover:border-indigo-500 text-slate-400' : 'border-slate-200 hover:border-indigo-500 text-slate-500'
+                    className={`w-full py-8 rounded-2xl border-4 border-dashed transition-all flex flex-col items-center justify-center gap-2 ${
+                      theme === 'dark' 
+                        ? 'bg-[#1e202f] border-[#32354a] hover:border-indigo-500 text-slate-400' 
+                        : 'bg-slate-50 border-slate-200 hover:border-indigo-500 text-slate-500'
                     }`}
                   >
-                    {uploadingVideo ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                    {uploadingVideo ? (
+                      <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-indigo-500" />
+                        <span className="text-sm font-bold">NHẤN ĐỂ TẢI VIDEO</span>
+                      </>
+                    )}
                   </button>
+                  {videoUrl && (
+                    <div className="flex items-center gap-2 p-2 rounded-xl bg-indigo-500/10 text-xs font-medium text-indigo-400 truncate">
+                      <Check className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{videoUrl}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
