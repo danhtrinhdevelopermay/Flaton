@@ -31,7 +31,7 @@ export default function ShopPage() {
   const { theme } = useTheme();
 
   return (
-    <div className={`min-h-screen pb-20 ${theme === 'dark' ? 'bg-[#0a0c14] text-white' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`min-h-screen pb-20 transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0f172a] text-white' : 'bg-slate-50 text-slate-900'}`}>
       <div className="max-w-2xl mx-auto px-4 pt-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
@@ -45,7 +45,7 @@ export default function ShopPage() {
             <span className="text-sm font-medium">Filters (0)</span>
           </button>
         </div>
-        <p className="text-sm opacity-50 mb-6">50 models found</p>
+        <p className="text-sm opacity-50 mb-6 font-medium">50 models found</p>
 
         {/* Search Bar */}
         <div className="relative mb-8">
@@ -70,7 +70,7 @@ export default function ShopPage() {
               key={model.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`group relative overflow-hidden rounded-[2rem] aspect-[4/3] cursor-pointer border ${
+              className={`group relative overflow-hidden rounded-[2.5rem] aspect-[4/3] cursor-pointer border transition-all duration-300 ${
                 theme === 'dark' ? 'border-white/5 bg-[#161922]' : 'border-slate-200 bg-white shadow-lg'
               }`}
             >
@@ -97,14 +97,14 @@ export default function ShopPage() {
               </div>
 
               {/* Content */}
-              <div className="absolute inset-x-0 bottom-0 p-6 flex flex-col gap-2">
-                <span className="text-sm font-medium text-white/70">{model.provider}</span>
-                <h3 className="text-xl font-bold text-white mb-1">{model.name}</h3>
+              <div className="absolute inset-x-0 bottom-0 p-8 flex flex-col gap-2">
+                <span className="text-sm font-semibold text-white/70">{model.provider}</span>
+                <h3 className="text-2xl font-black text-white mb-1 tracking-tight">{model.name}</h3>
                 <div className="flex flex-wrap gap-2">
                   {model.tags.map((tag) => (
                     <span 
                       key={tag}
-                      className="px-3 py-1 rounded-lg bg-white/10 backdrop-blur-md text-white text-xs font-semibold border border-white/10"
+                      className="px-4 py-1.5 rounded-xl bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/10"
                     >
                       {tag}
                     </span>
