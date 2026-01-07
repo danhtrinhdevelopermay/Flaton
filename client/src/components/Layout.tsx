@@ -77,7 +77,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/video-upscale', label: 'Nâng cấp Video', icon: Sparkles, color: 'text-cyan-500' },
     { path: '/music-generator', label: 'Tạo nhạc', icon: Music, color: 'text-pink-500' },
     { path: '/kling-motion', label: 'Motion Control', icon: Wand2, color: 'text-amber-500' },
-    { path: '/pptx-generator', label: 'Tạo PowerPoint', icon: Presentation, color: 'text-orange-500' },
+    { path: '/ppt-generator', label: 'Tạo PowerPoint', icon: Presentation, color: 'text-orange-500' },
     { path: '/word-generator', label: 'Tạo Word', icon: FileText, color: 'text-indigo-500' },
   ]
 

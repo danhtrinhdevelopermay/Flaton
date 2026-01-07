@@ -85,11 +85,17 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
     Lưu ý: 
     - Mỗi bài có khoảng 5-7 slide.
     - Tìm các URL ảnh từ Unsplash liên quan đến nội dung slide.
-    - Ngôn ngữ: Tiếng Việt.`;
+    - Ngôn ngữ: Tiếng Việt.
+    - Chỉ trả về JSON, không kèm văn bản giải thích.`;
 
     const result = await model.generateContent(systemPrompt);
     const response = await result.response;
-    const content = JSON.parse(response.text());
+    let text = response.text();
+    
+    // Clean JSON response
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    const content = JSON.parse(text);
 
     res.json(content);
   } catch (error: any) {
