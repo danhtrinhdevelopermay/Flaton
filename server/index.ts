@@ -2918,7 +2918,7 @@ app.post('/api/admin/grant-pro', async (req: Request, res: Response) => {
   }
 });
 
-// AI Assistant Bot Endpoint - Creates content automatically
+    // AI Assistant Bot Endpoint - Creates content automatically
 app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Response) => {
   try {
     const { message } = req.body;
@@ -2929,9 +2929,8 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
     const lowerMessage = message.toLowerCase();
     let response: any = { type: 'text', content: '', action: null };
 
-    // Initialize Gemini model directly
-    const genAI = new GoogleGenerativeAI(process.env.AI_INTEGRATIONS_GEMINI_API_KEY || '');
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL });
+    // Initialize Gemini model using the helper that fetches from database
+    const model = await getGeminiModel();
 
     // Check if user is asking for specific services
     if (lowerMessage.includes('hình ảnh') || lowerMessage.includes('ảnh') || lowerMessage.includes('image')) {
