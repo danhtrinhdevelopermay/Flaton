@@ -46,7 +46,7 @@ export async function generateLessonScript(
 
   try {
     const model = await getGeminiModel();
-    const result = await model.generateContent(prompt);
+    const result = await (model as any).generateContent(prompt);
     const response = await result.response;
     return response.text() || '';
   } catch (error) {
