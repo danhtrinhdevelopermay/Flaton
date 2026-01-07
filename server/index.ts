@@ -9,7 +9,10 @@ async function getGeminiModel() {
   try {
     const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'gemini_api_key' LIMIT 1");
     if (result.rows.length > 0 && result.rows[0].setting_value) {
-      apiKey = result.rows[0].setting_value;
+      apiKey = result.rows[0].setting_value.trim().replace(/^['"]|['"]$/g, '');
+      console.log('[Gemini] Using API Key from database (cleaned)');
+    } else {
+      console.log('[Gemini] Using API Key from environment variables');
     }
   } catch (error) {
     console.error('Error fetching Gemini API key from database:', error);
@@ -81,25 +84,7 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
     const { prompt, style } = req.body;
     
     const model = await getGeminiModel();
-    const systemPrompt = `Bạn là một chuyên gia thiết kế bài thuyết trình. 
-    Hãy tạo nội dung cho một bài thuyết trình về chủ đề: "${prompt}" với phong cách "${style}".
-    Trả về định dạng JSON theo cấu trúc:
-    {
-      "slides": [
-        {
-          "title": "Tiêu đề slide",
-          "bullets": ["Nội dung 1", "Nội dung 2"],
-          "imageUrl": "https://images.unsplash.com/photo-..."
-        }
-      ]
-    }
-    Lưu ý: 
-    - Mỗi bài có khoảng 5-7 slide.
-    - Tìm các URL ảnh từ Unsplash liên quan đến nội dung slide.
-    - Ngôn ngữ: Tiếng Việt.
-    - Chỉ trả về JSON, không kèm văn bản giải thích.`;
-
-    const result = await model.generateContent(systemPrompt);
+    const result = await (model as any).generateContent(systemPrompt);
     const response = await result.response;
     let text = response.text();
     
@@ -1831,7 +1816,7 @@ Return ONLY the Python code, no explanations or markdown formatting.
 Start with: from pptx import Presentation`;
 
     const model = await getGeminiModel();
-    const result = await model.generateContent(prompt);
+    const result = await (model as any).generateContent(prompt);
     const response = await result.response;
     const pythonCode = response.text() || '';
     console.log('[PowerPoint Gen] Generated code length:', pythonCode.length);
@@ -2000,7 +1985,7 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
     `;
 
     const model = await getGeminiModel();
-    const result = await model.generateContent(geminiPrompt);
+    const result = await (model as any).generateContent(geminiPrompt);
     const response = await result.response;
     const text = response.text() || '[]';
     const jsonMatch = text.match(/\[[\s\S]*\]/);
@@ -2066,7 +2051,7 @@ app.post('/api/export-pptx', authMiddleware, async (req: AuthRequest, res: Respo
     `;
 
     const model = await getGeminiModel();
-    const result = await model.generateContent(pythonCodePrompt);
+    const result = await (model as any).generateContent(pythonCodePrompt);
     const response = await result.response;
     const pythonCode = response.text() || '';
     const cleanPythonCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
@@ -2127,7 +2112,7 @@ app.post('/api/generate-pptx', authMiddleware, async (req: AuthRequest, res: Res
         console.log('[PPTX Gen] Generating AI images via Flaton Image V1...');
         // Request image prompts from Gemini first to make them relevant
         const model = await getGeminiModel();
-        const imagePromptRequestResult = await model.generateContent(`Based on the PowerPoint topic "${prompt}", suggest 3 short, highly descriptive image prompts for an AI image generator. Return ONLY a JSON array of strings.`);
+        const imagePromptRequestResult = await (model as any).generateContent(`Based on the PowerPoint topic "${prompt}", suggest 3 short, highly descriptive image prompts for an AI image generator. Return ONLY a JSON array of strings.`);
         const imagePromptResponse = await imagePromptRequestResult.response;
         const promptsText = imagePromptResponse.text() || '[]';
         // Improved parsing for prompt JSON
@@ -2254,7 +2239,7 @@ from pptx.dml.color import RGBColor
 Save final presentation to: /tmp/generated_presentation.pptx`;
 
     const model = await getGeminiModel();
-    const result = await model.generateContent(aiPrompt);
+    const result = await (model as any).generateContent(aiPrompt);
     const response = await result.response;
     let pythonCode = response.text() || '';
     // Clean up code if Gemini adds markdown
@@ -2630,7 +2615,7 @@ app.post('/api/generate-word', authMiddleware, async (req: AuthRequest, res: Res
     `;
 
     const model = await getGeminiModel();
-    const geminiResponseResult = await model.generateContent(geminiPrompt);
+    const geminiResponseResult = await (model as any).generateContent(geminiPrompt);
     const geminiResponse = await geminiResponseResult.response;
     const responseText = geminiResponse.text() || '{}';
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -3050,7 +3035,8 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
       }
     } else if (lowerMessage.includes('video') || lowerMessage.includes('clip')) {
       // Use Gemini directly for video prompt enhancement
-      const result = await model.generateContent(`Viết một prompt tiếng Anh chuyên nghiệp để tạo video (dưới 100 từ): ${message}`);
+    const model = await getGeminiModel();
+    const result = await (model as any).generateContent(`Viết một prompt tiếng Anh chuyên nghiệp để tạo video (dưới 100 từ): ${message}`);
       const enhancedText = result.response.text();
       
       response = {
@@ -3061,7 +3047,8 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
       };
     } else if (lowerMessage.includes('nhạc') || lowerMessage.includes('music')) {
       // Use Gemini directly for music prompt enhancement
-      const result = await model.generateContent(`Viết một prompt tiếng Anh để tạo nhạc Suno (dưới 100 từ): ${message}`);
+    const model = await getGeminiModel();
+    const result = await (model as any).generateContent(`Viết một prompt tiếng Anh để tạo nhạc Suno (dưới 100 từ): ${message}`);
       const enhancedText = result.response.text();
       
       response = {
@@ -3086,7 +3073,8 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
       };
     } else {
       // For general questions, use Gemini directly
-      const result = await model.generateContent(message);
+    const model = await getGeminiModel();
+    const result = await (model as any).generateContent(message);
       const aiText = result.response.text();
       
       response = {

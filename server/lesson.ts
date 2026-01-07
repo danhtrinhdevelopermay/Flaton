@@ -7,7 +7,10 @@ async function getGeminiModel() {
   try {
     const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'gemini_api_key' LIMIT 1");
     if (result.rows.length > 0 && result.rows[0].setting_value) {
-      apiKey = result.rows[0].setting_value;
+      apiKey = result.rows[0].setting_value.trim().replace(/^['"]|['"]$/g, '');
+      console.log('[Gemini] Using API Key from database (cleaned)');
+    } else {
+      console.log('[Gemini] Using API Key from environment variables');
     }
   } catch (error) {
     console.error('Error fetching Gemini API key from database:', error);
@@ -75,7 +78,7 @@ export async function generateLessonSlides(
 
   try {
     const model = await getGeminiModel();
-    const result = await model.generateContent(prompt);
+    const result = await (model as any).generateContent(prompt);
     const response = await result.response;
 
     const text = response.text() || '[]';
