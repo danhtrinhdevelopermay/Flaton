@@ -10,12 +10,14 @@ async function getGeminiModel() {
     const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'gemini_api_key' LIMIT 1");
     if (result.rows.length > 0 && result.rows[0].setting_value) {
       apiKey = result.rows[0].setting_value.trim().replace(/^['"]|['"]$/g, '');
-      console.log('[Gemini] Using API Key from database (cleaned)');
-    } else {
-      console.log('[Gemini] Using API Key from environment variables');
+      console.log('[Gemini] API Key from database loaded and cleaned');
     }
   } catch (error) {
     console.error('Error fetching Gemini API key from database:', error);
+  }
+
+  if (!apiKey || apiKey === '') {
+    console.error('[Gemini] CRITICAL: No API Key found in env or database!');
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
