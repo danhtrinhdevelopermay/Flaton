@@ -2931,6 +2931,10 @@ app.post('/api/ai-assistant', optionalAuthMiddleware, async (req: any, res: Resp
 
     // Initialize Gemini model using the helper that fetches from database
     const model = await getGeminiModel();
+    if (!model) {
+       console.error('[AI Assistant] Failed to initialize Gemini model');
+       return res.status(500).json({ error: 'Lỗi khởi tạo AI Assistant' });
+    }
 
     // Check if user is asking for specific services
     if (lowerMessage.includes('hình ảnh') || lowerMessage.includes('ảnh') || lowerMessage.includes('image')) {
