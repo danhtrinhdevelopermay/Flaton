@@ -8,9 +8,17 @@ const MODELS = [
     id: 'kling-motion',
     name: 'Kling 2.6 Motion Control',
     provider: 'Kling',
-    tags: ['Motion Control', 'Professional'],
-    image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800',
+    tags: ['Video to Video'],
+    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=800',
+    secondImage: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=800',
     path: '/kling-motion'
+  },
+  {
+    id: 'seedance-pro',
+    name: 'Seedance 1.5 Pro',
+    provider: 'ByteDance',
+    tags: ['Text to Video', 'Image to Video'],
+    image: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=800'
   }
 ];
 
@@ -65,7 +73,7 @@ export default function ShopPage() {
             >
               {/* Image Container */}
               <div className="absolute inset-0 flex">
-                <div className="relative flex-1 h-full overflow-hidden w-full">
+                <div className={`relative flex-1 h-full overflow-hidden ${model.secondImage ? 'w-1/2' : 'w-full'}`}>
                   <img 
                     src={model.image} 
                     alt={model.name}
@@ -73,6 +81,16 @@ export default function ShopPage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 </div>
+                {model.secondImage && (
+                  <div className="relative flex-1 h-full overflow-hidden w-1/2">
+                    <img 
+                      src={model.secondImage} 
+                      alt={model.name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  </div>
+                )}
               </div>
 
               {/* Content */}
