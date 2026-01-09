@@ -153,8 +153,32 @@ async function checkApiKeyCredits(): Promise<number> {
   }
 }
 
-async function callKieApi(endpoint: string, data: any) {
-  const apiKey = await getActiveApiKey();
+// Admin: Get all KIE API keys
+app.get('/api/admin/kie-keys', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await pool.query('SELECT id, name, credits FROM api_keys WHERE is_active = true ORDER BY id ASC');
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+async function getApiKeyById(id: number): Promise<string> {
+  const result = await pool.query('SELECT key_value FROM api_keys WHERE id = $1 AND is_active = true', [id]);
+  if (result.rows.length === 0) {
+    throw new Error('API Key not found or inactive');
+  }
+  return result.rows[0].key_value;
+}
+
+// Update callKieApi to accept an optional apiKeyId
+async function callKieApi(endpoint: string, data: any, apiKeyId?: number) {
+  let apiKey = '';
+  if (apiKeyId) {
+    apiKey = await getApiKeyById(apiKeyId);
+  } else {
+    apiKey = await getActiveApiKey();
+  }
 
   console.log(`Calling KIE API: ${endpoint}`, JSON.stringify(data, null, 2));
   
