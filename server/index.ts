@@ -772,7 +772,7 @@ app.post('/api/user/checkin', authMiddleware, async (req: AuthRequest, res: Resp
 
 app.post('/api/generate/nano-banana', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { prompt, aspectRatio = '1:1' } = req.body;
+    const { prompt, aspectRatio = '1:1', apiKeyId } = req.body;
     const result = await callKieApi('/playground/createTask', {
       model: 'google/nano-banana',
       input: {
@@ -780,7 +780,7 @@ app.post('/api/generate/nano-banana', authMiddleware, async (req: AuthRequest, r
         image_size: aspectRatio,
         output_format: 'png',
       },
-    });
+    }, apiKeyId);
     res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'playground' });
   } catch (error: any) {
     await refundCredits(req.userId!, MODEL_CREDITS['nano-banana']);
@@ -810,7 +810,7 @@ app.post('/api/upload-video', authMiddleware, upload.single('video'), async (req
 
 app.post('/api/generate/topaz-video', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { videoUrl, upscaleFactor = '4x' } = req.body;
+    const { videoUrl, upscaleFactor = '4x', apiKeyId } = req.body;
     
     const factor = upscaleFactor.replace('x', '');
     
@@ -823,7 +823,7 @@ app.post('/api/generate/topaz-video', authMiddleware, async (req: AuthRequest, r
         video_url: videoUrl,
         upscale_factor: factor
       }
-    });
+    }, apiKeyId);
     
     res.json({ 
       taskId: result.task_id || result.data?.taskId, 
@@ -837,7 +837,7 @@ app.post('/api/generate/topaz-video', authMiddleware, async (req: AuthRequest, r
 
 app.post('/api/generate/seedream', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { prompt, aspectRatio = '1:1', resolution = '1K' } = req.body;
+    const { prompt, aspectRatio = '1:1', resolution = '1K', apiKeyId } = req.body;
     const imageSizeMap: Record<string, string> = {
       '1:1': 'square_hd',
       '16:9': 'landscape_16_9',
@@ -855,7 +855,7 @@ app.post('/api/generate/seedream', authMiddleware, async (req: AuthRequest, res:
         image_resolution: resolution,
         max_images: 1,
       },
-    });
+    }, apiKeyId);
     res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'seedream' });
   } catch (error: any) {
     await refundCredits(req.userId!, MODEL_CREDITS['seedream']);
@@ -896,12 +896,12 @@ app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res
       return res.status(403).json({ error: 'Tính năng này chỉ dành cho tài khoản Pro. Vui lòng nâng cấp tài khoản để sử dụng.' });
     }
 
-    const { prompt, aspectRatio = '16:9' } = req.body;
+    const { prompt, aspectRatio = '16:9', apiKeyId } = req.body;
     const result = await callKieApi('/veo/generate', {
       prompt,
       model: 'veo3_fast',
       aspectRatio,
-    });
+    }, apiKeyId);
     res.json({ taskId: result.data.taskId, taskType: 'veo3' });
   } catch (error: any) {
     await refundCredits(req.userId!, MODEL_CREDITS['veo3-fast']);
