@@ -145,18 +145,31 @@ export default function ManusPage() {
         return;
       }
 
+      // Helper to determine if a file is desirable (not a configuration JSON)
+      const isDesirable = (url: string, name: string) => {
+        const lowerUrl = url.toLowerCase();
+        const lowerName = name.toLowerCase();
+        // Skip common config/log files unless specifically asked
+        if (lowerUrl.includes('.json') || lowerName.includes('.json')) return false;
+        if (lowerUrl.includes('.log') || lowerName.includes('.log')) return false;
+        return true;
+      };
+
       // 1. Handle all_files from server merged result (High priority)
       if (obj.all_files && Array.isArray(obj.all_files)) {
         obj.all_files.forEach((f: any) => {
           if (f && f.download_url) {
             const url = f.download_url;
-            if (!files.some(existing => existing.url === url)) {
-              files.push({
-                id: f.id || Math.random().toString(36).substr(2, 9),
-                name: f.file_name || f.name || 'Generated File',
-                url: url,
-                type: f.file_extension || f.extension
-              });
+            const name = f.file_name || f.name || 'Generated File';
+            if (isDesirable(url, name)) {
+              if (!files.some(existing => existing.url === url)) {
+                files.push({
+                  id: f.id || Math.random().toString(36).substr(2, 9),
+                  name: name,
+                  url: url,
+                  type: f.file_extension || f.extension || (url.split('?')[0].split('.').pop())
+                });
+              }
             }
           }
         });
@@ -165,37 +178,46 @@ export default function ManusPage() {
       // 2. Handle explicit file objects (Manus AI often uses download_url or fileUrl)
       if (obj.download_url || obj.fileUrl) {
         const url = obj.download_url || obj.fileUrl;
-        if (!files.some(f => f.url === url)) {
-          files.push({
-            id: obj.id || Math.random().toString(36).substr(2, 9),
-            name: obj.file_name || obj.fileName || obj.name || 'Generated File',
-            url: url,
-            type: obj.file_extension || obj.extension || (url.split('?')[0].split('.').pop())
-          });
+        const name = obj.file_name || obj.fileName || obj.name || 'Generated File';
+        if (isDesirable(url, name)) {
+          if (!files.some(f => f.url === url)) {
+            files.push({
+              id: obj.id || Math.random().toString(36).substr(2, 9),
+              name: name,
+              url: url,
+              type: obj.file_extension || obj.extension || (url.split('?')[0].split('.').pop())
+            });
+          }
         }
       } 
       // 3. Handle output_file objects
       else if (obj.type === 'output_file' && obj.output_file && (obj.output_file.download_url || obj.output_file.fileUrl)) {
         const url = obj.output_file.download_url || obj.output_file.fileUrl;
-        if (!files.some(f => f.url === url)) {
-          files.push({
-            id: obj.output_file.id || Math.random().toString(36).substr(2, 9),
-            name: obj.output_file.file_name || obj.output_file.fileName || obj.output_file.name || 'Generated File',
-            url: url,
-            type: obj.output_file.file_extension || obj.output_file.extension || (url.split('?')[0].split('.').pop())
-          });
+        const name = obj.output_file.file_name || obj.output_file.fileName || obj.output_file.name || 'Generated File';
+        if (isDesirable(url, name)) {
+          if (!files.some(f => f.url === url)) {
+            files.push({
+              id: obj.output_file.id || Math.random().toString(36).substr(2, 9),
+              name: name,
+              url: url,
+              type: obj.output_file.file_extension || obj.output_file.extension || (url.split('?')[0].split('.').pop())
+            });
+          }
         }
       } 
       // 4. Case where type is output_file and the object itself has fileUrl
       else if (obj.type === 'output_file' && (obj.fileUrl || obj.download_url)) {
         const url = obj.fileUrl || obj.download_url;
-        if (!files.some(f => f.url === url)) {
-          files.push({
-            id: obj.id || Math.random().toString(36).substr(2, 9),
-            name: obj.fileName || obj.file_name || obj.name || 'Generated File',
-            url: url,
-            type: obj.file_extension || obj.extension || (url.split('?')[0].split('.').pop())
-          });
+        const name = obj.fileName || obj.file_name || obj.name || 'Generated File';
+        if (isDesirable(url, name)) {
+          if (!files.some(f => f.url === url)) {
+            files.push({
+              id: obj.id || Math.random().toString(36).substr(2, 9),
+              name: name,
+              url: url,
+              type: obj.file_extension || obj.extension || (url.split('?')[0].split('.').pop())
+            });
+          }
         }
       } 
       
