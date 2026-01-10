@@ -99,6 +99,50 @@ async function getManusApiKey(): Promise<string> {
   return process.env.MANUS_API_KEY || '';
 }
 
+// Manus Webhook Handler
+app.post('/api/manus/webhook', async (req: Request, res: Response) => {
+  try {
+    const data = req.body;
+    console.log('[Manus Webhook] Received update:', JSON.stringify(data));
+    
+    const taskId = data.task_id || data.id;
+    if (!taskId) return res.status(400).json({ error: 'No task_id' });
+
+    const status = data.status;
+    const result = data.result || data.output;
+    const error = data.error;
+
+    // Merge files if available
+    let resultToSave = result && typeof result === 'object' ? { ...result } : { data: result };
+    
+    // Fetch files if completed
+    if (status === 'success' || status === 'completed') {
+      try {
+        const apiKey = await getManusApiKey();
+        const filesRes = await fetch(`${MANUS_API_BASE}/files?task_id=${taskId}`, {
+          headers: { 'API_KEY': apiKey }
+        });
+        if (filesRes.ok) {
+          const filesData = await filesRes.json();
+          resultToSave.all_files = filesData.files || filesData.data || (Array.isArray(filesData) ? filesData : []);
+        }
+      } catch (fErr) {
+        console.error('[Manus Webhook] Files fetch error:', fErr);
+      }
+    }
+
+    await pool.query(
+      'UPDATE manus_tasks SET status = $1, result = $2, error = $3, updated_at = CURRENT_TIMESTAMP WHERE task_id = $4',
+      [status, JSON.stringify(resultToSave), error || null, taskId]
+    );
+
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error('[Manus Webhook] Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { prompt, taskMode = 'agent', agentProfile = 'manus-1.6' } = req.body;
@@ -110,13 +154,27 @@ app.post('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Respo
       return res.status(400).json({ error: 'Manus API key chưa được cấu hình.' });
     }
 
+    // Attempt to get public URL for webhook
+    let webhookUrl = '';
+    try {
+      const domain = process.env.REPLIT_DEV_DOMAIN || process.env.DOMAIN;
+      if (domain) {
+        webhookUrl = `https://${domain}/api/manus/webhook`;
+      }
+    } catch (e) {}
+
     const response = await fetch(`${MANUS_API_BASE}/tasks`, {
       method: 'POST',
       headers: {
         'API_KEY': apiKey,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ prompt, taskMode, agentProfile })
+      body: JSON.stringify({ 
+        prompt, 
+        taskMode, 
+        agentProfile,
+        webhookUrl: webhookUrl || undefined
+      })
     });
 
     const data = await response.json();
@@ -237,8 +295,14 @@ app.get('/api/manus/download', authMiddleware, async (req: AuthRequest, res: Res
     const fileUrl = req.query.url as string;
     if (!fileUrl) return res.status(400).send('URL is required');
 
+    console.log('[Manus Download] Proxying URL:', fileUrl);
+
     const response = await fetch(fileUrl);
-    if (!response.ok) return res.status(response.status).send('Failed to fetch file');
+    if (!response.ok) {
+      console.error('[Manus Download] Failed to fetch:', response.status, response.statusText);
+      // Fallback: redirect to the URL if direct proxy fails
+      return res.redirect(fileUrl);
+    }
 
     const contentType = response.headers.get('content-type');
     if (contentType) res.setHeader('Content-Type', contentType);
@@ -249,6 +313,12 @@ app.get('/api/manus/download', authMiddleware, async (req: AuthRequest, res: Res
     const arrayBuffer = await response.arrayBuffer();
     res.send(Buffer.from(arrayBuffer));
   } catch (error: any) {
+    console.error('[Manus Download] Exception:', error);
+    // Emergency fallback to redirect
+    try {
+      const fileUrl = req.query.url as string;
+      if (fileUrl) return res.redirect(fileUrl);
+    } catch (e) {}
     res.status(500).send(error.message);
   }
 });

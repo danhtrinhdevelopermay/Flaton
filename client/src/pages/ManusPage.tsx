@@ -205,6 +205,11 @@ export default function ManusPage() {
         obj.data.forEach((f: any) => addFile(f));
       }
 
+      // Handle direct results array
+      if (Array.isArray(obj.results)) {
+        obj.results.forEach((f: any) => addFile(f));
+      }
+
       // 3. Handle explicit file fields
       if (obj.download_url || obj.fileUrl || obj.url) {
         addFile(obj);
@@ -227,7 +232,7 @@ export default function ManusPage() {
       try {
         Object.keys(obj).forEach(key => {
           // Avoid re-checking already handled special keys
-          if (!['all_files', 'data', 'output', 'result'].includes(key) && obj[key] && typeof obj[key] === 'object') {
+          if (!['all_files', 'data', 'output', 'result', 'results'].includes(key) && obj[key] && typeof obj[key] === 'object') {
             findFiles(obj[key]);
           }
         });
