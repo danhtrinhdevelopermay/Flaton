@@ -47,8 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (response.ok) {
           const data = await response.json();
-          console.log('[Auth] User verified:', data.user?.email);
-          setUser(data.user);
+          const userData = data.user || data;
+          console.log('[Auth] User verified:', userData.email);
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
         } else {
           console.log('[Auth] Token verification failed, logging out');
           logout();
@@ -121,9 +123,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (response.ok) {
         const data = await response.json();
-        setUser(data.user);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        console.log('[Auth] User refreshed:', data.user?.email, 'is_pro:', data.user?.is_pro);
+        const userData = data.user || data;
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        console.log('[Auth] User refreshed:', userData.email, 'is_pro:', userData.is_pro);
       }
     } catch (error) {
       console.error('[Auth] Failed to refresh user:', error);
