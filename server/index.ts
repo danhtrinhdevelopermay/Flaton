@@ -101,6 +101,33 @@ async function getManusApiKey(userId?: number): Promise<string> {
   return '';
 }
 
+// Get all users with Manus API Key info (Admin only)
+app.get('/api/admin/users-all-manus', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const users = await pool.query('SELECT id, email, name, manus_api_key FROM users ORDER BY created_at DESC');
+    res.json(users.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get Manus Error Logs (Admin only)
+app.get('/api/admin/manus-logs', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const logs = await pool.query(`
+      SELECT t.*, u.email, u.name 
+      FROM manus_tasks t 
+      JOIN users u ON t.user_id = u.id 
+      WHERE t.status = 'failed' OR t.error IS NOT NULL 
+      ORDER BY t.updated_at DESC 
+      LIMIT 50
+    `);
+    res.json(logs.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get all users without Manus API Key (Admin only)
 app.get('/api/admin/users-no-manus', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
