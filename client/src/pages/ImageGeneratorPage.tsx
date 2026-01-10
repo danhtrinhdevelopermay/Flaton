@@ -29,6 +29,8 @@ interface GenerationResult {
   error?: string
 }
 
+import ServerDropdown from '../components/ServerDropdown'
+
 export default function ImageGeneratorPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -302,32 +304,12 @@ export default function ImageGeneratorPage() {
             <label className={`block text-xs font-black uppercase tracking-[0.2em] mb-3 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
               Cơ sở hạ tầng (KIE AI)
             </label>
-            <div className="relative group">
-              <select
-                value={selectedServer || ''}
-                onChange={(e) => setSelectedServer(Number(e.target.value))}
-                className={`w-full appearance-none pl-12 pr-10 py-4 rounded-2xl border-2 transition-all cursor-pointer font-bold text-sm ${
-                  theme === 'dark' 
-                    ? 'bg-slate-800/50 border-slate-700 text-white hover:border-slate-600 focus:border-indigo-500' 
-                    : 'bg-white border-slate-200 text-slate-900 hover:border-slate-300 focus:border-indigo-500 shadow-sm'
-                }`}
-              >
-                {servers.map(server => {
-                  const isDisabled = server.credits < (currentTool?.credits || 0);
-                  return (
-                    <option key={server.id} value={server.id} disabled={isDisabled}>
-                      {server.name || `Server ${server.id}`} ({server.credits} Credits) {isDisabled ? '- KHÔNG ĐỦ' : ''}
-                    </option>
-                  );
-                })}
-              </select>
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                <Shield className={`w-5 h-5 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`} />
-              </div>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                <ChevronDown className={`w-4 h-4 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`} />
-              </div>
-            </div>
+            <ServerDropdown 
+              servers={servers}
+              selectedServer={selectedServer}
+              onSelect={setSelectedServer}
+              requiredCredits={currentTool?.credits || 0}
+            />
           </div>
 
           <div className="mb-6">
