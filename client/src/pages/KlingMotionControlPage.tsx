@@ -227,7 +227,7 @@ export default function KlingMotionControlPage() {
           <div className="space-y-6">
             <div className="mb-8">
               <label className={`block text-xs font-black uppercase tracking-[0.2em] mb-3 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                Cơ sở hạ tầng (KIE AI)
+                Cơ sở hạ tầng
               </label>
               <ServerDropdown 
                 servers={servers}
