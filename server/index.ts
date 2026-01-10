@@ -104,7 +104,7 @@ async function getManusApiKey(userId?: number): Promise<string> {
 // Get all users with Manus API Key info (Admin only)
 app.get('/api/admin/users-all-manus', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const users = await pool.query('SELECT id, email, name, manus_api_key FROM users ORDER BY created_at DESC');
+    const users = await pool.query('SELECT id, email, username, name, manus_api_key FROM users ORDER BY created_at DESC');
     console.log('[Admin] Returning all users:', users.rows.length);
     res.json(users.rows);
   } catch (error: any) {
