@@ -2,16 +2,16 @@ import { useState, useEffect } from 'react';
 import { Shield, Loader2, AlertTriangle, CheckCircle, Brain, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-export default function ManusAdminPage() {
+export default function FlagentAdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [adminToken, setAdminToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  const [allUsersManus, setAllUsersManus] = useState<any[]>([]);
-  const [manusLogs, setManusLogs] = useState<any[]>([]);
-  const [usersNoManus, setUsersNoManus] = useState<any[]>([]);
+  const [allUsersFlagent, setAllUsersFlagent] = useState<any[]>([]);
+  const [flagentLogs, setFlagentLogs] = useState<any[]>([]);
+  const [usersNoFlagent, setUsersNoFlagent] = useState<any[]>([]);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('adminToken');
@@ -23,70 +23,70 @@ export default function ManusAdminPage() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      loadUsersNoManus();
-      loadAllUsersManus();
-      loadManusLogs();
+      loadUsersNoFlagent();
+      loadAllUsersFlagent();
+      loadFlagentLogs();
       
       const interval = setInterval(() => {
-        loadUsersNoManus();
-        loadAllUsersManus();
-        loadManusLogs();
+        loadUsersNoFlagent();
+        loadAllUsersFlagent();
+        loadFlagentLogs();
       }, 10000);
       
       return () => clearInterval(interval);
     }
   }, [isLoggedIn, adminToken]);
 
-  const loadAllUsersManus = async () => {
+  const loadAllUsersFlagent = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/admin/users-all-manus', {
+      const res = await fetch('/api/admin/users-all-flagent', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
-        console.log('[ManusAdmin] Loaded users:', data);
-        setAllUsersManus(data);
+        console.log('[FlagentAdmin] Loaded users:', data);
+        setAllUsersFlagent(data);
       } else {
-        console.error('[ManusAdmin] Failed to load users:', res.status);
+        console.error('[FlagentAdmin] Failed to load users:', res.status);
       }
     } catch (err) {
-      console.error('Error loading all manus users:', err);
+      console.error('Error loading all flagent users:', err);
     }
   };
 
-  const loadManusLogs = async () => {
+  const loadFlagentLogs = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/admin/manus-logs', {
+      const res = await fetch('/api/admin/flagent-logs', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
-        setManusLogs(data);
+        setFlagentLogs(data);
       }
     } catch (err) {
-      console.error('Error loading manus logs:', err);
+      console.error('Error loading flagent logs:', err);
     }
   };
 
-  const loadUsersNoManus = async () => {
+  const loadUsersNoFlagent = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/admin/users-no-manus', {
+      const res = await fetch('/api/admin/users-no-flagent', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) setUsersNoManus(await res.json());
+      if (res.ok) setUsersNoFlagent(await res.json());
     } catch (err) {
-      console.error('Error loading users without manus key:', err);
+      console.error('Error loading users without flagent key:', err);
     }
   };
 
-  const assignManusKey = async (userId: number, key: string) => {
+  const assignFlagentKey = async (userId: number, key: string) => {
     if (!key) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/admin/update-user-manus', {
+      const res = await fetch('/api/admin/update-user-flagent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,8 +96,8 @@ export default function ManusAdminPage() {
       });
       if (res.ok) {
         setSuccess('Đã cập nhật API Key cho người dùng');
-        loadUsersNoManus();
-        loadAllUsersManus();
+        loadUsersNoFlagent();
+        loadAllUsersFlagent();
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err: any) {
@@ -128,7 +128,7 @@ export default function ManusAdminPage() {
             <Brain className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-black">QUẢN LÝ MANUS AI</h1>
+            <h1 className="text-3xl font-black">QUẢN LÝ FLAGENT</h1>
             <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">Hệ thống giám sát & Cấp phát API</p>
           </div>
         </div>
@@ -155,36 +155,36 @@ export default function ManusAdminPage() {
             DANH SÁCH TÀI KHOẢN
           </h2>
           <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-            {allUsersManus.length === 0 ? (
+            {allUsersFlagent.length === 0 ? (
               <p className="text-slate-500">Chưa có dữ liệu người dùng.</p>
             ) : (
-              allUsersManus.map(user => (
+              allUsersFlagent.map(user => (
                 <div key={user.id} className="p-4 bg-slate-800/30 rounded-2xl border border-slate-700/50 space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="font-bold">{user.email.split('@')[0]}</div>
                       <div className="text-xs text-slate-400">{user.email}</div>
                     </div>
-                    {(!user.manus_api_key || user.manus_api_key === '') && (
+                    {(!user.flagent_api_key || user.flagent_api_key === '') && (
                       <span className="px-2 py-1 bg-yellow-500/10 text-yellow-500 text-[10px] font-black rounded-full uppercase">Chưa có Key</span>
                     )}
                   </div>
                   <div className="flex gap-2">
                     <input
                       type="password"
-                      defaultValue={user.manus_api_key || ''}
-                      placeholder="Manus API Key..."
+                      defaultValue={user.flagent_api_key || ''}
+                      placeholder="Flagent API Key..."
                       className="flex-1 px-4 py-2 bg-slate-900 border border-slate-600 rounded-xl text-sm focus:border-indigo-500 outline-none"
                       onBlur={(e) => {
-                        if (e.target.value !== (user.manus_api_key || '')) {
-                          assignManusKey(user.id, e.target.value);
+                        if (e.target.value !== (user.flagent_api_key || '')) {
+                          assignFlagentKey(user.id, e.target.value);
                         }
                       }}
                     />
                     <button 
                       onClick={(e) => {
                         const input = (e.currentTarget.previousSibling as HTMLInputElement);
-                        assignManusKey(user.id, input.value);
+                        assignFlagentKey(user.id, input.value);
                       }}
                       className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm font-bold transition-all"
                     >
@@ -203,10 +203,10 @@ export default function ManusAdminPage() {
             HỆ THỐNG LOG LỖI
           </h2>
           <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-            {manusLogs.length === 0 ? (
+            {flagentLogs.length === 0 ? (
               <p className="text-slate-500">Không có log lỗi nào.</p>
             ) : (
-              manusLogs.map((log, i) => (
+              flagentLogs.map((log, i) => (
                 <div key={i} className="p-4 bg-red-500/5 border border-red-500/10 rounded-2xl text-xs space-y-2">
                   <div className="flex justify-between font-bold">
                     <span className="text-red-400">{log.email}</span>

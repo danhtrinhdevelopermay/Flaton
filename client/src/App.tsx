@@ -15,12 +15,12 @@ import ExplorerPage from './pages/ExplorerPage'
 import ProfilePage from './pages/ProfilePage'
 import StatusPage from './pages/StatusPage'
 import HistoryPage from './pages/HistoryPage'
-import ManusPage from './pages/ManusPage'
+import FlagentPage from './pages/FlagentPage'
 import ShopPage from './pages/ShopPage'
 import KlingMotionControlPage from './pages/KlingMotionControlPage'
 import AdminPage from './pages/AdminPage'
 import AdminUpgradePage from './pages/AdminUpgradePage'
-import ManusAdminPage from './pages/ManusAdminPage'
+import FlagentAdminPage from './pages/FlagentAdminPage'
 import LessonsListPage from './pages/LessonsListPage'
 import LessonDetailPage from './pages/LessonDetailPage'
 import MilestonesPage from './pages/MilestonesPage'
@@ -45,10 +45,10 @@ export default function App() {
             <Route path="/explorer" element={<ProtectedRoute><ExplorerPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
-            <Route path="/manus" element={<ProtectedRoute><ManusPage /></ProtectedRoute>} />
+            <Route path="/flagent" element={<ProtectedRoute><FlagentPage /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
             <Route path="/admin/upgrade" element={<ProtectedRoute><AdminUpgradePage /></ProtectedRoute>} />
-            <Route path="/admin/manus" element={<ProtectedRoute><ManusAdminPage /></ProtectedRoute>} />
+            <Route path="/admin/flagent" element={<ProtectedRoute><FlagentAdminPage /></ProtectedRoute>} />
             <Route path="/lessons" element={<ProtectedRoute><LessonsListPage /></ProtectedRoute>} />
             <Route path="/lesson/:id" element={<ProtectedRoute><LessonDetailPage /></ProtectedRoute>} />
             <Route path="/milestones" element={<ProtectedRoute><MilestonesPage /></ProtectedRoute>} />

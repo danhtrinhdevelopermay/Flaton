@@ -35,8 +35,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [manusKey, setManusKey] = useState('');
-  const [savingManus, setSavingManus] = useState(false);
+  const [flagentKey, setFlagentKey] = useState('');
+  const [savingFlagent, setSavingFlagent] = useState(false);
   
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
@@ -80,18 +80,18 @@ export default function AdminPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      if (data.manus_api_key) setManusKey(data.manus_api_key);
+      if (data.flagent_api_key) setFlagentKey(data.flagent_api_key);
     } catch (err) {
       console.error('Error loading settings:', err);
     }
   };
 
-  const saveManusKey = async (e: React.FormEvent) => {
+  const saveFlagentKey = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSavingManus(true);
+    setSavingFlagent(true);
     setError('');
     try {
-      console.log('Saving Manus Key:', manusKey);
+      console.log('Saving Flagent Key:', flagentKey);
       // Use standard auth token if adminToken is just a password string
       const token = localStorage.getItem('token');
       const res = await fetch('/api/admin/settings', {
@@ -100,23 +100,23 @@ export default function AdminPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ key: 'manus_api_key', value: manusKey })
+        body: JSON.stringify({ key: 'flagent_api_key', value: flagentKey })
       });
       
       const data = await res.json();
-      console.log('Save Manus Key response:', data);
+      console.log('Save Flagent Key response:', data);
 
       if (res.ok) {
-        setSuccess('Đã lưu Manus API Key');
+        setSuccess('Đã lưu Flagent API Key');
         setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError(data.error || 'Không thể lưu Manus API Key');
+        setError(data.error || 'Không thể lưu Flagent API Key');
       }
     } catch (err: any) {
-      console.error('Save Manus Key error:', err);
+      console.error('Save Flagent Key error:', err);
       setError(err.message);
     } finally {
-      setSavingManus(false);
+      setSavingFlagent(false);
     }
   };
 
@@ -421,11 +421,11 @@ export default function AdminPage() {
         </div>
         <div className="flex gap-2">
           <Link
-            to="/admin/manus"
+            to="/admin/flagent"
             className="px-4 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 rounded-xl flex items-center gap-2 transition-all"
           >
             <Brain className="w-4 h-4" />
-            Quản lý Manus
+            Quản lý Flagent
           </Link>
           <button
             onClick={() => setShowChangePassword(!showChangePassword)}
@@ -549,22 +549,22 @@ export default function AdminPage() {
       <div className="glass rounded-2xl p-6">
         <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
           <Brain className="w-5 h-5 text-indigo-500" />
-          Cấu hình Manus AI (Mặc định)
+          Cấu hình Flagent (Mặc định)
         </h2>
-        <form onSubmit={saveManusKey} className="flex gap-4">
+        <form onSubmit={saveFlagentKey} className="flex gap-4">
           <input
             type="password"
-            value={manusKey}
-            onChange={(e) => setManusKey(e.target.value)}
-            placeholder="Nhập Manus API Key..."
+            value={flagentKey}
+            onChange={(e) => setFlagentKey(e.target.value)}
+            placeholder="Nhập Flagent API Key..."
             className="flex-1 px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl focus:outline-none focus:border-indigo-500"
           />
           <button
             type="submit"
-            disabled={savingManus}
+            disabled={savingFlagent}
             className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-medium transition-all"
           >
-            {savingManus ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Lưu Key'}
+            {savingFlagent ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Lưu Key'}
           </button>
         </form>
       </div>

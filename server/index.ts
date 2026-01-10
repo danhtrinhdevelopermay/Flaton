@@ -88,23 +88,23 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Manus AI Integration
-const MANUS_API_BASE = 'https://api.manus.ai/v1';
+// Flagent AI Integration
+const FLAGENT_API_BASE = 'https://api.flagent.ai/v1';
 
-async function getManusApiKey(userId?: number): Promise<string> {
+async function getFlagentApiKey(userId?: number): Promise<string> {
   if (userId) {
-    const userResult = await pool.query('SELECT manus_api_key FROM users WHERE id = $1', [userId]);
-    if (userResult.rows.length > 0 && userResult.rows[0].manus_api_key) {
-      return userResult.rows[0].manus_api_key.trim();
+    const userResult = await pool.query('SELECT flagent_api_key FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length > 0 && userResult.rows[0].flagent_api_key) {
+      return userResult.rows[0].flagent_api_key.trim();
     }
   }
   return '';
 }
 
-// Get all users with Manus API Key info (Admin only)
-app.get('/api/admin/users-all-manus', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Get all users with Flagent API Key info (Admin only)
+app.get('/api/admin/users-all-flagent', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const users = await pool.query('SELECT id, email, name, manus_api_key FROM users ORDER BY created_at DESC');
+    const users = await pool.query('SELECT id, email, name, flagent_api_key FROM users ORDER BY created_at DESC');
     console.log('[Admin] Returning all users:', users.rows.length);
     res.json(users.rows);
   } catch (error: any) {
@@ -113,74 +113,74 @@ app.get('/api/admin/users-all-manus', authMiddleware, async (req: AuthRequest, r
   }
 });
 
-// Get Manus Error Logs (Admin only)
-app.get('/api/admin/manus-logs', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Get Flagent Error Logs (Admin only)
+app.get('/api/admin/flagent-logs', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const logs = await pool.query(`
       SELECT t.*, u.email, u.name 
-      FROM manus_tasks t 
+      FROM flagent_tasks t 
       JOIN users u ON t.user_id = u.id 
       WHERE t.status = 'failed' OR t.error IS NOT NULL 
       ORDER BY t.updated_at DESC 
       LIMIT 50
     `);
-    console.log('[Admin] Returning manus logs:', logs.rows.length);
+    console.log('[Admin] Returning flagent logs:', logs.rows.length);
     res.json(logs.rows);
   } catch (error: any) {
-    console.error('[Admin] Error fetching manus logs:', error);
+    console.error('[Admin] Error fetching flagent logs:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get all users without Manus API Key (Admin only)
-app.get('/api/admin/users-no-manus', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Get all users without Flagent API Key (Admin only)
+app.get('/api/admin/users-no-flagent', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const users = await pool.query('SELECT id, email, name FROM users WHERE manus_api_key IS NULL OR manus_api_key = \'\' ORDER BY created_at DESC');
-    console.log('[Admin] Returning users without manus:', users.rows.length);
+    const users = await pool.query('SELECT id, email, name FROM users WHERE flagent_api_key IS NULL OR flagent_api_key = \'\' ORDER BY created_at DESC');
+    console.log('[Admin] Returning users without flagent:', users.rows.length);
     res.json(users.rows);
   } catch (error: any) {
-    console.error('[Admin] Error fetching users without manus:', error);
+    console.error('[Admin] Error fetching users without flagent:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Update User Manus API Key (Admin)
-app.post('/api/admin/update-user-manus', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Update User Flagent API Key (Admin)
+app.post('/api/admin/update-user-flagent', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { userId, apiKey } = req.body;
-    await pool.query('UPDATE users SET manus_api_key = $1 WHERE id = $2', [apiKey, userId]);
+    await pool.query('UPDATE users SET flagent_api_key = $1 WHERE id = $2', [apiKey, userId]);
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get User Manus API Key
-app.get('/api/user/manus-key', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Get User Flagent API Key
+app.get('/api/user/flagent-key', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const result = await pool.query('SELECT manus_api_key FROM users WHERE id = $1', [req.userId]);
-    res.json({ apiKey: result.rows[0]?.manus_api_key });
+    const result = await pool.query('SELECT flagent_api_key FROM users WHERE id = $1', [req.userId]);
+    res.json({ apiKey: result.rows[0]?.flagent_api_key });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Update User Manus API Key
-app.post('/api/user/manus-key', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Update User Flagent API Key
+app.post('/api/user/flagent-key', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { apiKey } = req.body;
-    await pool.query('UPDATE users SET manus_api_key = $1 WHERE id = $2', [apiKey, req.userId]);
+    await pool.query('UPDATE users SET flagent_api_key = $1 WHERE id = $2', [apiKey, req.userId]);
     res.json({ success: true, message: "Cập nhật API Key thành công" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Manus Webhook Handler
-app.post('/api/manus/webhook', async (req: Request, res: Response) => {
+// Flagent Webhook Handler
+app.post('/api/flagent/webhook', async (req: Request, res: Response) => {
   try {
     const data = req.body;
-    console.log('[Manus Webhook] Received update:', JSON.stringify(data));
+    console.log('[Flagent Webhook] Received update:', JSON.stringify(data));
     
     const taskId = data.task_id || data.id;
     if (!taskId) return res.status(400).json({ error: 'No task_id' });
@@ -195,8 +195,8 @@ app.post('/api/manus/webhook', async (req: Request, res: Response) => {
     // Fetch files if completed
     if (status === 'success' || status === 'completed') {
       try {
-        const apiKey = await getManusApiKey();
-        const filesRes = await fetch(`${MANUS_API_BASE}/files?task_id=${taskId}`, {
+        const apiKey = await getFlagentApiKey();
+        const filesRes = await fetch(`${FLAGENT_API_BASE}/files?task_id=${taskId}`, {
           headers: { 'API_KEY': apiKey }
         });
         if (filesRes.ok) {
@@ -204,31 +204,31 @@ app.post('/api/manus/webhook', async (req: Request, res: Response) => {
           resultToSave.all_files = filesData.files || filesData.data || (Array.isArray(filesData) ? filesData : []);
         }
       } catch (fErr) {
-        console.error('[Manus Webhook] Files fetch error:', fErr);
+        console.error('[Flagent Webhook] Files fetch error:', fErr);
       }
     }
 
     await pool.query(
-      'UPDATE manus_tasks SET status = $1, result = $2, error = $3, updated_at = CURRENT_TIMESTAMP WHERE task_id = $4',
+      'UPDATE flagent_tasks SET status = $1, result = $2, error = $3, updated_at = CURRENT_TIMESTAMP WHERE task_id = $4',
       [status, JSON.stringify(resultToSave), error || null, taskId]
     );
 
     res.json({ success: true });
   } catch (err: any) {
-    console.error('[Manus Webhook] Error:', err);
+    console.error('[Flagent Webhook] Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Response) => {
+app.post('/api/flagent/tasks', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { prompt, taskMode = 'agent', agentProfile = 'manus-1.6' } = req.body;
-    console.log('[Manus] Creating task:', { prompt, taskMode, agentProfile });
+    const { prompt, taskMode = 'agent', agentProfile = 'flagent-1.6' } = req.body;
+    console.log('[Flagent] Creating task:', { prompt, taskMode, agentProfile });
     
-    const apiKey = await getManusApiKey(req.userId);
+    const apiKey = await getFlagentApiKey(req.userId);
     if (!apiKey) {
-      console.error('[Manus] Error: API key not configured');
-      return res.status(400).json({ error: 'Vui lòng cài đặt Manus API key trong phần Cài đặt của bạn.' });
+      console.error('[Flagent] Error: API key not configured');
+      return res.status(400).json({ error: 'Vui lòng cài đặt Flagent API key trong phần Cài đặt của bạn.' });
     }
 
     // Attempt to get public URL for webhook
@@ -236,11 +236,11 @@ app.post('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Respo
     try {
       const domain = process.env.REPLIT_DEV_DOMAIN || process.env.DOMAIN;
       if (domain) {
-        webhookUrl = `https://${domain}/api/manus/webhook`;
+        webhookUrl = `https://${domain}/api/flagent/webhook`;
       }
     } catch (e) {}
 
-    const response = await fetch(`${MANUS_API_BASE}/tasks`, {
+    const response = await fetch(`${FLAGENT_API_BASE}/tasks`, {
       method: 'POST',
       headers: {
         'API_KEY': apiKey,
@@ -255,10 +255,10 @@ app.post('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Respo
     });
 
     const data = await response.json();
-    console.log('[Manus] Create task response:', data);
+    console.log('[Flagent] Create task response:', data);
     
     if (!response.ok) {
-      console.error('[Manus] API Error:', data);
+      console.error('[Flagent] API Error:', data);
       return res.status(response.status).json(data);
     }
 
@@ -266,55 +266,55 @@ app.post('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Respo
     const taskId = data.task_id || data.id;
     if (taskId) {
       await pool.query(
-        'INSERT INTO manus_tasks (user_id, task_id, status, prompt) VALUES ($1, $2, $3, $4)',
+        'INSERT INTO flagent_tasks (user_id, task_id, status, prompt) VALUES ($1, $2, $3, $4)',
         [req.userId, taskId, 'pending', prompt]
       );
     }
     
     res.json(data);
   } catch (error: any) {
-    console.error('[Manus] Request Exception:', error);
+    console.error('[Flagent] Request Exception:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-app.get('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Response) => {
+app.get('/api/flagent/tasks', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT task_id as id, status, prompt, result, error, created_at as "createdAt" FROM manus_tasks WHERE user_id = $1 ORDER BY created_at DESC',
+      'SELECT task_id as id, status, prompt, result, error, created_at as "createdAt" FROM flagent_tasks WHERE user_id = $1 ORDER BY created_at DESC',
       [req.userId]
     );
     res.json(result.rows);
   } catch (error: any) {
-    console.error('[Manus] Get tasks error:', error);
+    console.error('[Flagent] Get tasks error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Response) => {
+app.get('/api/flagent/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { taskId } = req.params;
-    console.log('[Manus] Polling task:', taskId);
+    console.log('[Flagent] Polling task:', taskId);
     
-    const apiKey = await getManusApiKey(req.userId);
-    const response = await fetch(`${MANUS_API_BASE}/tasks/${taskId}`, {
+    const apiKey = await getFlagentApiKey(req.userId);
+    const response = await fetch(`${FLAGENT_API_BASE}/tasks/${taskId}`, {
       headers: { 'API_KEY': apiKey }
     });
 
     const data = await response.json();
     if (!response.ok) {
-      console.error('[Manus] Poll API Error:', data);
+      console.error('[Flagent] Poll API Error:', data);
       return res.status(response.status).json(data);
     }
 
     // Try to get full list of files for this task
     try {
-      const filesResponse = await fetch(`${MANUS_API_BASE}/files?task_id=${taskId}`, {
+      const filesResponse = await fetch(`${FLAGENT_API_BASE}/files?task_id=${taskId}`, {
         headers: { 'API_KEY': apiKey }
       });
       if (filesResponse.ok) {
         const filesData = await filesResponse.json();
-        console.log(`[Manus] Files API response for ${taskId}:`, JSON.stringify(filesData));
+        console.log(`[Flagent] Files API response for ${taskId}:`, JSON.stringify(filesData));
         // The API returns { "files": [...] } according to the docs
         if (filesData && filesData.files && Array.isArray(filesData.files)) {
           data.all_files = filesData.files;
@@ -324,15 +324,15 @@ app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res
           data.all_files = filesData.data;
         }
       } else {
-        console.error(`[Manus] Files API Error ${filesResponse.status} for ${taskId}`);
+        console.error(`[Flagent] Files API Error ${filesResponse.status} for ${taskId}`);
         // Fallback: If files API fails, extract from task data if it's there
         if (!data.all_files && data.result?.results && Array.isArray(data.result.results)) {
            data.all_files = data.result.results;
-           console.log(`[Manus] Fallback: Extracted ${data.all_files.length} files from task result`);
+           console.log(`[Flagent] Fallback: Extracted ${data.all_files.length} files from task result`);
         }
       }
     } catch (fileErr) {
-      console.error('[Manus] Error fetching files list:', fileErr);
+      console.error('[Flagent] Error fetching files list:', fileErr);
     }
 
     // Update status in database if changed
@@ -356,25 +356,25 @@ app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res
       }
 
       await pool.query(
-        'UPDATE manus_tasks SET status = $1, result = $2, error = $3, updated_at = CURRENT_TIMESTAMP WHERE task_id = $4 AND user_id = $5',
+        'UPDATE flagent_tasks SET status = $1, result = $2, error = $3, updated_at = CURRENT_TIMESTAMP WHERE task_id = $4 AND user_id = $5',
         [data.status, JSON.stringify(resultToSave), data.error || null, taskId, req.userId]
       );
     }
     
     res.json(data);
   } catch (error: any) {
-    console.error('[Manus] Poll Exception:', error);
+    console.error('[Flagent] Poll Exception:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Manus File Download Proxy (Bypass proxy to preserve file format)
-app.get('/api/manus/download', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Flagent File Download Proxy (Bypass proxy to preserve file format)
+app.get('/api/flagent/download', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const fileUrl = req.query.url as string;
     if (!fileUrl) return res.status(400).send('URL is required');
 
-    console.log('[Manus Download] Handling URL:', fileUrl);
+    console.log('[Flagent Download] Handling URL:', fileUrl);
     
     // For JSON files that are actually data for slides, we want to force a download
     // instead of just redirecting which might cause the browser to just display the JSON.
@@ -397,14 +397,14 @@ app.get('/api/manus/download', authMiddleware, async (req: AuthRequest, res: Res
           return res.send(Buffer.from(arrayBuffer));
         }
       } catch (fetchError) {
-        console.error('[Manus Download] Fetch error for JSON:', fetchError);
+        console.error('[Flagent Download] Fetch error for JSON:', fetchError);
       }
     }
 
-    console.log('[Manus Download] Redirecting to URL to preserve format:', fileUrl);
+    console.log('[Flagent Download] Redirecting to URL to preserve format:', fileUrl);
     return res.redirect(fileUrl);
   } catch (error: any) {
-    console.error('[Manus Download] Exception:', error);
+    console.error('[Flagent Download] Exception:', error);
     res.status(500).send(error.message);
   }
 });
@@ -416,8 +416,8 @@ import puppeteer from 'puppeteer';
 import axios from 'axios';
 import FormData from 'form-data';
 
-// Manus PPTX Conversion API using Nutrient API
-app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Flagent PPTX Conversion API using Nutrient API
+app.post('/api/flagent/convert-pptx', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { html, fileName } = req.body;
     if (!html) return res.status(400).json({ error: 'HTML content is required' });
@@ -432,7 +432,7 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     }
 
     if (!nutrientApiKey) {
-      console.log('[Manus PPTX] Nutrient API key not found, falling back to local auto-layout...');
+      console.log('[Flagent PPTX] Nutrient API key not found, falling back to local auto-layout...');
       
       try {
         const pres = new pptxgen();
@@ -477,7 +477,7 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
           slideElements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName)) as Element[];
         }
 
-        console.log(`[Manus PPTX] Rendering ${slideElements.length} slides using fallback...`);
+        console.log(`[Flagent PPTX] Rendering ${slideElements.length} slides using fallback...`);
 
         for (const el of slideElements) {
           const slide = pres.addSlide();
@@ -497,7 +497,7 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
             } catch (e) {}
           }
           
-          // Default Manus Dark Theme check
+          // Default Flagent Dark Theme check
           if (html.includes('dark') || bgColor === '1A1D21') {
             if (bgColor === 'FFFFFF') bgColor = '1A1D21';
             if (textColor === '000000') textColor = 'E2E8F0';
@@ -505,7 +505,7 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
 
           slide.background = { color: bgColor.replace(/[^a-fA-F0-9]/g, '') || 'FFFFFF' };
 
-          // Extract content - Thêm các selector linh hoạt hơn cho Manus
+          // Extract content - Thêm các selector linh hoạt hơn cho Flagent
           const headers = Array.from(el.querySelectorAll('h1, h2, h3, .title, .slide-title, b, strong'));
           const paragraphs = Array.from(el.querySelectorAll('p, li, .text, span, div:not(:has(*))'));
           const images = Array.from(el.querySelectorAll('img'));
@@ -564,16 +564,16 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
         res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.pptx"; filename*=UTF-8''${safeFileName}.pptx`);
         return res.send(buffer);
       } catch (fallbackErr: any) {
-        console.error('[Manus PPTX] Local fallback failed:', fallbackErr);
+        console.error('[Flagent PPTX] Local fallback failed:', fallbackErr);
         return res.status(500).json({ error: 'Lỗi khi tạo slide nội bộ: ' + fallbackErr.message });
       }
     }
 
-    console.log('[Manus PPTX] Converting content using Nutrient API...');
+    console.log('[Flagent PPTX] Converting content using Nutrient API...');
     
     const nutrientApiKeyFromEnv = process.env.NUTRIENT_API_KEY || '';
     if (!nutrientApiKeyFromEnv) {
-      console.error('[Manus PPTX] NUTRIENT_API_KEY not found');
+      console.error('[Flagent PPTX] NUTRIENT_API_KEY not found');
       return res.status(400).json({ error: 'NUTRIENT_API_KEY chưa được cấu hình.' });
     }
 
@@ -665,12 +665,12 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
       return res.send(Buffer.from(nutrientResponse.data));
 
     } catch (apiErr: any) {
-      console.error('[Manus PPTX] Nutrient API Error:', apiErr.response?.data?.toString() || apiErr.message);
+      console.error('[Flagent PPTX] Nutrient API Error:', apiErr.response?.data?.toString() || apiErr.message);
       res.status(500).json({ error: 'Lỗi khi gọi Nutrient API: ' + (apiErr.response?.data?.toString() || apiErr.message) });
     }
 
   } catch (error: any) {
-    console.error('[Manus PPTX] Conversion error:', error);
+    console.error('[Flagent PPTX] Conversion error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -1519,20 +1519,20 @@ app.get('/api/auth/me', authMiddleware, async (req: AuthRequest, res: Response) 
   }
 });
 
-  // Delete Manus task
-  app.delete("/api/manus/tasks/:id", authMiddleware, async (req: AuthRequest, res: Response) => {
+  // Delete Flagent task
+  app.delete("/api/flagent/tasks/:id", authMiddleware, async (req: AuthRequest, res: Response) => {
     try {
       const taskId = req.params.id;
       const userId = req.userId;
       
-      console.log(`[Manus API] Deleting task ${taskId} for user ${userId}`);
+      console.log(`[Flagent API] Deleting task ${taskId} for user ${userId}`);
       
       // Delete from database
-      await pool.query('DELETE FROM manus_tasks WHERE task_id = $1 AND user_id = $2', [taskId, userId]);
+      await pool.query('DELETE FROM flagent_tasks WHERE task_id = $1 AND user_id = $2', [taskId, userId]);
       
       res.json({ success: true, message: "Đã xóa nhiệm vụ thành công" });
     } catch (err: any) {
-      console.error('[Manus API] Error deleting task:', err);
+      console.error('[Flagent API] Error deleting task:', err);
       res.status(500).json({ error: err.message });
     }
   });

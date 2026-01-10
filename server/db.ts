@@ -278,9 +278,9 @@ export async function initDatabase() {
       )
     `);
 
-    // Create manus_tasks table
+    // Create flagent_tasks table
     await client.query(`
-      CREATE TABLE IF NOT EXISTS manus_tasks (
+      CREATE TABLE IF NOT EXISTS flagent_tasks (
         id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         task_id TEXT NOT NULL,
@@ -293,16 +293,16 @@ export async function initDatabase() {
       )
     `);
 
-    // Add indexes for manus_tasks
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_manus_tasks_user_id ON manus_tasks(user_id)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_manus_tasks_task_id ON manus_tasks(task_id)`);
+    // Add indexes for flagent_tasks
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_flagent_tasks_user_id ON flagent_tasks(user_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_flagent_tasks_task_id ON flagent_tasks(task_id)`);
 
-    const manusApiKeyColumnCheck = await client.query(`
+    const flagentApiKeyColumnCheck = await client.query(`
       SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'users' AND column_name = 'manus_api_key'
+      WHERE table_name = 'users' AND column_name = 'flagent_api_key'
     `);
-    if (manusApiKeyColumnCheck.rows.length === 0) {
-      await client.query(`ALTER TABLE users ADD COLUMN manus_api_key TEXT`);
+    if (flagentApiKeyColumnCheck.rows.length === 0) {
+      await client.query(`ALTER TABLE users ADD COLUMN flagent_api_key TEXT`);
     }
 
     console.log('Database tables created successfully');

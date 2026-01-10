@@ -76,7 +76,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/video-generator', label: 'Tạo video', icon: Video, color: 'text-purple-500' },
     { path: '/video-upscale', label: 'Nâng cấp Video', icon: Sparkles, color: 'text-cyan-500' },
     { path: '/music-generator', label: 'Tạo nhạc', icon: Music, color: 'text-pink-500' },
-    { path: '/manus', label: 'Manus AI Agent', icon: Brain, color: 'text-indigo-600' },
+    { path: '/flagent', label: 'Flagent Agent', icon: Brain, color: 'text-indigo-600' },
     { path: '/kling-motion', label: 'Motion Control', icon: Wand2, color: 'text-amber-500' },
   ]
 

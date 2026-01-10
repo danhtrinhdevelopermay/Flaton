@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { AnimatePresence, motion } from 'framer-motion'
 
-interface ManusFile {
+interface FlagentFile {
   id: string
   name: string
   url: string
@@ -13,7 +13,7 @@ interface ManusFile {
   html?: string
 }
 
-interface ManusTask {
+interface FlagentTask {
   id: string
   status: 'pending' | 'running' | 'completed' | 'failed'
   prompt: string
@@ -22,16 +22,16 @@ interface ManusTask {
   createdAt: string
 }
 
-export default function ManusPage() {
+export default function FlagentPage() {
   const { theme } = useTheme()
   const { token } = useAuth()
   const [prompt, setPrompt] = useState('')
   const [loading, setLoading] = useState(false)
-  const [tasks, setTasks] = useState<ManusTask[]>([])
-  const [currentTask, setCurrentTask] = useState<ManusTask | null>(null)
-  const [previewFile, setPreviewFile] = useState<ManusFile | null>(null)
+  const [tasks, setTasks] = useState<FlagentTask[]>([])
+  const [currentTask, setCurrentTask] = useState<FlagentTask | null>(null)
+  const [previewFile, setPreviewFile] = useState<FlagentFile | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
-  const [manusApiKey, setManusApiKey] = useState('')
+  const [flagentApiKey, setFlagentApiKey] = useState('')
 
   useEffect(() => {
     if (token) {
@@ -42,19 +42,19 @@ export default function ManusPage() {
 
   const fetchUserApiKey = async () => {
     try {
-      const res = await fetch('/api/user/manus-key', {
+      const res = await fetch('/api/user/flagent-key', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
-      if (data.apiKey) setManusApiKey(data.apiKey)
+      if (data.apiKey) setFlagentApiKey(data.apiKey)
     } catch (err) {
-      console.error('[Manus UI] Error fetching API key:', err)
+      console.error('[Flagent UI] Error fetching API key:', err)
     }
   }
 
   const loadTasks = async () => {
     try {
-      const res = await fetch('/api/manus/tasks', {
+      const res = await fetch('/api/flagent/tasks', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
@@ -64,14 +64,14 @@ export default function ManusPage() {
         if (runningTask) setCurrentTask(runningTask)
       }
     } catch (err) {
-      console.error('[Manus UI] Error loading tasks:', err)
+      console.error('[Flagent UI] Error loading tasks:', err)
     }
   }
 
   const handleDeleteTask = async (taskId: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa nhiệm vụ này?')) return;
     try {
-      const res = await fetch(`/api/manus/tasks/${taskId}`, {
+      const res = await fetch(`/api/flagent/tasks/${taskId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -81,7 +81,7 @@ export default function ManusPage() {
         if (currentTask?.id === taskId) setCurrentTask(null);
       }
     } catch (err) {
-      console.error('[Manus UI] Error deleting task:', err);
+      console.error('[Flagent UI] Error deleting task:', err);
     }
   };
 
@@ -90,7 +90,7 @@ export default function ManusPage() {
     if (!prompt.trim() || loading) return
     setLoading(true)
     try {
-      const res = await fetch('/api/manus/tasks', {
+      const res = await fetch('/api/flagent/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ export default function ManusPage() {
       })
       const data = await res.json()
       if (data.task_id || data.id) {
-        const newTask: ManusTask = {
+        const newTask: FlagentTask = {
           id: data.task_id || data.id,
           status: 'pending',
           prompt: prompt,
@@ -111,7 +111,7 @@ export default function ManusPage() {
         setPrompt('')
       }
     } catch (err) {
-      console.error('[Manus UI] Connection error:', err)
+      console.error('[Flagent UI] Connection error:', err)
     } finally {
       setLoading(false)
     }
@@ -122,7 +122,7 @@ export default function ManusPage() {
     if (currentTask && (currentTask.status === 'pending' || currentTask.status === 'running')) {
       interval = setInterval(async () => {
         try {
-          const res = await fetch(`/api/manus/tasks/${currentTask.id}`, {
+          const res = await fetch(`/api/flagent/tasks/${currentTask.id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
           const data = await res.json()
@@ -136,7 +136,7 @@ export default function ManusPage() {
             if (finalStatus === 'completed' || finalStatus === 'failed') clearInterval(interval)
           }
         } catch (err) {
-          console.error('[Manus UI] Polling error:', err)
+          console.error('[Flagent UI] Polling error:', err)
         }
       }, 5000)
     }
@@ -145,7 +145,7 @@ export default function ManusPage() {
 
   const renderFiles = (result: any) => {
     if (!result) return null;
-    let files: ManusFile[] = [];
+    let files: FlagentFile[] = [];
     const findFiles = (obj: any) => {
       if (!obj || typeof obj !== 'object') return;
       if (Array.isArray(obj)) {
@@ -182,7 +182,7 @@ export default function ManusPage() {
               <p className="font-bold text-sm truncate">{file.name}</p>
             </div>
             <button
-              onClick={() => window.open(`/api/manus/download?url=${encodeURIComponent(file.url)}&token=${token}`, '_blank')}
+              onClick={() => window.open(`/api/flagent/download?url=${encodeURIComponent(file.url)}&token=${token}`, '_blank')}
               className="px-4 py-2 rounded-full bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 transition-all"
             >
               TẢI XUỐNG
@@ -193,14 +193,14 @@ export default function ManusPage() {
     );
   };
 
-  if (!manusApiKey) {
+  if (!flagentApiKey) {
     return (
       <div className="max-w-4xl mx-auto py-20 px-4 text-center">
         <div className="w-24 h-24 rounded-[2rem] bg-indigo-500/10 flex items-center justify-center mx-auto mb-8 animate-pulse">
           <Brain className="w-12 h-12 text-indigo-500" />
         </div>
         <h1 className="text-3xl font-black mb-4">Chúng tôi đang chuẩn bị cho bạn không gian mới</h1>
-        <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">Tính năng Manus AI sẽ khả dụng ngay khi tài khoản của bạn được cấp API Key.</p>
+        <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">Tính năng Flagent sẽ khả dụng ngay khi tài khoản của bạn được cấp API Key.</p>
       </div>
     )
   }
@@ -212,7 +212,7 @@ export default function ManusPage() {
           <Brain className="w-8 h-8 text-white drop-shadow-md" />
         </div>
         <div>
-          <h1 className="text-3xl font-black">FLATON MANUS AI</h1>
+          <h1 className="text-3xl font-black">FLATON FLAGENT</h1>
           <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Tự động hóa & Phân tích thông minh</p>
         </div>
       </div>
