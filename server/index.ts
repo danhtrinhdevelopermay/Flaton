@@ -375,15 +375,31 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
 
     slidesData.forEach(data => {
       const slide = pres.addSlide();
+      
+      // Set dark background for a professional look like Manus AI
+      slide.background = { color: '1A1D21' }; 
+      
+      // Add a subtle title with accent color
       slide.addText(data.title, { 
         x: 0.5, y: 0.5, w: '90%', h: 1, 
-        fontSize: 32, bold: true, color: '2D3748', align: pres.AlignH.center 
+        fontSize: 36, bold: true, color: '60A5FA', // Sky blue accent
+        align: pres.AlignH.center,
+        fontFace: 'Arial'
       });
       
+      // Add content with clean white text
       const contentText = data.content.join('\n\n');
       slide.addText(contentText, { 
-        x: 0.5, y: 1.5, w: '90%', h: 4, 
-        fontSize: 18, color: '4A5568', valign: pres.AlignV.top 
+        x: 0.75, y: 1.8, w: '85%', h: 4, 
+        fontSize: 20, color: 'E2E8F0', // Light gray/white
+        valign: pres.AlignV.top,
+        fontFace: 'Arial',
+        lineSpacing: 28
+      });
+
+      // Add a subtle footer line or decoration
+      slide.addShape(pres.ShapeType.rect, {
+        x: 0.5, y: 1.4, w: '90%', h: 0.02, fill: { color: '334155' }
       });
     });
 
