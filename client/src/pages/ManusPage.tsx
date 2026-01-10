@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Brain, Send, Loader2, CheckCircle, AlertCircle, Clock, FileText, Download, Code } from 'lucide-react'
+import { Brain, Send, Loader2, CheckCircle, AlertCircle, Clock, FileText, Download, Code, X, Eye } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,6 +10,7 @@ interface ManusFile {
   url: string
   type?: string
   size?: number
+  html?: string
 }
 
 interface ManusTask {
@@ -28,6 +29,8 @@ export default function ManusPage() {
   const [loading, setLoading] = useState(false)
   const [tasks, setTasks] = useState<ManusTask[]>([])
   const [currentTask, setCurrentTask] = useState<ManusTask | null>(null)
+  const [previewFile, setPreviewFile] = useState<ManusFile | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
 
   useEffect(() => {
     if (token) {
@@ -293,6 +296,43 @@ export default function ManusPage() {
 
     if (files.length === 0) return null;
 
+    const handleDownload = (file: ManusFile) => {
+      const token = localStorage.getItem('token');
+      const downloadUrl = `/api/manus/download?url=${encodeURIComponent(file.url)}&token=${token}`;
+      window.open(downloadUrl, '_blank');
+    };
+
+    const handlePreview = async (file: ManusFile) => {
+      setPreviewLoading(true);
+      try {
+        const response = await fetch(file.url);
+        const data = await response.json();
+        
+        let htmlContent = '';
+        if (data.files && Array.isArray(data.files)) {
+          htmlContent = data.files.map((f: any) => `
+            <div class="mb-8 border-b pb-4">
+              <h2 class="text-xl font-bold mb-4 text-indigo-600">${f.id || 'Slide'}</h2>
+              ${f.content}
+            </div>
+          `).join('');
+        } else if (data.content) {
+          htmlContent = data.content;
+        }
+        
+        if (htmlContent) {
+          setPreviewFile({ ...file, html: htmlContent });
+        } else {
+          alert('Không tìm thấy nội dung hiển thị trong file này.');
+        }
+      } catch (error) {
+        console.error('Error fetching file content:', error);
+        alert('Lỗi khi tải nội dung bản xem trước.');
+      } finally {
+        setPreviewLoading(false);
+      }
+    };
+
     return (
       <div className="mt-4 space-y-3">
         <p className="text-sm font-bold opacity-70 uppercase tracking-wider mb-2">Tệp kết quả:</p>
@@ -312,15 +352,25 @@ export default function ManusPage() {
                 {file.type && <p className="text-[10px] font-bold opacity-50 uppercase">{file.type}</p>}
               </div>
             </div>
-            <a 
-              href={`/api/manus/download?url=${encodeURIComponent(file.url)}&token=${token}`}
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
-            >
-              <Download className="w-4 h-4" />
-              TẢI XUỐNG
-            </a>
+            <div className="flex items-center gap-2">
+              {file.type === 'json' && (
+                <button
+                  onClick={() => handlePreview(file)}
+                  disabled={previewLoading}
+                  className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-black hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95"
+                >
+                  {previewLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                  XEM TRƯỚC
+                </button>
+              )}
+              <button
+                onClick={() => handleDownload(file)}
+                className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+              >
+                <Download className="w-4 h-4" />
+                TẢI XUỐNG
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -329,6 +379,7 @@ export default function ManusPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 fade-in">
+      {/* ... existing header and form ... */}
       <div className="flex items-center gap-4 mb-8">
         <div className="w-16 h-16 rounded-[1.2rem] bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center shadow-lg transform rotate-3">
           <Brain className="w-8 h-8 text-white drop-shadow-md" />
@@ -436,6 +487,90 @@ export default function ManusPage() {
           ))}
         </AnimatePresence>
       </div>
+
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {previewFile && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-5xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden flex flex-col shadow-2xl"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-500">
+                    <Eye className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white truncate">
+                    BẢN XEM TRƯỚC SLIDE
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => setPreviewFile(null)}
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-slate-500" />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-auto bg-white p-8 custom-scrollbar">
+                <div 
+                  dangerouslySetInnerHTML={{ __html: previewFile.html || '' }} 
+                  className="slide-preview-content"
+                />
+              </div>
+
+              <div className="p-6 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3 bg-slate-50 dark:bg-slate-900/50">
+                <button
+                  onClick={() => {
+                    const fullHtml = `
+                      <!DOCTYPE html>
+                      <html>
+                      <head>
+                        <meta charset="UTF-8">
+                        <title>${previewFile.name}</title>
+                        <style>
+                          body { font-family: sans-serif; padding: 40px; }
+                          .slide { margin-bottom: 60px; border-bottom: 2px solid #eee; padding-bottom: 40px; }
+                        </style>
+                      </head>
+                      <body>
+                        ${previewFile.html}
+                      </body>
+                      </html>
+                    `;
+                    const blob = new Blob([fullHtml], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${previewFile.name.replace('.json', '.html')}`;
+                    a.click();
+                  }}
+                  className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                >
+                  TẢI VỀ DẠNG HTML
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <style>{`
+        .slide-preview-content iframe { width: 100% !important; min-height: 400px; border: none; }
+        .slide-preview-content img { max-width: 100%; height: auto; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+      `}</style>
     </div>
-  )
+  );
 }
