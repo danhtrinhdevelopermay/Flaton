@@ -26,6 +26,7 @@ export default function ManusPage() {
     if (!prompt.trim() || loading) return
 
     setLoading(true)
+    console.log('[Manus UI] Sending task request:', prompt)
     try {
       const res = await fetch('/api/manus/tasks', {
         method: 'POST',
@@ -36,6 +37,8 @@ export default function ManusPage() {
         body: JSON.stringify({ prompt })
       })
       const data = await res.json()
+      console.log('[Manus UI] Create task response:', data)
+      
       if (data.id) {
         const newTask: ManusTask = {
           id: data.id,
@@ -47,9 +50,12 @@ export default function ManusPage() {
         setTasks(prev => [newTask, ...prev])
         setPrompt('')
       } else {
-        alert(data.error || 'Không thể tạo task')
+        const errorMsg = data.error || data.message || 'Không thể tạo task'
+        console.error('[Manus UI] Error creating task:', errorMsg)
+        alert(`Lỗi: ${errorMsg}`)
       }
     } catch (err) {
+      console.error('[Manus UI] Connection error:', err)
       alert('Lỗi kết nối server')
     } finally {
       setLoading(false)
@@ -61,20 +67,24 @@ export default function ManusPage() {
     if (currentTask && (currentTask.status === 'pending' || currentTask.status === 'running')) {
       interval = setInterval(async () => {
         try {
+          console.log('[Manus UI] Polling status for:', currentTask.id)
           const res = await fetch(`/api/manus/tasks/${currentTask.id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
           const data = await res.json()
+          console.log('[Manus UI] Poll result:', data)
+          
           if (data.status) {
             setCurrentTask(prev => prev ? { ...prev, status: data.status, result: data.result, error: data.error } : null)
             setTasks(prev => prev.map(t => t.id === data.id ? { ...t, status: data.status, result: data.result, error: data.error } : t))
             
             if (data.status === 'completed' || data.status === 'failed') {
+              console.log('[Manus UI] Task finished with status:', data.status)
               clearInterval(interval)
             }
           }
         } catch (err) {
-          console.error('Polling error:', err)
+          console.error('[Manus UI] Polling error:', err)
         }
       }, 5000)
     }

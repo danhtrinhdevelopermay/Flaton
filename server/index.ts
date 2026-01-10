@@ -102,9 +102,11 @@ async function getManusApiKey(): Promise<string> {
 app.post('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { prompt, taskMode = 'agent', agentProfile = 'manus-1.6' } = req.body;
-    const apiKey = await getManusApiKey();
+    console.log('[Manus] Creating task:', { prompt, taskMode, agentProfile });
     
+    const apiKey = await getManusApiKey();
     if (!apiKey) {
+      console.error('[Manus] Error: API key not configured');
       return res.status(400).json({ error: 'Manus API key chưa được cấu hình.' });
     }
 
@@ -118,8 +120,16 @@ app.post('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Respo
     });
 
     const data = await response.json();
+    console.log('[Manus] Create task response:', data);
+    
+    if (!response.ok) {
+      console.error('[Manus] API Error:', data);
+      return res.status(response.status).json(data);
+    }
+    
     res.json(data);
   } catch (error: any) {
+    console.error('[Manus] Request Exception:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -127,15 +137,22 @@ app.post('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Respo
 app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { taskId } = req.params;
-    const apiKey = await getManusApiKey();
+    console.log('[Manus] Polling task:', taskId);
     
+    const apiKey = await getManusApiKey();
     const response = await fetch(`${MANUS_API_BASE}/tasks/${taskId}`, {
       headers: { 'API_KEY': apiKey }
     });
 
     const data = await response.json();
+    if (!response.ok) {
+      console.error('[Manus] Poll API Error:', data);
+      return res.status(response.status).json(data);
+    }
+    
     res.json(data);
   } catch (error: any) {
+    console.error('[Manus] Poll Exception:', error);
     res.status(500).json({ error: error.message });
   }
 });
