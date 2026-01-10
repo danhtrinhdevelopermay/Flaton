@@ -518,28 +518,31 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
       
       // Inject CSS to handle slide breaking and dimensions for Nutrient's engine
       // Using standard PPTX 16:9 ratio in pixels (960x540) which maps better to slide size
+      // Force viewport and zoom to ensure HTML fits exactly into the slide area
       const optimizedHtml = `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, initial-scale=1.0">
     <style>
         @page {
-            size: 19.05cm 10.72cm;
+            size: 1920px 1080px;
             margin: 0;
         }
-        body {
+        html, body {
             margin: 0;
             padding: 0;
-            width: 19.05cm;
-            height: 10.72cm;
+            width: 1920px;
+            height: 1080px;
             font-family: Arial, sans-serif;
             -webkit-print-color-adjust: exact;
             background-color: white;
+            overflow: hidden;
         }
         section, .slide, .presentation-slide {
-            width: 19.05cm;
-            height: 10.72cm;
+            width: 1920px;
+            height: 1080px;
             page-break-after: always;
             position: relative;
             overflow: hidden;
@@ -547,19 +550,16 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
             background-position: center;
             display: block !important;
             box-sizing: border-box;
+            zoom: 1 !important;
         }
-        /* Ensure content scales correctly */
-        .slide-content, .content {
-            width: 100%;
-            height: 100%;
-            transform-origin: top left;
+        /* Handle absolute positioning from AI */
+        [style*="position: absolute"] {
+            display: block !important;
         }
+        /* Ensure images don't overflow */
         img {
             max-width: 100%;
             height: auto;
-        }
-        [style*="position: absolute"] {
-            display: block !important;
         }
     </style>
 </head>
