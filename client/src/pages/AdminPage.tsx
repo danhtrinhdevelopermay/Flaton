@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Shield, Key, Plus, Trash2, RefreshCw, Loader2, AlertTriangle, CheckCircle, Lock, LogOut, Zap, Brain, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ApiKey {
   id: number;
