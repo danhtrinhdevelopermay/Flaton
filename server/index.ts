@@ -342,7 +342,7 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const { html, fileName } = req.body;
     if (!html) return res.status(400).json({ error: 'HTML content is required' });
 
-    console.log('[Manus PPTX] Converting content to PPTX with advanced CSS parsing...');
+    console.log('[Manus PPTX] Converting content to PPTX with coordinate-based layout...');
     
     const pres = new pptxgen();
     pres.layout = 'LAYOUT_16x9';
@@ -354,18 +354,18 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const styleTags = Array.from(document.querySelectorAll('style'));
     const cssText = styleTags.map(s => s.textContent).join('\n');
     
-    // Simple CSS parser to find background colors and text colors
     const parseStyles = (css: string) => {
       const styles: Record<string, any> = {};
       const rules = css.split('}');
       rules.forEach(rule => {
-        const [selector, body] = rule.split('{');
-        if (selector && body) {
-          const s = selector.trim();
-          styles[s] = {};
+        const parts = rule.split('{');
+        if (parts.length === 2) {
+          const selector = parts[0].trim();
+          const body = parts[1];
+          styles[selector] = {};
           body.split(';').forEach(prop => {
             const [k, v] = prop.split(':');
-            if (k && v) styles[s][k.trim()] = v.trim();
+            if (k && v) styles[selector][k.trim()] = v.trim();
           });
         }
       });
@@ -379,91 +379,98 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
       slideElements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName)) as Element[];
     }
 
-    console.log(`[Manus PPTX] Rendering ${slideElements.length} slides`);
+    // Slide dimensions for coordinate conversion
+    const PAGE_W = 1280;
+    const PAGE_H = 720;
 
     for (const el of slideElements) {
       const slide = pres.addSlide();
       
-      // Default styles
+      // Default Background
       let bgColor = '1A1D21';
-      let titleColor = '60A5FA';
-      let textColor = 'E2E8F0';
-
-      // Try to extract styles for this specific slide
       const elStyles = (el as HTMLElement).style;
       if (elStyles.backgroundColor) bgColor = elStyles.backgroundColor.replace('#', '');
       
-      // Look for specific style rules in the parsed CSS
       for (const selector in globalStyles) {
         if (el.matches(selector)) {
-          if (globalStyles[selector].background) bgColor = globalStyles[selector].background.replace('#', '');
-          if (globalStyles[selector]['background-color']) bgColor = globalStyles[selector]['background-color'].replace('#', '');
+          const s = globalStyles[selector];
+          if (s.background) bgColor = s.background.replace('#', '');
+          if (s['background-color']) bgColor = s['background-color'].replace('#', '');
         }
       }
-
       slide.background = { color: bgColor.replace(/[^a-fA-F0-9]/g, '') || '1A1D21' };
 
-      // Process content
-      const elements = Array.from(el.querySelectorAll('h1, h2, h3, h4, p, li, span, .title, .text, .content'));
-      
-      let currentY = 0.5;
-      elements.forEach(item => {
-        // Skip items that are inside other processed items to avoid duplication
-        if (elements.some(parent => parent !== item && parent.contains(item))) return;
-
-        const text = item.textContent?.trim();
-        if (!text || text.length < 2) return;
-
+      // Recursive function to process elements and maintain layout
+      const processElement = (item: Element, parentX = 0, parentY = 0) => {
         const tagName = item.tagName;
-        const isHeader = ['H1', 'H2', 'H3', 'H4'].includes(tagName) || item.classList.contains('title') || item.classList.contains('header');
-        
+        if (['SCRIPT', 'STYLE'].includes(tagName)) return;
+
+        // Try to estimate position from styles
+        let x = parentX;
+        let y = parentY;
+        let w = 100;
+        let h = 10;
         let fontSize = 18;
-        let color = textColor;
+        let color = 'E2E8F0';
         let align: 'left' | 'center' | 'right' = 'left';
         let bold = false;
 
-        if (isHeader) {
-          fontSize = tagName === 'H1' ? 36 : tagName === 'H2' ? 32 : 28;
-          color = titleColor;
-          bold = true;
-          align = 'center';
-        }
-
-        // Try to get inline styles
         const itemStyle = (item as HTMLElement).style;
-        if (itemStyle.color) color = itemStyle.color.replace('#', '');
-        if (itemStyle.fontSize) fontSize = parseInt(itemStyle.fontSize) || fontSize;
-        if (itemStyle.textAlign) align = itemStyle.textAlign as any;
-
-        // Check global styles for this item
-        for (const selector in globalStyles) {
-          if (item.matches(selector)) {
-            if (globalStyles[selector].color) color = globalStyles[selector].color.replace('#', '');
-            if (globalStyles[selector]['font-size']) fontSize = parseInt(globalStyles[selector]['font-size']) || fontSize;
-            if (globalStyles[selector]['text-align']) align = globalStyles[selector]['text-align'] as any;
+        const s = (selector: string) => {
+          for (const sel in globalStyles) {
+            if (item.matches(sel)) return globalStyles[sel][selector];
           }
+          return null;
+        };
+
+        // Extraction
+        const cssW = itemStyle.width || s('width');
+        const cssH = itemStyle.height || s('height');
+        const cssTop = itemStyle.top || s('top');
+        const cssLeft = itemStyle.left || s('left');
+        const cssColor = itemStyle.color || s('color');
+        const cssFontSize = itemStyle.fontSize || s('font-size');
+        const cssTextAlign = itemStyle.textAlign || s('text-align');
+        const cssDisplay = itemStyle.display || s('display');
+
+        if (cssW && cssW.includes('px')) w = (parseInt(cssW) / PAGE_W) * 100;
+        if (cssH && cssH.includes('px')) h = (parseInt(cssH) / PAGE_H) * 100;
+        if (cssTop && cssTop.includes('px')) y = (parseInt(cssTop) / PAGE_H) * 10;
+        if (cssLeft && cssLeft.includes('px')) x = (parseInt(cssLeft) / PAGE_W) * 10;
+        if (cssColor) color = cssColor.replace('#', '');
+        if (cssFontSize) fontSize = parseInt(cssFontSize) || fontSize;
+        if (cssTextAlign) align = cssTextAlign as any;
+        if (['H1', 'H2', 'H3'].includes(tagName)) bold = true;
+
+        // Render Text or Image
+        if (tagName === 'IMG') {
+          try {
+            slide.addImage({
+              path: (item as HTMLImageElement).src,
+              x: (x / 10) * 10, y: (y / 10) * 5.625, // Convert to inches for 16x9
+              w: (w / 100) * 10, h: (h / 100) * 5.625
+            });
+          } catch (e) {}
+        } else if (item.children.length === 0 || Array.from(item.childNodes).every(n => n.nodeType === 3)) {
+          const text = item.textContent?.trim();
+          if (text && text.length > 0) {
+            slide.addText(text, {
+              x: (x / 10) * 10 || 0.5, 
+              y: (y / 10) * 5.625 || parentY, 
+              w: (w / 100) * 10 || '90%',
+              fontSize, color: color.replace(/[^a-fA-F0-9]/g, '') || 'E2E8F0',
+              bold, align: align as any,
+              fontFace: 'Arial'
+            });
+            parentY += (fontSize / 72) * 1.2; // Move down for next sibling if no absolute pos
+          }
+        } else {
+          // Process children
+          Array.from(item.children).forEach(child => processElement(child, x, y));
         }
+      };
 
-        slide.addText(text, {
-          x: 0.5, y: currentY, w: '90%', 
-          fontSize, color: color.replace(/[^a-fA-F0-9]/g, '') || 'E2E8F0',
-          bold, align: align as any,
-          fontFace: 'Arial'
-        });
-
-        currentY += (fontSize / 72) * 1.5 + 0.2; // Adjust vertical spacing
-      });
-
-      // Images
-      const images = Array.from(el.querySelectorAll('img'));
-      images.forEach((img, idx) => {
-        try {
-          slide.addImage({
-            path: img.src,
-            x: 6, y: 1.5, w: 3, h: 3 // Simplistic image placement
-          });
-        } catch (e) {}
-      });
+      Array.from(el.children).forEach(child => processElement(child, 0.5, 0.5));
     }
 
     const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
