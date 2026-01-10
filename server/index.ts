@@ -336,111 +336,73 @@ import pptxgen from 'pptxgenjs';
 import { JSDOM } from 'jsdom';
 import puppeteer from 'puppeteer';
 
-// Manus PPTX Conversion API
+import axios from 'axios';
+import FormData from 'form-data';
+
+// Manus PPTX Conversion API using Nutrient API
 app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { html, fileName } = req.body;
     if (!html) return res.status(400).json({ error: 'HTML content is required' });
 
-    console.log('[Manus PPTX] Converting content to PPTX with balanced auto-layout...');
-    
-    const pres = new pptxgen();
-    pres.layout = 'LAYOUT_16x9';
-
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
-    
-    // 1. Extract and Parse CSS
-    const styleTags = Array.from(document.querySelectorAll('style'));
-    const cssText = styleTags.map(s => s.textContent).join('\n');
-    
-    const parseStyles = (css: string) => {
-      const styles: Record<string, any> = {};
-      const rules = css.split('}');
-      rules.forEach(rule => {
-        const parts = rule.split('{');
-        if (parts.length === 2) {
-          const selector = parts[0].trim();
-          const body = parts[1];
-          styles[selector] = {};
-          body.split(';').forEach(prop => {
-            const [k, v] = prop.split(':');
-            if (k && v) styles[selector][k.trim()] = v.trim();
-          });
-        }
-      });
-      return styles;
-    };
-    const globalStyles = parseStyles(cssText);
-
-    // 2. Detect Slides
-    let slideElements = Array.from(document.querySelectorAll('section, .slide, .presentation-slide, .slide-container'));
-    if (slideElements.length === 0) {
-      slideElements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName)) as Element[];
+    // Try to get Nutrient API key from database or env
+    let nutrientApiKey = '';
+    const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'nutrient_api_key' LIMIT 1");
+    if (result.rows.length > 0 && result.rows[0].setting_value) {
+      nutrientApiKey = result.rows[0].setting_value.trim();
+    } else {
+      nutrientApiKey = process.env.NUTRIENT_API_KEY || '';
     }
 
-    for (const el of slideElements) {
-      const slide = pres.addSlide();
-      
-      // Background
-      let bgColor = '1A1D21';
-      for (const selector in globalStyles) {
-        if (el.matches(selector)) {
-          const s = globalStyles[selector];
-          if (s.background) bgColor = s.background.replace('#', '');
-          if (s['background-color']) bgColor = s['background-color'].replace('#', '');
-        }
-      }
-      slide.background = { color: bgColor.replace(/[^a-fA-F0-9]/g, '') || '1A1D21' };
-
-      // Content processing with better flow
-      const headers = Array.from(el.querySelectorAll('h1, h2, h3, .title'));
-      const paragraphs = Array.from(el.querySelectorAll('p, li, .text'));
-      const images = Array.from(el.querySelectorAll('img'));
-
-      let currentY = 0.5;
-
-      // Render Headers
-      headers.forEach(h => {
-        const text = h.textContent?.trim();
-        if (!text) return;
-        
-        slide.addText(text, {
-          x: 0.5, y: currentY, w: '90%', h: 1,
-          fontSize: 32, color: '60A5FA', bold: true, align: 'center'
-        });
-        currentY += 1.2;
-      });
-
-      // Render Images (if any)
-      if (images.length > 0) {
-        images.forEach((img, idx) => {
-          try {
-            slide.addImage({
-              path: (img as HTMLImageElement).src,
-              x: 0.5 + (idx * 3), y: currentY, w: 3, h: 3
-            });
-          } catch (e) {}
-        });
-        currentY += 3.2;
-      }
-
-      // Render Paragraphs
-      const pText = paragraphs.map(p => p.textContent?.trim()).filter(Boolean).join('\n\n');
-      if (pText) {
-        slide.addText(pText, {
-          x: 0.75, y: currentY, w: '85%', h: 4,
-          fontSize: 18, color: 'E2E8F0', align: 'left', valign: 'top'
-        });
-      }
+    if (!nutrientApiKey) {
+      console.log('[Manus PPTX] Nutrient API key not found, falling back to local auto-layout...');
+      // ... existing fallback logic or just inform user
+      return res.status(400).json({ error: 'Nutrient API Key chưa được cấu hình trong cài đặt admin.' });
     }
 
-    const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
-    const safeFileName = encodeURIComponent(fileName || 'presentation');
+    console.log('[Manus PPTX] Converting content using Nutrient API...');
     
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
-    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.pptx"; filename*=UTF-8''${safeFileName}.pptx`);
-    res.send(buffer);
+    const formData = new FormData();
+    formData.append('instructions', JSON.stringify({
+      parts: [
+        {
+          html: "document"
+        }
+      ],
+      output: {
+        type: "pptx"
+      }
+    }));
+
+    // Create a temporary HTML file for Nutrient
+    const tempHtmlPath = path.join(__dirname, `temp_${Date.now()}.html`);
+    fs.writeFileSync(tempHtmlPath, html);
+
+    formData.append('document', fs.createReadStream(tempHtmlPath));
+
+    try {
+      const nutrientResponse = await axios.post('https://api.nutrient.io/build', formData, {
+        headers: {
+          ...formData.getHeaders(),
+          'Authorization': `Bearer ${nutrientApiKey}`
+        },
+        responseType: 'arraybuffer'
+      });
+
+      // Cleanup temp file
+      if (fs.existsSync(tempHtmlPath)) fs.unlinkSync(tempHtmlPath);
+
+      const safeFileName = encodeURIComponent(fileName || 'presentation');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+      res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.pptx"; filename*=UTF-8''${safeFileName}.pptx`);
+      res.send(Buffer.from(nutrientResponse.data));
+
+    } catch (apiErr: any) {
+      if (fs.existsSync(tempHtmlPath)) fs.unlinkSync(tempHtmlPath);
+      console.error('[Manus PPTX] Nutrient API Error:', apiErr.response?.data?.toString() || apiErr.message);
+      res.status(500).json({ error: 'Lỗi khi gọi Nutrient API: ' + (apiErr.response?.data?.toString() || apiErr.message) });
+    }
+
   } catch (error: any) {
     console.error('[Manus PPTX] Conversion error:', error);
     res.status(500).json({ error: error.message });
