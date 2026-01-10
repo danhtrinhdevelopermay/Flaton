@@ -99,6 +99,11 @@ Uses the official KIE AI API endpoints:
 - `/api/v1/jobs/createTask` - For Grok Imagenia, Seedream, Sora 2
 - `/api/v1/jobs/recordInfo` - Poll Grok, Seedream, Sora 2 task status
 
+## Recent Changes (Jan 10, 2026)
+- **Deleted**: Removed PowerPoint and Word generator pages and routes.
+- **Improved**: Server selection logic now strictly compares required credits and only auto-selects if a server is sufficient.
+- **UI Cleanup**: Removed WaterDropAnimation from all AI feature pages.
+
 ## Recent Changes (Dec 31, 2025)
 
 ### AI Assistant Auto-Generation Feature (Complete)

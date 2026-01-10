@@ -15,8 +15,6 @@ import ExplorerPage from './pages/ExplorerPage'
 import ProfilePage from './pages/ProfilePage'
 import StatusPage from './pages/StatusPage'
 import HistoryPage from './pages/HistoryPage'
-import WordGeneratorPage from './pages/WordGeneratorPage'
-import PowerPointGeneratorPage from './pages/PowerPointGeneratorPage'
 import ShopPage from './pages/ShopPage'
 import KlingMotionControlPage from './pages/KlingMotionControlPage'
 import AdminPage from './pages/AdminPage'
@@ -45,8 +43,6 @@ export default function App() {
             <Route path="/explorer" element={<ProtectedRoute><ExplorerPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
-            <Route path="/word-generator" element={<ProtectedRoute><WordGeneratorPage /></ProtectedRoute>} />
-            <Route path="/ppt-generator" element={<ProtectedRoute><PowerPointGeneratorPage /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
             <Route path="/admin/upgrade" element={<ProtectedRoute><AdminUpgradePage /></ProtectedRoute>} />
             <Route path="/lessons" element={<ProtectedRoute><LessonsListPage /></ProtectedRoute>} />
