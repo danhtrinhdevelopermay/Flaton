@@ -179,6 +179,7 @@ app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res
       });
       if (filesResponse.ok) {
         const filesData = await filesResponse.json();
+        console.log(`[Manus] Files API response for ${taskId}:`, JSON.stringify(filesData));
         // The API returns { "files": [...] } according to the docs
         if (filesData && filesData.files && Array.isArray(filesData.files)) {
           data.all_files = filesData.files;
@@ -186,7 +187,12 @@ app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res
         } else if (Array.isArray(filesData)) {
           data.all_files = filesData;
           console.log(`[Manus] Found ${filesData.length} files for task ${taskId}`);
+        } else if (filesData && filesData.data && Array.isArray(filesData.data)) {
+          data.all_files = filesData.data;
+          console.log(`[Manus] Found ${filesData.data.length} files in .data for task ${taskId}`);
         }
+      } else {
+        console.error(`[Manus] Files API Error ${filesResponse.status} for ${taskId}`);
       }
     } catch (fileErr) {
       console.error('[Manus] Error fetching files list:', fileErr);
