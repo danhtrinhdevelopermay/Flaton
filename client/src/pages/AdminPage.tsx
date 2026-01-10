@@ -59,8 +59,15 @@ export default function AdminPage() {
   useEffect(() => {
     if (isLoggedIn) {
       loadData();
+      
+      // Set up 10s interval
+      const interval = setInterval(() => {
+        loadData();
+      }, 10000);
+      
+      return () => clearInterval(interval);
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, adminToken]);
 
   const loadData = async () => {
     try {

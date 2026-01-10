@@ -66,6 +66,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchCurrentUser();
   }, [token]);
 
+  useEffect(() => {
+    if (!token) return;
+    
+    // Initial fetch
+    refreshUser();
+    
+    // Set up 10s interval
+    const interval = setInterval(() => {
+      refreshUser();
+    }, 10000);
+    
+    return () => clearInterval(interval);
+  }, [token]);
+
   const login = async (email: string, password: string) => {
     const response = await fetch('/api/auth/login', {
       method: 'POST',
