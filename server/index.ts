@@ -200,17 +200,27 @@ app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res
 
     // Update status in database if changed
     if (data.status) {
-      // If we have all_files, merge it into result for storage
-      const resultToSave = data.result || data.output || {};
-      if (data.all_files) {
-        if (typeof resultToSave === 'object') {
-          resultToSave.all_files = data.all_files;
+      // Ensure result is an object and merge all_files
+      let resultToSave: any = {};
+      try {
+        if (data.result && typeof data.result === 'object') {
+          resultToSave = { ...data.result };
+        } else if (data.output && typeof data.output === 'object') {
+          resultToSave = { ...data.output };
+        } else if (data.result && typeof data.result === 'string') {
+          try { resultToSave = JSON.parse(data.result); } catch (e) { resultToSave = { raw_result: data.result }; }
         }
+      } catch (e) {
+        resultToSave = { error_parsing: true };
+      }
+
+      if (data.all_files && Array.isArray(data.all_files)) {
+        resultToSave.all_files = data.all_files;
       }
 
       await pool.query(
         'UPDATE manus_tasks SET status = $1, result = $2, error = $3, updated_at = CURRENT_TIMESTAMP WHERE task_id = $4 AND user_id = $5',
-        [data.status, resultToSave, data.error || null, taskId, req.userId]
+        [data.status, JSON.stringify(resultToSave), data.error || null, taskId, req.userId]
       );
     }
     

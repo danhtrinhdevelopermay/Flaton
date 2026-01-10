@@ -137,64 +137,64 @@ export default function ManusPage() {
     
     // Recursive function to find all output_file objects in the nested structure
     const findFiles = (obj: any) => {
-      if (!obj) return;
+      if (!obj || typeof obj !== 'object') return;
       
-      console.log('Checking object for files:', obj);
-
+      // Handle array
       if (Array.isArray(obj)) {
         obj.forEach(item => findFiles(item));
-      } else if (typeof obj === 'object') {
-        // 1. Handle all_files from server merged result (High priority)
-        if (obj.all_files && Array.isArray(obj.all_files)) {
-          obj.all_files.forEach((f: any) => {
-            if (f.download_url) {
-              const url = f.download_url;
-              if (!files.some(existing => existing.url === url)) {
-                files.push({
-                  id: f.id || Math.random().toString(36).substr(2, 9),
-                  name: f.file_name || f.name || 'Unnamed File',
-                  url: url,
-                  type: f.file_extension || f.extension
-                });
-              }
-            }
-          });
-        }
+        return;
+      }
 
-        // 2. Handle explicit file objects
-        if (obj.download_url) {
-          const url = obj.download_url;
-          if (!files.some(f => f.url === url)) {
-            files.push({
-              id: obj.id || Math.random().toString(36).substr(2, 9),
-              name: obj.file_name || obj.name || 'Unnamed File',
-              url: url,
-              type: obj.file_extension || obj.extension
-            });
-          }
-        } 
-        // 3. Handle output_file objects
-        else if (obj.type === 'output_file' && obj.output_file && obj.output_file.download_url) {
-          const url = obj.output_file.download_url;
-          if (!files.some(f => f.url === url)) {
-            files.push({
-              id: obj.output_file.id || Math.random().toString(36).substr(2, 9),
-              name: obj.output_file.file_name || obj.output_file.name || 'Unnamed File',
-              url: url,
-              type: obj.output_file.file_extension || obj.output_file.extension
-            });
-          }
-        } 
-        
-        // Always recurse into properties
-        Object.keys(obj).forEach(key => {
-          if (key !== 'all_files') { // Already handled
-            try {
-              findFiles(obj[key]);
-            } catch (e) {}
+      // 1. Handle all_files from server merged result (High priority)
+      if (obj.all_files && Array.isArray(obj.all_files)) {
+        obj.all_files.forEach((f: any) => {
+          if (f && f.download_url) {
+            const url = f.download_url;
+            if (!files.some(existing => existing.url === url)) {
+              files.push({
+                id: f.id || Math.random().toString(36).substr(2, 9),
+                name: f.file_name || f.name || 'Generated File',
+                url: url,
+                type: f.file_extension || f.extension
+              });
+            }
           }
         });
       }
+
+      // 2. Handle explicit file objects
+      if (obj.download_url) {
+        const url = obj.download_url;
+        if (!files.some(f => f.url === url)) {
+          files.push({
+            id: obj.id || Math.random().toString(36).substr(2, 9),
+            name: obj.file_name || obj.name || 'Generated File',
+            url: url,
+            type: obj.file_extension || obj.extension
+          });
+        }
+      } 
+      // 3. Handle output_file objects
+      else if (obj.type === 'output_file' && obj.output_file && obj.output_file.download_url) {
+        const url = obj.output_file.download_url;
+        if (!files.some(f => f.url === url)) {
+          files.push({
+            id: obj.output_file.id || Math.random().toString(36).substr(2, 9),
+            name: obj.output_file.file_name || obj.output_file.name || 'Generated File',
+            url: url,
+            type: obj.output_file.file_extension || obj.output_file.extension
+          });
+        }
+      } 
+      
+      // Always recurse into properties safely
+      try {
+        Object.keys(obj).forEach(key => {
+          if (key !== 'all_files' && obj[key] && typeof obj[key] === 'object') {
+            findFiles(obj[key]);
+          }
+        });
+      } catch (e) {}
     };
 
     findFiles(result);
