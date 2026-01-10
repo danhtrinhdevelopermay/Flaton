@@ -342,66 +342,85 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const { html, fileName } = req.body;
     if (!html) return res.status(400).json({ error: 'HTML content is required' });
 
-    console.log('[Manus PPTX] Converting content to PPTX using pure PptxGenJS (Text extraction)...');
+    console.log('[Manus PPTX] Converting content to PPTX using Puppeteer for high fidelity...');
+    
     const pres = new pptxgen();
     pres.layout = 'LAYOUT_16x9';
+
+    // Start Puppeteer to capture high-quality screenshots of the HTML/CSS
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    const page = await browser.newPage();
+    
+    // Set viewport to slide aspect ratio (16:9)
+    // 1280x720 is a good standard for 16:9 slides
+    await page.setViewport({ width: 1280, height: 720 });
 
     const dom = new JSDOM(html);
     const document = dom.window.document;
     
-    // Improved Text-based strategy
-    const slidesData: { title: string, content: string[] }[] = [];
-    const elements = Array.from(document.querySelectorAll('h1, h2, h3, p, li'));
+    // Check if the HTML contains multiple slide-like elements or is just one block
+    // Manus AI usually outputs multiple sections for slides
+    let slideElements = Array.from(document.querySelectorAll('.slide, section, .presentation-slide'));
     
-    let currentSlide: { title: string, content: string[] } | null = null;
-    
-    elements.forEach(el => {
-      const text = el.textContent?.trim();
-      if (!text || text.length < 2 || text.includes('{') || text.includes(':')) return;
-
-      if (['H1', 'H2', 'H3'].includes(el.tagName)) {
-        if (currentSlide) slidesData.push(currentSlide);
-        currentSlide = { title: text, content: [] };
-      } else if (currentSlide) {
-        currentSlide.content.push(text);
+    if (slideElements.length === 0) {
+      // Fallback: If no explicit slides, try to find top-level divs or just use the body
+      const bodyChildren = Array.from(document.body.children).filter(el => el.tagName !== 'SCRIPT' && el.tagName !== 'STYLE');
+      if (bodyChildren.length > 0) {
+        slideElements = bodyChildren as Element[];
+      } else {
+        slideElements = [document.body];
       }
-    });
-    if (currentSlide) slidesData.push(currentSlide);
-
-    if (slidesData.length === 0) {
-      const bodyText = document.body.textContent?.trim() || '';
-      slidesData.push({ title: 'Presentation', content: [bodyText.substring(0, 500)] });
     }
 
-    slidesData.forEach(data => {
-      const slide = pres.addSlide();
-      
-      // Set dark background for a professional look like Manus AI
-      slide.background = { color: '1A1D21' }; 
-      
-      // Add a subtle title with accent color
-      slide.addText(data.title, { 
-        x: 0.5, y: 0.5, w: '90%', h: 1, 
-        fontSize: 36, bold: true, color: '60A5FA', // Sky blue accent
-        align: pres.AlignH.center,
-        fontFace: 'Arial'
-      });
-      
-      // Add content with clean white text
-      const contentText = data.content.join('\n\n');
-      slide.addText(contentText, { 
-        x: 0.75, y: 1.8, w: '85%', h: 4, 
-        fontSize: 20, color: 'E2E8F0', // Light gray/white
-        valign: pres.AlignV.top,
-        fontFace: 'Arial',
-        lineSpacing: 28
-      });
+    console.log(`[Manus PPTX] Found ${slideElements.length} slide elements`);
 
-      // Add a subtle footer line or decoration
-      slide.addShape(pres.ShapeType.rect, {
-        x: 0.5, y: 1.4, w: '90%', h: 0.02, fill: { color: '334155' }
+    for (const el of slideElements) {
+      // Wrap the element in a basic HTML structure with styles
+      // We extract styles from the original HTML to preserve look and feel
+      const styles = Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('\n');
+      const elementHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          ${styles}
+          <style>
+            body { margin: 0; padding: 0; overflow: hidden; background: #1A1D21; }
+            .capture-container { 
+              width: 1280px; 
+              height: 720px; 
+              display: flex; 
+              flex-direction: column; 
+              justify-content: center; 
+              align-items: center;
+              box-sizing: border-box;
+              padding: 40px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="capture-container">
+            ${el.outerHTML}
+          </div>
+        </body>
+        </html>
+      `;
+
+      await page.setContent(elementHtml, { waitUntil: 'networkidle0' });
+      
+      // Take screenshot as base64
+      const screenshot = await page.screenshot({ encoding: 'base64' });
+      
+      const slide = pres.addSlide();
+      slide.addImage({
+        data: `image/png;base64,${screenshot}`,
+        x: 0, y: 0, w: '100%', h: '100%'
       });
-    });
+    }
+
+    await browser.close();
 
     const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
     const safeFileName = encodeURIComponent(fileName || 'presentation');
