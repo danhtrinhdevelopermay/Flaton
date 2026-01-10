@@ -48,6 +48,7 @@ export default function App() {
             <Route path="/flagent" element={<ProtectedRoute><FlagentPage /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
             <Route path="/admin/upgrade" element={<ProtectedRoute><AdminUpgradePage /></ProtectedRoute>} />
+            <Route path="/admin/manus" element={<Navigate to="/admin/flagent" replace />} />
             <Route path="/admin/flagent" element={<ProtectedRoute><FlagentAdminPage /></ProtectedRoute>} />
             <Route path="/lessons" element={<ProtectedRoute><LessonsListPage /></ProtectedRoute>} />
             <Route path="/lesson/:id" element={<ProtectedRoute><LessonDetailPage /></ProtectedRoute>} />
