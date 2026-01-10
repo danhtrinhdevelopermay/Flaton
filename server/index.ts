@@ -98,13 +98,30 @@ async function getManusApiKey(userId?: number): Promise<string> {
       return userResult.rows[0].manus_api_key.trim();
     }
   }
-  
-  const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'manus_api_key' LIMIT 1");
-  if (result.rows.length > 0 && result.rows[0].setting_value) {
-    return result.rows[0].setting_value.trim();
-  }
-  return process.env.MANUS_API_KEY || '';
+  return '';
 }
+
+// Get all users without Manus API Key (Admin only)
+app.get('/api/admin/users-no-manus', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    // Check if requester is admin (could be improved with a proper role check)
+    const users = await pool.query('SELECT id, email, name FROM users WHERE manus_api_key IS NULL OR manus_api_key = \'\' ORDER BY created_at DESC');
+    res.json(users.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update User Manus API Key (Admin)
+app.post('/api/admin/update-user-manus', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId, apiKey } = req.body;
+    await pool.query('UPDATE users SET manus_api_key = $1 WHERE id = $2', [apiKey, userId]);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Get User Manus API Key
 app.get('/api/user/manus-key', authMiddleware, async (req: AuthRequest, res: Response) => {

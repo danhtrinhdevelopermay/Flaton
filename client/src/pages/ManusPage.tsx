@@ -534,6 +534,68 @@ export default function ManusPage() {
     );
   };
 
+  if (!manusApiKey) {
+    return (
+      <div className="max-w-4xl mx-auto py-20 px-4 text-center">
+        <div className="w-24 h-24 rounded-[2rem] bg-indigo-500/10 flex items-center justify-center mx-auto mb-8 animate-pulse">
+          <Brain className="w-12 h-12 text-indigo-500" />
+        </div>
+        <h1 className="text-3xl font-black mb-4">Chúng tôi đang chuẩn bị cho bạn không gian mới</h1>
+        <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">Tính năng Manus AI sẽ khả dụng ngay khi tài khoản của bạn được cấp API Key.</p>
+        <div className="mt-8">
+           <button
+            onClick={() => setShowSettings(!showSettings)}
+            className={`p-4 rounded-2xl transition-all flex items-center gap-2 mx-auto ${
+              theme === 'dark' ? 'bg-[#2a2d3e] hover:bg-[#32354a]' : 'bg-white shadow-md hover:shadow-lg'
+            }`}
+          >
+            <Settings className={`w-6 h-6 ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`} />
+            <span className="font-bold">Cài đặt API Key thủ công</span>
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {showSettings && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className={`mt-8 text-left rounded-[2rem] border-b-4 transition-all ${
+                theme === 'dark' ? 'bg-[#2a2d3e] border-[#1e202f]' : 'bg-white border-slate-100 shadow-xl'
+              }`}
+            >
+              <div className="p-8">
+                <h2 className="text-xl font-black mb-4 flex items-center gap-2">
+                  <Settings className="w-5 h-5" /> CÀI ĐẶT API KEY
+                </h2>
+                <form onSubmit={handleUpdateApiKey} className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold opacity-70 uppercase tracking-wider">Manus API Key</label>
+                    <input
+                      type="password"
+                      value={manusApiKey}
+                      onChange={(e) => setManusApiKey(e.target.value)}
+                      placeholder="Nhập API Key cá nhân của bạn..."
+                      className={`w-full p-4 rounded-xl border-2 focus:border-indigo-500 focus:outline-none transition-all ${
+                        theme === 'dark' ? 'bg-[#1e202f] border-[#32354a]' : 'bg-slate-50 border-slate-100'
+                      }`}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-8 py-3 rounded-xl bg-indigo-600 text-white font-black hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                  >
+                    LƯU CÀI ĐẶT
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 fade-in">
       {/* ... existing header and form ... */}

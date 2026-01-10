@@ -58,19 +58,56 @@ export default function AdminPage() {
     }
   }, []);
 
+  const [usersNoManus, setUsersNoManus] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
   useEffect(() => {
     if (isLoggedIn) {
       loadData();
       loadSettings();
+      loadUsersNoManus();
       
       // Set up 10s interval
       const interval = setInterval(() => {
         loadData();
+        loadUsersNoManus();
       }, 10000);
       
       return () => clearInterval(interval);
     }
   }, [isLoggedIn, adminToken]);
+
+  const loadUsersNoManus = async () => {
+    try {
+      const res = await fetch('/api/admin/users-no-manus', {
+        headers: { Authorization: `Bearer ${adminToken}` }
+      });
+      if (res.ok) setUsersNoManus(await res.json());
+    } catch (err) {
+      console.error('Error loading users without manus key:', err);
+    }
+  };
+
+  const assignManusKey = async (userId: number, key: string) => {
+    if (!key) return;
+    try {
+      const res = await fetch('/api/admin/update-user-manus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ userId, apiKey: key })
+      });
+      if (res.ok) {
+        setSuccess('Đã cập nhật API Key cho người dùng');
+        loadUsersNoManus();
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -541,7 +578,51 @@ export default function AdminPage() {
       <div className="glass rounded-2xl p-6">
         <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
           <Brain className="w-5 h-5 text-indigo-500" />
-          Cấu hình Manus AI
+          Người dùng chưa có Manus API
+        </h2>
+        {usersNoManus.length === 0 ? (
+          <p className="text-slate-400">Tất cả người dùng đã có API Key.</p>
+        ) : (
+          <div className="space-y-4">
+            {usersNoManus.map(user => (
+              <div key={user.id} className="flex items-center justify-between p-4 bg-slate-800/30 rounded-xl border border-slate-700">
+                <div>
+                  <div className="font-bold">{user.name || 'N/A'}</div>
+                  <div className="text-sm text-slate-400">{user.email}</div>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    placeholder="Nhập Manus Key..."
+                    className="px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm focus:border-indigo-500 outline-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        assignManusKey(user.id, (e.target as HTMLInputElement).value);
+                        (e.target as HTMLInputElement).value = '';
+                      }
+                    }}
+                  />
+                  <button 
+                    onClick={(e) => {
+                      const input = (e.currentTarget.previousSibling as HTMLInputElement);
+                      assignManusKey(user.id, input.value);
+                      input.value = '';
+                    }}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium transition-all"
+                  >
+                    Cấp Key
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="glass rounded-2xl p-6">
+        <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
+          <Brain className="w-5 h-5 text-indigo-500" />
+          Cấu hình Manus AI (Mặc định)
         </h2>
         <form onSubmit={saveManusKey} className="flex gap-4">
           <input
