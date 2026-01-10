@@ -507,8 +507,9 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
       await page.setContent(`
         <html>
           <head>
+            <meta charset="UTF-8">
             <style>
-              body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+              body { margin: 0; padding: 0; background: transparent; overflow: visible; font-family: sans-serif; }
               /* Ensure slides take up full viewport for capture */
               section, .slide, .presentation-slide { 
                 width: 1920px; 
@@ -519,19 +520,39 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
                 align-items: center;
                 page-break-after: always;
                 position: relative;
+                box-sizing: border-box;
+                padding: 40px;
+                overflow: hidden;
               }
+              img { max-width: 100%; max-height: 80%; object-fit: contain; }
+              h1, h2, h3 { margin-top: 0; }
+              p, li { font-size: 24px; line-height: 1.6; }
             </style>
           </head>
           <body>${html}</body>
         </html>
-      `, { waitUntil: 'networkidle0' });
+      `, { waitUntil: 'networkidle0', timeout: 60000 });
+      
+      // Wait for all images to be fully loaded
+      await page.evaluate(async () => {
+        const selectors = ['img', 'video', 'iframe'];
+        const elements = Array.from(document.querySelectorAll(selectors.join(',')));
+        await Promise.all(elements.map(img => {
+          if (img.tagName === 'IMG' && (img as HTMLImageElement).complete) return;
+          return new Promise((resolve, reject) => {
+            img.addEventListener('load', resolve);
+            img.addEventListener('error', resolve);
+            setTimeout(resolve, 5000); // Timeout after 5s
+          });
+        }));
+      });
       
       const pres = new pptxgen();
       pres.layout = 'LAYOUT_16x9';
 
-      const slideSelectors = ['section', '.slide', '.presentation-slide', '.slide-container', '.mb-8.border-b'];
+      const slideSelectors = ['section', '.slide', '.presentation-slide', '.slide-container', '.mb-8.border-b', '.presentation-item'];
       
-      const slideHandles = await page.evaluate((selectors) => {
+      const slideHandlesCount = await page.evaluate((selectors) => {
         let elements: Element[] = [];
         for (const selector of selectors) {
           const found = document.querySelectorAll(selector);
@@ -541,17 +562,20 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
           }
         }
         if (elements.length === 0) {
-          elements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName));
+          // If no specific slides found, try to treat large divs as slides
+          const divs = Array.from(document.body.querySelectorAll('div')).filter(d => d.parentElement === document.body);
+          if (divs.length > 0) elements = divs;
+          else elements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName));
         }
         return elements.length;
       }, slideSelectors);
 
-      console.log(`[Manus PPTX] Capturing ${slideHandles} slides with pixel-perfect precision`);
+      console.log(`[Manus PPTX] Capturing ${slideHandlesCount} slides with pixel-perfect precision and asset waiting`);
 
-      for (let i = 0; i < slideHandles; i++) {
+      for (let i = 0; i < slideHandlesCount; i++) {
         const slide = pres.addSlide();
         
-        const screenshot = await page.evaluate(async (selectors, index) => {
+        await page.evaluate(async (selectors, index) => {
           let elements: Element[] = [];
           for (const selector of selectors) {
             const found = document.querySelectorAll(selector);
@@ -561,35 +585,31 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
             }
           }
           if (elements.length === 0) {
-            elements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName));
+            const divs = Array.from(document.body.querySelectorAll('div')).filter(d => d.parentElement === document.body);
+            if (divs.length > 0) elements = divs;
+            else elements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName));
           }
           const el = elements[index];
-          if (!el) return null;
+          if (!el) return;
 
-          // Scroll to element to ensure it's rendered
           el.scrollIntoView();
-          
-          // Use a small delay for any animations to settle
-          await new Promise(r => setTimeout(r, 100));
-          
-          return index;
+          await new Promise(r => setTimeout(r, 500)); // Increased wait for rendering
         }, slideSelectors, i);
 
-        if (screenshot !== null) {
-          const elements = await page.$$(slideSelectors.join(',') || 'body > *');
-          const targetElement = elements[i] || (await page.$('body'));
+        // Capture screenshot of the specific element
+        const elements = await page.$$(slideSelectors.join(',') || 'body > *');
+        const targetElement = elements[i];
+        
+        if (targetElement) {
+          const buffer = await targetElement.screenshot({
+            type: 'png',
+            omitBackground: false
+          });
           
-          if (targetElement) {
-            const buffer = await targetElement.screenshot({
-              type: 'png',
-              omitBackground: false
-            });
-            
-            slide.addImage({
-              data: `image/png;base64,${buffer.toString('base64')}`,
-              x: 0, y: 0, w: '100%', h: '100%'
-            });
-          }
+          slide.addImage({
+            data: `image/png;base64,${buffer.toString('base64')}`,
+            x: 0, y: 0, w: '100%', h: '100%'
+          });
         }
       }
 
