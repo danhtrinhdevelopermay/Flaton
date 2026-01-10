@@ -113,10 +113,10 @@ export default function VideoUpscalePage() {
         
         // Auto-select logic
         const requiredCredits = 72;
-        const availableServer = data.find((s: any) => s.credits >= requiredCredits);
+        const availableServers = data.filter((s: any) => s.credits >= requiredCredits);
         
-        if (availableServer) {
-          setSelectedServer(availableServer.id);
+        if (availableServers.length > 0) {
+          setSelectedServer(availableServers[0].id);
         } else if (data.length > 0) {
           // If no server has enough credits, still select the first one so the dropdown isn't empty
           setSelectedServer(data[0].id);
