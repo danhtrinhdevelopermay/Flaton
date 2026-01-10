@@ -39,9 +39,9 @@ export default function ManusPage() {
       const data = await res.json()
       console.log('[Manus UI] Create task response:', data)
       
-      if (data.id) {
+      if (data.task_id || data.id) {
         const newTask: ManusTask = {
-          id: data.id,
+          id: data.task_id || data.id,
           status: 'pending',
           prompt: prompt,
           createdAt: new Date().toISOString()
