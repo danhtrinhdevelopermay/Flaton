@@ -93,8 +93,9 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
   try {
     const { prompt, style } = req.body;
     
+    const systemPrompt = `Bạn là một chuyên gia soạn thảo bài giảng. Hãy tạo nội dung slide cho bài giảng theo yêu cầu.`;
     const model = await getGeminiModel();
-    const result = await (model as any).generateContent(systemPrompt);
+    const result = await (model as any).generateContent(systemPrompt + "\n\n" + prompt);
     const response = await result.response;
     let text = response.text();
     
