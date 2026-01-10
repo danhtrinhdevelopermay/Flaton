@@ -374,8 +374,10 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
 
     const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
     
+    // Use encodeURIComponent and RFC 5987 to handle Vietnamese characters in filenames
+    const safeFileName = encodeURIComponent(fileName || 'presentation');
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName || 'presentation'}.pptx"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.pptx"; filename*=UTF-8''${safeFileName}.pptx`);
     res.send(buffer);
   } catch (error: any) {
     console.error('[Manus PPTX] Conversion error:', error);
