@@ -105,8 +105,10 @@ async function getManusApiKey(userId?: number): Promise<string> {
 app.get('/api/admin/users-all-manus', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const users = await pool.query('SELECT id, email, name, manus_api_key FROM users ORDER BY created_at DESC');
+    console.log('[Admin] Returning all users:', users.rows.length);
     res.json(users.rows);
   } catch (error: any) {
+    console.error('[Admin] Error fetching all users:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -122,8 +124,10 @@ app.get('/api/admin/manus-logs', authMiddleware, async (req: AuthRequest, res: R
       ORDER BY t.updated_at DESC 
       LIMIT 50
     `);
+    console.log('[Admin] Returning manus logs:', logs.rows.length);
     res.json(logs.rows);
   } catch (error: any) {
+    console.error('[Admin] Error fetching manus logs:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -131,10 +135,11 @@ app.get('/api/admin/manus-logs', authMiddleware, async (req: AuthRequest, res: R
 // Get all users without Manus API Key (Admin only)
 app.get('/api/admin/users-no-manus', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    // Check if requester is admin (could be improved with a proper role check)
     const users = await pool.query('SELECT id, email, name FROM users WHERE manus_api_key IS NULL OR manus_api_key = \'\' ORDER BY created_at DESC');
+    console.log('[Admin] Returning users without manus:', users.rows.length);
     res.json(users.rows);
   } catch (error: any) {
+    console.error('[Admin] Error fetching users without manus:', error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -39,10 +39,17 @@ export default function ManusAdminPage() {
 
   const loadAllUsersManus = async () => {
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/admin/users-all-manus', {
-        headers: { Authorization: `Bearer ${adminToken}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) setAllUsersManus(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        console.log('[ManusAdmin] Loaded users:', data);
+        setAllUsersManus(data);
+      } else {
+        console.error('[ManusAdmin] Failed to load users:', res.status);
+      }
     } catch (err) {
       console.error('Error loading all manus users:', err);
     }
@@ -50,10 +57,14 @@ export default function ManusAdminPage() {
 
   const loadManusLogs = async () => {
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/admin/manus-logs', {
-        headers: { Authorization: `Bearer ${adminToken}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) setManusLogs(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setManusLogs(data);
+      }
     } catch (err) {
       console.error('Error loading manus logs:', err);
     }
@@ -61,8 +72,9 @@ export default function ManusAdminPage() {
 
   const loadUsersNoManus = async () => {
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/admin/users-no-manus', {
-        headers: { Authorization: `Bearer ${adminToken}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) setUsersNoManus(await res.json());
     } catch (err) {
@@ -73,11 +85,12 @@ export default function ManusAdminPage() {
   const assignManusKey = async (userId: number, key: string) => {
     if (!key) return;
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/admin/update-user-manus', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminToken}`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ userId, apiKey: key })
       });
