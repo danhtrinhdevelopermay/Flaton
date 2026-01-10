@@ -570,12 +570,13 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
         return elements.length;
       }, slideSelectors);
 
-      console.log(`[Manus PPTX] Capturing ${slideHandlesCount} slides with pixel-perfect precision and asset waiting`);
+      console.log(`[Manus PPTX] Capturing ${slideHandlesCount} slides with Hybrid (Image Background + Text Overlay) method`);
 
       for (let i = 0; i < slideHandlesCount; i++) {
         const slide = pres.addSlide();
         
-        await page.evaluate(async (selectors, index) => {
+        // 1. Get slide elements data from browser
+        const slideData = await page.evaluate(async (selectors, index) => {
           let elements: Element[] = [];
           for (const selector of selectors) {
             const found = document.querySelectorAll(selector);
@@ -589,27 +590,112 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
             if (divs.length > 0) elements = divs;
             else elements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName));
           }
-          const el = elements[index];
-          if (!el) return;
+          const el = elements[index] as HTMLElement;
+          if (!el) return null;
 
           el.scrollIntoView();
-          await new Promise(r => setTimeout(r, 500)); // Increased wait for rendering
+          
+          // Helper to get element details for overlay
+          const getElementInfo = (child: HTMLElement) => {
+            const rect = child.getBoundingClientRect();
+            const slideRect = el.getBoundingClientRect();
+            const style = window.getComputedStyle(child);
+            
+            // Convert pixels to PPTX inches (approx 96 DPI)
+            // 1920px = 10 inches wide, 1080px = 5.625 inches high
+            const pxToInX = (px: number) => (px / slideRect.width) * 10;
+            const pxToInY = (px: number) => (px / slideRect.height) * 5.625;
+
+            return {
+              text: child.innerText.trim(),
+              tagName: child.tagName,
+              x: pxToInX(rect.left - slideRect.left),
+              y: pxToInY(rect.top - slideRect.top),
+              w: pxToInX(rect.width),
+              h: pxToInY(rect.height),
+              fontSize: parseFloat(style.fontSize) * (10 / slideRect.width) * 72, // Scale font size
+              color: style.color,
+              textAlign: style.textAlign,
+              fontWeight: style.fontWeight,
+              isText: child.childNodes.length === 1 && child.childNodes[0].nodeType === 3 && child.innerText.trim().length > 0
+            };
+          };
+
+          // Find text elements to overlay
+          const textElements: any[] = [];
+          const walk = (node: HTMLElement) => {
+            if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE') return;
+            
+            // If it's a leaf node with text, or a specific heading/paragraph
+            if (['H1', 'H2', 'H3', 'P', 'LI', 'SPAN'].includes(node.tagName) || 
+                (node.childNodes.length === 1 && node.childNodes[0].nodeType === 3 && node.innerText.trim().length > 0)) {
+              textElements.push(getElementInfo(node));
+              // Don't recurse into text nodes we already captured
+              return;
+            }
+            
+            for (let i = 0; i < node.children.length; i++) {
+              walk(node.children[i] as HTMLElement);
+            }
+          };
+          
+          // Before capturing background, temporarily hide text to get "canvas" only
+          // This is tricky because backgrounds might be tied to text containers.
+          // For now, we'll capture everything as background and overlay editable text.
+          walk(el);
+
+          return {
+            textElements
+          };
         }, slideSelectors, i);
 
-        // Capture screenshot of the specific element
-        const elements = await page.$$(slideSelectors.join(',') || 'body > *');
-        const targetElement = elements[i];
-        
-        if (targetElement) {
-          const buffer = await targetElement.screenshot({
-            type: 'png',
-            omitBackground: false
-          });
+        if (slideData) {
+          // 2. Capture background (canvas/images/layout)
+          const elements = await page.$$(slideSelectors.join(',') || 'body > *');
+          const targetElement = elements[i];
           
-          slide.addImage({
-            data: `image/png;base64,${buffer.toString('base64')}`,
-            x: 0, y: 0, w: '100%', h: '100%'
-          });
+          if (targetElement) {
+            // Option: Hide text via CSS injection before screenshot to get pure background
+            // But some backgrounds are tied to text elements. We'll keep them and overlay.
+            const buffer = await targetElement.screenshot({
+              type: 'png',
+              omitBackground: false
+            });
+            
+            // Add Background Image
+            slide.addImage({
+              data: `image/png;base64,${buffer.toString('base64')}`,
+              x: 0, y: 0, w: '100%', h: '100%'
+            });
+
+            // 3. Add Invisible/Transparent Text Layer for editability and accessibility
+            // Or overlay visible text if background capture was text-free.
+            // For now, we add them as nearly transparent layers so they are selectable.
+            for (const te of slideData.textElements) {
+              if (te.text && te.text.length > 0) {
+                // Parse color
+                let color = '000000';
+                const rgb = te.color.match(/\d+/g);
+                if (rgb && rgb.length >= 3) {
+                  color = ((1 << 24) + (parseInt(rgb[0]) << 16) + (parseInt(rgb[1]) << 8) + parseInt(rgb[2])).toString(16).slice(1);
+                }
+
+                slide.addText(te.text, {
+                  x: te.x,
+                  y: te.y,
+                  w: te.w,
+                  h: te.h,
+                  fontSize: Math.max(te.fontSize, 8),
+                  color: color,
+                  bold: te.fontWeight === 'bold' || parseInt(te.fontWeight) >= 700,
+                  align: (te.textAlign as any) || 'left',
+                  valign: 'middle',
+                  // We can't make it truly "invisible" but selectable in PptxGenJS easily
+                  // without it being a shape. This makes it a real PPTX text object.
+                });
+              }
+            }
+          }
         }
       }
 
