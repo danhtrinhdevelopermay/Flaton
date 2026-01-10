@@ -150,10 +150,19 @@ export default function ManusPage() {
         const lowerUrl = url.toLowerCase();
         const lowerName = name.toLowerCase();
         
-        // Skip common config/log files unless specifically asked
-        // But keep them if they are the only output
-        if (lowerUrl.includes('.json') || lowerName.includes('.json')) return false;
+        // Always include slides or document files even if they have .json extension (sometimes used for presentation data)
+        if (lowerName.includes('slides') || lowerName.includes('presentation') || lowerName.includes('document')) return true;
+
+        // Skip common technical/log files
         if (lowerUrl.includes('.log') || lowerName.includes('.log')) return false;
+        
+        // If it's a generic JSON without "slides" or similar in name, skip it
+        if (lowerUrl.includes('.json') || lowerName.includes('.json')) {
+           // If the name is very generic like "config.json" or "task.json", hide it
+           const genericNames = ['config', 'task', 'status', 'meta', 'info', 'log'];
+           if (genericNames.some(gn => lowerName.includes(gn))) return false;
+        }
+
         return true;
       };
 
