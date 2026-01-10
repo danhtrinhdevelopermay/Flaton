@@ -505,15 +505,19 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
       
       // Load the HTML content with all styles
       await page.setContent(`
+        <!DOCTYPE html>
         <html>
           <head>
             <meta charset="UTF-8">
+            <meta name="viewport" content="width=1920, height=1080">
             <style>
               body { 
                 margin: 0; 
                 padding: 0; 
                 background: transparent; 
-                overflow: visible;
+                overflow: hidden;
+                width: 1920px;
+                height: 1080px;
               }
               /* 
                  Reset any global styles that might interfere 
@@ -526,12 +530,65 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
                 overflow: hidden;
                 box-sizing: border-box;
                 page-break-after: always;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                background-size: cover !important;
+                background-position: center !important;
+              }
+              img {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                max-width: none !important;
+                max-height: none !important;
               }
             </style>
           </head>
           <body>${html}</body>
         </html>
-      `, { waitUntil: 'networkidle0', timeout: 60000 });
+      `, { waitUntil: 'networkidle0', timeout: 90000 });
+      
+      // Wait for all assets (images, fonts, etc) to be fully loaded
+      await page.evaluate(async () => {
+        const loadAsset = (el: any) => {
+          if (el.complete) return Promise.resolve();
+          return new Promise(resolve => {
+            el.onload = resolve;
+            el.onerror = resolve;
+            setTimeout(resolve, 15000); // 15s timeout per asset
+          });
+        };
+
+        const imgs = Array.from(document.querySelectorAll('img'));
+        const bgElements = Array.from(document.querySelectorAll('*')).filter(el => {
+          const bg = window.getComputedStyle(el).backgroundImage;
+          return bg && bg !== 'none' && bg.includes('url');
+        });
+
+        // Preload background images
+        const bgPromises = bgElements.map(el => {
+          const bg = window.getComputedStyle(el).backgroundImage;
+          const url = bg.match(/url\(["']?([^"']+)["']?\)/)?.[1];
+          if (url) {
+            const img = new Image();
+            img.src = url;
+            return loadAsset(img);
+          }
+          return Promise.resolve();
+        });
+
+        await Promise.all([...imgs.map(loadAsset), ...bgPromises]);
+        
+        // Wait for fonts
+        if ((document as any).fonts) {
+          await (document as any).fonts.ready;
+        }
+      });
+      
+      // Extra breathing room for any scripts/renderings
+      await new Promise(r => setTimeout(r, 3000));
+
       
       // Wait for all images to be fully loaded
       await page.evaluate(async () => {
