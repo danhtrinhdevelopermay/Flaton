@@ -349,6 +349,10 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const dom = new JSDOM(html);
     const document = dom.window.document;
     
+    // Remove all <style> tags as they contain CSS code that we don't want to extract as text
+    const styles = document.querySelectorAll('style');
+    styles.forEach(style => style.remove());
+
     // Improved slide detection: try various common markers
     let slides = Array.from(document.querySelectorAll('div.mb-8, section, hr'));
     
@@ -369,15 +373,18 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
           let current = h2.nextElementSibling;
           let contentParts: string[] = [];
           while (current && current.tagName !== 'H2') {
-            const text = current.textContent?.trim();
-            if (text) {
-              // Handle lists
-              if (current.tagName === 'UL' || current.tagName === 'OL') {
-                Array.from(current.querySelectorAll('li')).forEach(li => {
-                  contentParts.push(`• ${li.textContent?.trim()}`);
-                });
-              } else {
-                contentParts.push(text);
+            // Ignore script or style tags if they somehow remained
+            if (current.tagName !== 'SCRIPT' && current.tagName !== 'STYLE') {
+              const text = current.textContent?.trim();
+              if (text) {
+                // Handle lists
+                if (current.tagName === 'UL' || current.tagName === 'OL') {
+                  Array.from(current.querySelectorAll('li')).forEach(li => {
+                    contentParts.push(`• ${li.textContent?.trim()}`);
+                  });
+                } else {
+                  contentParts.push(text);
+                }
               }
             }
             current = current.nextElementSibling;
@@ -404,7 +411,7 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
           const title = container.querySelector('h2, h1, h3')?.textContent || 'Slide';
           
           const bodyContent = Array.from(container.children)
-            .filter((el: any) => !['H1', 'H2', 'H3'].includes(el.tagName))
+            .filter((el: any) => !['H1', 'H2', 'H3', 'STYLE', 'SCRIPT'].includes(el.tagName))
             .map((el: any) => el.textContent?.trim())
             .filter(t => t)
             .join('\n\n');
@@ -413,8 +420,10 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
           slide.addText(bodyContent, { x: 0.75, y: 1.5, w: '85%', h: 4.5, fontSize: 20, color: '4A5568', valign: pres.AlignV.top });
         });
       } else {
-        // Absolute fallback
+        // Absolute fallback - clean everything before taking text
         const slide = pres.addSlide();
+        const scripts = document.querySelectorAll('script');
+        scripts.forEach(s => s.remove());
         const cleanText = document.body.textContent?.trim() || 'No content';
         slide.addText(cleanText, { x: 0.5, y: 1.5, w: '90%', h: 4.5, fontSize: 18, color: '4A5568', valign: pres.AlignV.top });
       }
