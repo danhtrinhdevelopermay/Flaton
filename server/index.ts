@@ -376,7 +376,8 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     }
 
     const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      executablePath: '/usr/bin/google-chrome', // Force specific path if needed, but nix usually handles it
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
     });
 
     try {
