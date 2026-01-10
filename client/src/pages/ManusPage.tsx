@@ -153,15 +153,16 @@ export default function ManusPage() {
         // Skip common technical/log/config files
         if (lowerUrl.includes('.log') || lowerName.includes('.log')) return false;
         
-        // Hide ALL .json files unless they are explicitly meant to be viewed (unlikely for Manus outputs)
-        if (lowerUrl.includes('.json') || lowerName.includes('.json')) return false;
+        // Hide most .json files EXCEPT if they likely contain the presentation data we want
+        if (lowerUrl.includes('.json') || lowerName.includes('.json')) {
+           const isPresentation = lowerName.includes('slides') || lowerName.includes('presentation') || lowerName.includes('lesson');
+           if (!isPresentation) return false;
+        }
 
         // Common valid document extensions for Manus
-        const validExtensions = ['.pptx', '.docx', '.pdf', '.zip', '.xlsx', '.txt', '.csv'];
+        const validExtensions = ['.pptx', '.docx', '.pdf', '.zip', '.xlsx', '.txt', '.csv', '.json'];
         if (validExtensions.some(ext => lowerUrl.includes(ext) || lowerName.includes(ext))) return true;
 
-        // If no known extension, but it doesn't look like a config/log, we might want to show it
-        // but for now let's be strict to avoid showing the .json files
         return false;
       };
 
@@ -239,6 +240,36 @@ export default function ManusPage() {
     };
 
     findFiles(result);
+    
+    // Emergency fallback: If no files were found after filtering, try to recover any file-like objects
+    if (files.length === 0 && result) {
+      const recoverFiles = (obj: any) => {
+        if (!obj || typeof obj !== 'object') return;
+        if (Array.isArray(obj)) {
+          obj.forEach(recoverFiles);
+          return;
+        }
+        
+        const url = obj.download_url || obj.fileUrl || obj.url;
+        if (url && typeof url === 'string' && url.startsWith('http')) {
+          const name = obj.file_name || obj.fileName || obj.name || 'Generated File';
+          if (!files.some(f => f.url === url)) {
+            files.push({
+              id: obj.id || Math.random().toString(36).substr(2, 9),
+              name: name,
+              url: url,
+              type: url.split('?')[0].split('.').pop()
+            });
+          }
+        }
+        
+        Object.keys(obj).forEach(key => {
+          if (obj[key] && typeof obj[key] === 'object') recoverFiles(obj[key]);
+        });
+      };
+      recoverFiles(result);
+    }
+    
     console.log('Total files found:', files.length, files);
 
     if (files.length === 0) {
