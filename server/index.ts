@@ -353,11 +353,13 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     let slides = Array.from(document.querySelectorAll('div.mb-8, section, hr'));
     
     // If no clear markers, split by H2 titles
+    let slideCount = 0;
     if (slides.length === 0) {
       const h2s = Array.from(document.querySelectorAll('h2'));
       if (h2s.length > 0) {
         h2s.forEach((h2, idx) => {
           const slide = pres.addSlide();
+          slideCount++;
           slide.addText(h2.textContent || `Slide ${idx + 1}`, { 
             x: 0.5, y: 0.3, w: '90%', h: 1, 
             fontSize: 36, bold: true, color: '2D3748', align: pres.AlignH.center 
@@ -392,12 +394,13 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
       }
     }
 
-    if (pres.slides.length === 0) {
+    if (slideCount === 0) {
       // Fallback: use containers if found
       const containers = document.querySelectorAll('div.mb-8, section');
       if (containers.length > 0) {
         containers.forEach((container: any) => {
           const slide = pres.addSlide();
+          slideCount++;
           const title = container.querySelector('h2, h1, h3')?.textContent || 'Slide';
           
           const bodyContent = Array.from(container.children)
