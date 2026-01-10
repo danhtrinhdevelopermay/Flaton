@@ -13,8 +13,6 @@ interface Message {
 const quickActions = [
   { icon: Image, label: 'Tạo hình ảnh', color: 'from-blue-500 to-cyan-500' },
   { icon: Music, label: 'Tạo nhạc', color: 'from-purple-500 to-pink-500' },
-  { icon: Presentation, label: 'Tạo Slide', color: 'from-orange-500 to-red-500' },
-  { icon: FileText, label: 'Tạo Word', color: 'from-green-500 to-emerald-500' },
 ]
 
 export default function AIAssistantBot() {
@@ -111,14 +109,6 @@ export default function AIAssistantBot() {
       } else if (data.action === 'redirect-music') {
         setTimeout(() => {
           window.location.href = `/music-generator?autoPrompt=${encodeURIComponent(data.prompt || '')}`
-        }, 1000)
-      } else if (data.action === 'redirect-powerpoint') {
-        setTimeout(() => {
-          window.location.href = `/pptx-generator?autoPrompt=${encodeURIComponent(data.prompt || '')}`
-        }, 1000)
-      } else if (data.action === 'redirect-word') {
-        setTimeout(() => {
-          window.location.href = `/word-generator?autoPrompt=${encodeURIComponent(data.prompt || '')}`
         }, 1000)
       }
     } catch (err) {
