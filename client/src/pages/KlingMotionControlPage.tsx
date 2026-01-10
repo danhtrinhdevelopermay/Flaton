@@ -124,10 +124,38 @@ export default function KlingMotionControlPage() {
     return finalResult
   }
 
+  const [selectedServer, setSelectedServer] = useState<number | null>(null);
+  const [servers, setServers] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchServers = async () => {
+      try {
+        const response = await fetch('/api/admin/kie-keys', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        setServers(data);
+        if (data.length > 0) setSelectedServer(data[0].id);
+      } catch (err) {
+        console.error('Failed to fetch servers:', err);
+      }
+    };
+    if (isAuthenticated && token) fetchServers();
+  }, [isAuthenticated, token]);
+
   const handleGenerate = async () => {
     if (!isAuthenticated || !token) {
       navigate('/login')
       return
+    }
+
+    if (!selectedServer) return;
+
+    const currentToolCredits = 48; // Hardcoded from the button text
+    const server = servers.find(s => s.id === selectedServer);
+    if (server && server.credits < currentToolCredits) {
+      alert('Server này không đủ credit!');
+      return;
     }
 
     setShowWaterDrop(true)
@@ -147,7 +175,8 @@ export default function KlingMotionControlPage() {
           prompt,
           input_urls: [imageUrl],
           video_urls: [videoUrl],
-          mode
+          mode,
+          apiKeyId: selectedServer
         }),
       })
 
@@ -195,6 +224,23 @@ export default function KlingMotionControlPage() {
           theme === 'dark' ? 'bg-[#2a2d3e] border-[#1e202f] text-white' : 'bg-white border-slate-200 shadow-xl text-slate-900'
         }`}>
           <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-bold mb-2 opacity-70 uppercase tracking-wider">Chọn Server (KIE AI)</label>
+              <select
+                value={selectedServer || ''}
+                onChange={(e) => setSelectedServer(Number(e.target.value))}
+                className={`w-full p-3 rounded-xl border transition-all ${
+                  theme === 'dark' ? 'bg-[#1e202f] border-[#32354a] text-white' : 'bg-slate-50 border-slate-100 text-slate-900'
+                }`}
+              >
+                {servers.map(server => (
+                  <option key={server.id} value={server.id} disabled={server.credits < 48}>
+                    {server.name || `Server ${server.id}`} - {server.credits} credits {(server.credits < 48) ? '(Không đủ)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label className="block text-sm font-bold mb-2 opacity-70 uppercase tracking-wider">Mô tả hành động</label>
               <textarea

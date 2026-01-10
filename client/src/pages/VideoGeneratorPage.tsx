@@ -174,17 +174,43 @@ export default function VideoGeneratorPage() {
     return finalResult
   }
 
+  const [selectedServer, setSelectedServer] = useState<number | null>(null);
+  const [servers, setServers] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchServers = async () => {
+      try {
+        const response = await fetch('/api/admin/kie-keys', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        setServers(data);
+        if (data.length > 0) setSelectedServer(data[0].id);
+      } catch (err) {
+        console.error('Failed to fetch servers:', err);
+      }
+    };
+    if (isAuthenticated && token) fetchServers();
+  }, [isAuthenticated, token]);
+
   const handleGenerate = async () => {
     const isTextTool = currentTool?.type === 'text'
     const isSora2 = selectedTool === 'sora2'
     const isImageTool = isSora2 && sora2Type === 'image'
     
-    if (!prompt.trim()) return
+    if (!prompt.trim() || !selectedServer) return;
     if (isImageTool && !imageUrl.trim()) return
     
     if (!isAuthenticated || !token) {
       navigate('/login')
       return
+    }
+
+    const currentToolCredits = currentTool?.credits || 0;
+    const server = servers.find(s => s.id === selectedServer);
+    if (server && server.credits < currentToolCredits) {
+      alert('Server này không đủ credit!');
+      return;
     }
 
     setShowWaterDrop(true)
@@ -199,7 +225,7 @@ export default function VideoGeneratorPage() {
     const currentVideoAspectRatio = isSora2 ? sora2Ratio : aspectRatio
 
     try {
-      let body: any = { prompt: currentPrompt }
+      let body: any = { prompt: currentPrompt, apiKeyId: selectedServer }
       
       if (isSora2) {
         body.aspectRatio = sora2Ratio
@@ -342,6 +368,23 @@ export default function VideoGeneratorPage() {
             </div>
             CẤU HÌNH
           </h2>
+
+          <div className="mb-6">
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Chọn Server (KIE AI)</label>
+            <select
+              value={selectedServer || ''}
+              onChange={(e) => setSelectedServer(Number(e.target.value))}
+              className={`w-full p-3 rounded-xl border transition-all ${
+                theme === 'dark' ? 'bg-slate-800 border-slate-600 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+              }`}
+            >
+              {servers.map(server => (
+                <option key={server.id} value={server.id} disabled={server.credits < (currentTool?.credits || 0)}>
+                  {server.name || `Server ${server.id}`} - {server.credits} credits {(server.credits < (currentTool?.credits || 0)) ? '(Không đủ)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="mb-6">
             <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Chọn mô hình AI</label>

@@ -97,11 +97,39 @@ export default function VideoUpscalePage() {
     return finalResult
   }
 
+  const [selectedServer, setSelectedServer] = useState<number | null>(null);
+  const [servers, setServers] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchServers = async () => {
+      try {
+        const response = await fetch('/api/admin/kie-keys', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        setServers(data);
+        if (data.length > 0) setSelectedServer(data[0].id);
+      } catch (err) {
+        console.error('Failed to fetch servers:', err);
+      }
+    };
+    if (isAuthenticated && token) fetchServers();
+  }, [isAuthenticated, token]);
+
   const handleUpscale = async () => {
     if (!videoUrl.trim()) return
     if (!isAuthenticated) {
       navigate('/login')
       return
+    }
+
+    if (!selectedServer) return;
+
+    const currentToolCredits = 72; // Hardcoded from the button text
+    const server = servers.find(s => s.id === selectedServer);
+    if (server && server.credits < currentToolCredits) {
+      alert('Server này không đủ credit!');
+      return;
     }
 
     setLoading(true)
@@ -115,7 +143,7 @@ export default function VideoUpscalePage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ videoUrl, upscaleFactor })
+        body: JSON.stringify({ videoUrl, upscaleFactor, apiKeyId: selectedServer })
       })
 
       const data = await response.json()
@@ -162,6 +190,24 @@ export default function VideoUpscalePage() {
             </div>
             CÀI ĐẶT
           </h2>
+
+          <div className="mb-6">
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Chọn Server (KIE AI)</label>
+            <select
+              value={selectedServer || ''}
+              onChange={(e) => setSelectedServer(Number(e.target.value))}
+              className={`w-full p-3 rounded-xl border transition-all ${
+                theme === 'dark' ? 'bg-slate-800 border-slate-600 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+              }`}
+            >
+              {servers.map(server => (
+                <option key={server.id} value={server.id} disabled={server.credits < 72}>
+                  {server.name || `Server ${server.id}`} - {server.credits} credits {(server.credits < 72) ? '(Không đủ)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="mb-6">
             <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
               Video đầu vào
