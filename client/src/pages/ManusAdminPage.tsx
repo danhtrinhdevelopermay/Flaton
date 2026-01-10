@@ -162,7 +162,7 @@ export default function ManusAdminPage() {
                 <div key={user.id} className="p-4 bg-slate-800/30 rounded-2xl border border-slate-700/50 space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="font-bold">{user.username || user.name || 'N/A'}</div>
+                      <div className="font-bold">{user.name || 'N/A'}</div>
                       <div className="text-xs text-slate-400">{user.email}</div>
                     </div>
                     {(!user.manus_api_key || user.manus_api_key === '') && (
