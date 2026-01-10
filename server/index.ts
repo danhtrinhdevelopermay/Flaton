@@ -217,7 +217,12 @@ async function callKieApi(endpoint: string, data: any, apiKeyId?: number) {
 }
 
 async function checkTaskStatus(taskId: string, taskType: string, apiKeyId?: number) {
-  const apiKey = apiKeyId ? await getApiKeyById(apiKeyId) : await getActiveApiKey();
+  let apiKey = '';
+  if (apiKeyId) {
+    apiKey = await getApiKeyById(apiKeyId);
+  } else {
+    apiKey = await getActiveApiKey();
+  }
 
   let endpoint = '';
   switch (taskType) {
@@ -785,7 +790,7 @@ app.post('/api/generate/nano-banana', authMiddleware, async (req: AuthRequest, r
         output_format: 'png',
       },
     }, apiKeyId);
-    res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'playground' });
+    res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'playground', apiKeyId });
   } catch (error: any) {
     await refundCredits(req.userId!, MODEL_CREDITS['nano-banana']);
     res.status(500).json({ error: error.message });
@@ -831,7 +836,8 @@ app.post('/api/generate/topaz-video', authMiddleware, async (req: AuthRequest, r
     
     res.json({ 
       taskId: result.task_id || result.data?.taskId, 
-      taskType: 'topaz-video' 
+      taskType: 'topaz-video',
+      apiKeyId
     });
   } catch (error: any) {
     console.error('[ERROR] Topaz generation failed:', error);
@@ -860,7 +866,7 @@ app.post('/api/generate/seedream', authMiddleware, async (req: AuthRequest, res:
         max_images: 1,
       },
     }, apiKeyId);
-    res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'seedream' });
+    res.json({ taskId: result.task_id || result.data?.taskId, taskType: 'seedream', apiKeyId });
   } catch (error: any) {
     await refundCredits(req.userId!, MODEL_CREDITS['seedream']);
     res.status(500).json({ error: error.message });
@@ -906,7 +912,7 @@ app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res
       model: 'veo3_fast',
       aspectRatio,
     }, apiKeyId);
-    res.json({ taskId: result.data.taskId, taskType: 'veo3' });
+    res.json({ taskId: result.data.taskId, taskType: 'veo3', apiKeyId });
   } catch (error: any) {
     await refundCredits(req.userId!, MODEL_CREDITS['veo3-fast']);
     res.status(500).json({ error: error.message });
@@ -916,7 +922,7 @@ app.post('/api/generate/veo3-fast', authMiddleware, async (req: AuthRequest, res
 // Sora 2 Text to Video
 app.post('/api/generate/kling-motion', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { prompt, input_urls, video_urls, mode } = req.body;
+    const { prompt, input_urls, video_urls, mode, apiKeyId } = req.body;
     if (!input_urls || !video_urls) return res.status(400).json({ error: 'Image and Video URLs are required' });
     
     const creditsNeeded = MODEL_CREDITS['kling-motion'];
@@ -931,9 +937,9 @@ app.post('/api/generate/kling-motion', authMiddleware, async (req: AuthRequest, 
         video_urls: Array.isArray(video_urls) ? video_urls : [video_urls],
         mode: mode || '720p'
       }
-    });
+    }, apiKeyId);
 
-    res.json({ taskId: result.data.taskId, taskType: 'kling' });
+    res.json({ taskId: result.data.taskId, taskType: 'kling', apiKeyId });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -947,7 +953,7 @@ app.post('/api/generate/sora2-text', authMiddleware, async (req: AuthRequest, re
       return res.status(403).json({ error: 'Tính năng này chỉ dành cho tài khoản Pro. Vui lòng nâng cấp tài khoản để sử dụng.' });
     }
 
-    const { prompt, aspectRatio = 'landscape', duration = '10' } = req.body;
+    const { prompt, aspectRatio = 'landscape', duration = '10', apiKeyId } = req.body;
     const result = await callKieApi('/jobs/createTask', {
       model: 'sora-2-text-to-video',
       input: {
@@ -956,8 +962,8 @@ app.post('/api/generate/sora2-text', authMiddleware, async (req: AuthRequest, re
         n_frames: duration,
         remove_watermark: true,
       },
-    });
-    res.json({ taskId: result.data?.taskId, taskType: 'sora2' });
+    }, apiKeyId);
+    res.json({ taskId: result.data?.taskId, taskType: 'sora2', apiKeyId });
   } catch (error: any) {
     await refundCredits(req.userId!, MODEL_CREDITS['sora2-text']);
     res.status(500).json({ error: error.message });
@@ -973,7 +979,7 @@ app.post('/api/generate/sora2-image', authMiddleware, async (req: AuthRequest, r
       return res.status(403).json({ error: 'Tính năng này chỉ dành cho tài khoản Pro. Vui lòng nâng cấp tài khoản để sử dụng.' });
     }
 
-    const { prompt, imageUrl, aspectRatio = 'landscape', duration = '10' } = req.body;
+    const { prompt, imageUrl, aspectRatio = 'landscape', duration = '10', apiKeyId } = req.body;
     
     if (!imageUrl) {
       return res.status(400).json({ error: 'Image URL is required' });
@@ -992,8 +998,8 @@ app.post('/api/generate/sora2-image', authMiddleware, async (req: AuthRequest, r
         n_frames: duration,
         remove_watermark: true,
       },
-    });
-    res.json({ taskId: result.data?.taskId, taskType: 'sora2' });
+    }, apiKeyId);
+    res.json({ taskId: result.data?.taskId, taskType: 'sora2', apiKeyId });
   } catch (error: any) {
     await refundCredits(req.userId!, MODEL_CREDITS['sora2-image']);
     res.status(500).json({ error: error.message });
@@ -1052,7 +1058,8 @@ app.post('/api/generate/suno', authMiddleware, async (req: AuthRequest, res: Res
       style, 
       title,
       negativeTags,
-      vocalGender
+      vocalGender,
+      apiKeyId
     } = req.body;
     
     let finalPrompt = '';
@@ -1080,8 +1087,8 @@ app.post('/api/generate/suno', authMiddleware, async (req: AuthRequest, res: Res
     
     console.log('Suno payload:', JSON.stringify(payload, null, 2));
     
-    const result = await callKieApi('/generate', payload);
-    res.json({ taskId: result.data?.taskId, taskType: 'suno' });
+    const result = await callKieApi('/generate', payload, apiKeyId);
+    res.json({ taskId: result.data?.taskId, taskType: 'suno', apiKeyId });
   } catch (error: any) {
     await refundCredits(req.userId!, MODEL_CREDITS['suno']);
     res.status(500).json({ error: error.message });
