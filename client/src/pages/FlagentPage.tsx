@@ -90,13 +90,14 @@ export default function FlagentPage() {
     if (!prompt.trim() || loading) return
     setLoading(true)
     try {
+      const finalPrompt = prompt + " (Lưu ý: Sau khi tạo slide xong thì hãy chuyển đổi kết quả thành file .pptx và gửi cho tôi để tải xuống)";
       const res = await fetch('/api/flagent/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ prompt: finalPrompt })
       })
       const data = await res.json()
       if (data.task_id || data.id) {
