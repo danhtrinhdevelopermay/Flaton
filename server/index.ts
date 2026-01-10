@@ -342,50 +342,145 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const { html, fileName } = req.body;
     if (!html) return res.status(400).json({ error: 'HTML content is required' });
 
-    console.log('[Manus PPTX] Converting content to PPTX using pure PptxGenJS (Text extraction - Puppeteer disabled due to environment)...');
+    console.log('[Manus PPTX] Converting content to PPTX using pure PptxGenJS (Enhanced structured parsing)...');
     const pres = new pptxgen();
     pres.layout = 'LAYOUT_16x9';
 
     const dom = new JSDOM(html);
     const document = dom.window.document;
     
-    // Check for slides
-    let slideElements = Array.from(document.querySelectorAll('.slide, section, .presentation-slide, h1, h2, h3'));
+    // Improved slide detection
+    // Manus often uses <section> or <div> with specific classes
+    let slideElements = Array.from(document.querySelectorAll('section, .slide, .presentation-slide, .content-block, div[style*="background"]'));
     
+    // If no clear sections, we'll try to split by headers
     if (slideElements.length === 0) {
-      slideElements = [document.body];
-    }
+      const headers = Array.from(document.querySelectorAll('h1, h2, h3'));
+      if (headers.length > 0) {
+        headers.forEach((header) => {
+          const slide = pres.addSlide();
+          slide.background = { color: '1A1D21' }; // Dark theme
 
-    console.log(`[Manus PPTX] Processing ${slideElements.length} sections`);
+          // Add Title
+          slide.addText(header.textContent || '', {
+            x: 0.5, y: 0.5, w: '90%', h: 1,
+            fontSize: 32, bold: true, color: '60A5FA',
+            align: pres.AlignH.center
+          });
 
-    slideElements.forEach((el, idx) => {
-      const slide = pres.addSlide();
-      slide.background = { color: '1A1D21' }; // Dark theme like Manus
+          // Add separator
+          slide.addShape(pres.ShapeType.rect, {
+            x: 0.5, y: 1.4, w: '90%', h: 0.02, fill: { color: '334155' }
+          });
 
-      const title = el.tagName.startsWith('H') ? el.textContent : (el.querySelector('h1, h2, h3')?.textContent || `Slide ${idx + 1}`);
-      const contentElements = Array.from(el.querySelectorAll('p, li, span'));
-      const content = contentElements.map(c => c.textContent?.trim()).filter(Boolean).join('\n\n');
+          // Find following content until next header
+          let content = '';
+          let next = header.nextElementSibling;
+          while (next && !['H1', 'H2', 'H3'].includes(next.tagName)) {
+            content += (next.textContent?.trim() || '') + '\n\n';
+            next = next.nextElementSibling;
+          }
 
-      slide.addText(title || 'Presentation', {
-        x: 0.5, y: 0.5, w: '90%', h: 1,
-        fontSize: 32, bold: true, color: '60A5FA',
-        align: pres.AlignH.center
-      });
-
-      if (content) {
-        slide.addText(content, {
-          x: 0.75, y: 1.8, w: '85%', h: 4.5,
+          if (content.trim()) {
+            slide.addText(content.trim(), {
+              x: 0.75, y: 1.8, w: '85%', h: 4.5,
+              fontSize: 18, color: 'E2E8F0',
+              valign: pres.AlignV.top,
+              lineSpacing: 24
+            });
+          }
+        });
+      } else {
+        // Last resort: just the body
+        const slide = pres.addSlide();
+        slide.background = { color: '1A1D21' };
+        slide.addText(document.body.textContent || 'Presentation', {
+          x: 0.5, y: 0.5, w: '90%', h: 6,
           fontSize: 18, color: 'E2E8F0',
-          valign: pres.AlignV.top,
-          lineSpacing: 24
+          valign: pres.AlignV.middle
         });
       }
+    } else {
+      // Process detected slide elements
+      slideElements.forEach((el, idx) => {
+        // Skip very small elements that might not be slides
+        if (el.textContent && el.textContent.length < 10 && !el.querySelector('img')) return;
 
-      // Add a separator line
-      slide.addShape(pres.ShapeType.rect, {
-        x: 0.5, y: 1.4, w: '90%', h: 0.02, fill: { color: '334155' }
+        const slide = pres.addSlide();
+        
+        // Try to detect background color from style
+        let bgColor = '1A1D21'; // Default dark
+        const style = (el as HTMLElement).style?.backgroundColor;
+        if (style) {
+          // Simplistic hex conversion if needed, but PptxGenJS accepts many formats
+          // For now stick to dark theme as it matches Manus best
+        }
+        slide.background = { color: bgColor };
+
+        // Find main title in this section
+        const titleEl = el.querySelector('h1, h2, h3, h4, .title, .header');
+        const title = titleEl?.textContent?.trim() || `Slide ${idx + 1}`;
+
+        // Find images
+        const imgEl = el.querySelector('img');
+        if (imgEl && imgEl.src) {
+          // If there's an image, we'll try a split layout
+          slide.addText(title, {
+            x: 0.5, y: 0.3, w: '90%', h: 0.8,
+            fontSize: 28, bold: true, color: '60A5FA',
+            align: pres.AlignH.left
+          });
+
+          // Text content
+          const textContent = Array.from(el.querySelectorAll('p, li, .text'))
+            .map(c => c.textContent?.trim())
+            .filter(Boolean)
+            .join('\n\n');
+
+          slide.addText(textContent, {
+            x: 0.5, y: 1.2, w: '45%', h: 5,
+            fontSize: 16, color: 'E2E8F0',
+            valign: pres.AlignV.top
+          });
+
+          // Image (we use placeholder or link if possible, but PptxGenJS needs data or reachable URL)
+          try {
+            slide.addImage({
+              path: imgEl.src,
+              x: 5.2, y: 1.2, w: 4.5, h: 4.5
+            });
+          } catch (e) {
+            console.log('[Manus PPTX] Image add failed:', e);
+          }
+        } else {
+          // Content only layout
+          slide.addText(title, {
+            x: 0.5, y: 0.5, w: '90%', h: 1,
+            fontSize: 32, bold: true, color: '60A5FA',
+            align: pres.AlignH.center
+          });
+
+          slide.addShape(pres.ShapeType.rect, {
+            x: 0.5, y: 1.4, w: '90%', h: 0.02, fill: { color: '334155' }
+          });
+
+          const content = Array.from(el.querySelectorAll('p, li, span, .content'))
+            .filter(c => c !== titleEl)
+            .map(c => c.textContent?.trim())
+            .filter(Boolean)
+            .join('\n\n');
+
+          if (content) {
+            slide.addText(content, {
+              x: 0.75, y: 1.8, w: '85%', h: 4.5,
+              fontSize: 18, color: 'E2E8F0',
+              valign: pres.AlignV.top,
+              lineSpacing: 24
+            });
+          }
+        }
       });
-    });
+    }
 
     const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
     const safeFileName = encodeURIComponent(fileName || 'presentation');
