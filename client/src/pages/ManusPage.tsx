@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Brain, Send, Loader2, CheckCircle, AlertCircle, Clock, FileText, Download, Code, X, Eye } from 'lucide-react'
+import { Brain, Send, Loader2, CheckCircle, AlertCircle, Clock, FileText, Download, Code, X, Eye, Trash2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -92,6 +92,27 @@ export default function ManusPage() {
       console.error('[Manus UI] Error loading tasks:', err)
     }
   }
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa nhiệm vụ này?')) return;
+    
+    try {
+      const res = await fetch(`/api/manus/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTasks(prev => prev.filter(t => t.id !== taskId));
+        if (currentTask?.id === taskId) setCurrentTask(null);
+      } else {
+        alert(data.error || 'Không thể xóa nhiệm vụ');
+      }
+    } catch (err) {
+      console.error('[Manus UI] Error deleting task:', err);
+      alert('Lỗi kết nối khi xóa nhiệm vụ');
+    }
+  };
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -544,6 +565,17 @@ export default function ManusPage() {
                     </span>
                   </div>
                 </div>
+                <button
+                  onClick={() => handleDeleteTask(task.id)}
+                  className={`p-2 rounded-xl transition-all ${
+                    theme === 'dark' 
+                      ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' 
+                      : 'bg-red-50 text-red-500 hover:bg-red-100'
+                  }`}
+                  title="Xóa nhiệm vụ"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
               </div>
 
               {task.status === 'completed' && (

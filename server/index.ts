@@ -1442,6 +1442,24 @@ app.get('/api/auth/me', authMiddleware, async (req: AuthRequest, res: Response) 
   }
 });
 
+  // Delete Manus task
+  app.delete("/api/manus/tasks/:id", authMiddleware, async (req: AuthRequest, res: Response) => {
+    try {
+      const taskId = req.params.id;
+      const userId = req.userId;
+      
+      console.log(`[Manus API] Deleting task ${taskId} for user ${userId}`);
+      
+      // Delete from database
+      await pool.query('DELETE FROM manus_tasks WHERE task_id = $1 AND user_id = $2', [taskId, userId]);
+      
+      res.json({ success: true, message: "Đã xóa nhiệm vụ thành công" });
+    } catch (err: any) {
+      console.error('[Manus API] Error deleting task:', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 
 async function start() {
