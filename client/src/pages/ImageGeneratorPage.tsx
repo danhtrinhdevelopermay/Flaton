@@ -165,16 +165,14 @@ export default function ImageGeneratorPage() {
         const data = await response.json();
         setServers(data);
         
-        // Auto-select logic
+        // Auto-select logic: Only select if server has enough credits
         const currentToolCredits = currentTool?.credits || 0;
         const availableServers = data.filter((s: any) => s.credits >= currentToolCredits);
         
         if (availableServers.length > 0) {
           setSelectedServer(availableServers[0].id);
-        } else if (data.length > 0) {
-          // If no server has enough credits, still select the first one so the dropdown isn't empty
-          setSelectedServer(data[0].id);
         } else {
+          // If no server has enough credits, leave it empty as requested
           setSelectedServer(null);
         }
       } catch (err) {
