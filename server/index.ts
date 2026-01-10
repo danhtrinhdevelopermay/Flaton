@@ -342,98 +342,50 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const { html, fileName } = req.body;
     if (!html) return res.status(400).json({ error: 'HTML content is required' });
 
-    console.log('[Manus PPTX] Converting content to PPTX using Puppeteer rendering...');
+    console.log('[Manus PPTX] Converting content to PPTX using pure PptxGenJS (Text extraction)...');
     const pres = new pptxgen();
     pres.layout = 'LAYOUT_16x9';
 
     const dom = new JSDOM(html);
     const document = dom.window.document;
     
-    // Strategy: Each section or h2-based block becomes a slide render
-    let slideElements = Array.from(document.querySelectorAll('section, .slide, .slide-container, div.mb-8'));
+    // Improved Text-based strategy
+    const slidesData: { title: string, content: string[] }[] = [];
+    const elements = Array.from(document.querySelectorAll('h1, h2, h3, p, li'));
     
-    if (slideElements.length === 0) {
-      // If no markers, split by H2
-      const h2s = Array.from(document.querySelectorAll('h2'));
-      if (h2s.length > 0) {
-        h2s.forEach(h2 => {
-          let content = h2.outerHTML;
-          let next = h2.nextElementSibling;
-          while (next && next.tagName !== 'H2') {
-            content += next.outerHTML;
-            next = next.nextElementSibling;
-          }
-          const wrapper = document.createElement('div');
-          wrapper.className = 'rendered-slide';
-          wrapper.innerHTML = content;
-          slideElements.push(wrapper);
-        });
+    let currentSlide: { title: string, content: string[] } | null = null;
+    
+    elements.forEach(el => {
+      const text = el.textContent?.trim();
+      if (!text || text.length < 2 || text.includes('{') || text.includes(':')) return;
+
+      if (['H1', 'H2', 'H3'].includes(el.tagName)) {
+        if (currentSlide) slidesData.push(currentSlide);
+        currentSlide = { title: text, content: [] };
+      } else if (currentSlide) {
+        currentSlide.content.push(text);
       }
-    }
-
-    if (slideElements.length === 0) {
-      slideElements = [document.body];
-    }
-
-    const browser = await puppeteer.launch({
-      executablePath: '/usr/bin/google-chrome', // Force specific path if needed, but nix usually handles it
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
     });
+    if (currentSlide) slidesData.push(currentSlide);
 
-    try {
-      for (const el of slideElements) {
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1280, height: 720 });
-        
-        // Construct full HTML for rendering with original styles
-        const slideHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="UTF-8">
-            ${Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('\n')}
-            <style>
-              body { 
-                margin: 0; 
-                padding: 0; 
-                overflow: hidden;
-                background: white;
-                width: 1280px;
-                height: 720px;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-              }
-              .slide-render-root {
-                width: 100%;
-                height: 100%;
-                box-sizing: border-box;
-                padding: 40px;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="slide-render-root">
-              ${el.innerHTML}
-            </div>
-          </body>
-          </html>
-        `;
-
-        await page.setContent(slideHtml, { waitUntil: 'networkidle0' });
-        const screenshot = await page.screenshot({ encoding: 'base64' });
-        await page.close();
-
-        const slide = pres.addSlide();
-        slide.addImage({
-          data: `image/png;base64,${screenshot}`,
-          x: 0, y: 0, w: '100%', h: '100%'
-        });
-      }
-    } finally {
-      await browser.close();
+    if (slidesData.length === 0) {
+      const bodyText = document.body.textContent?.trim() || '';
+      slidesData.push({ title: 'Presentation', content: [bodyText.substring(0, 500)] });
     }
+
+    slidesData.forEach(data => {
+      const slide = pres.addSlide();
+      slide.addText(data.title, { 
+        x: 0.5, y: 0.5, w: '90%', h: 1, 
+        fontSize: 32, bold: true, color: '2D3748', align: pres.AlignH.center 
+      });
+      
+      const contentText = data.content.join('\n\n');
+      slide.addText(contentText, { 
+        x: 0.5, y: 1.5, w: '90%', h: 4, 
+        fontSize: 18, color: '4A5568', valign: pres.AlignV.top 
+      });
+    });
 
     const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
     const safeFileName = encodeURIComponent(fileName || 'presentation');
