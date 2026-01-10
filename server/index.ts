@@ -492,282 +492,52 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
       }
     }
 
-    console.log('[Manus PPTX] Converting content using high-precision Puppeteer method...');
+    console.log('[Manus PPTX] Converting content using Nutrient API...');
     
+    const nutrientApiKey = process.env.NUTRIENT_API_KEY || '';
+    if (!nutrientApiKey) {
+      console.error('[Manus PPTX] NUTRIENT_API_KEY not found');
+      return res.status(400).json({ error: 'NUTRIENT_API_KEY chưa được cấu hình.' });
+    }
+
     try {
-      const browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      const formData = new FormData();
+      formData.append('instructions', JSON.stringify({
+        parts: [
+          {
+            html: "document"
+          }
+        ],
+        output: {
+          type: "pptx"
+        }
+      }));
+
+      // Create a temporary HTML file for Nutrient
+      const tempHtmlPath = path.join(__dirname, `temp_${Date.now()}.html`);
+      fs.writeFileSync(tempHtmlPath, `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;width:1920px;height:1080px;} section,.slide{width:1920px;height:1080px;page-break-after:always;position:relative;overflow:hidden;}</style></head><body>${html}</body></html>`);
+
+      formData.append('document', fs.createReadStream(tempHtmlPath));
+
+      const nutrientResponse = await axios.post('https://api.nutrient.io/build', formData, {
+        headers: {
+          ...formData.getHeaders(),
+          'Authorization': `Bearer ${nutrientApiKey}`
+        },
+        responseType: 'arraybuffer'
       });
-      const page = await browser.newPage();
-      
-      // Use a higher scale factor for crystal clear images
-      await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 3 });
-      
-      // Load the HTML content with all styles
-      await page.setContent(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=1920, height=1080">
-            <style>
-              body { 
-                margin: 0; 
-                padding: 0; 
-                background: transparent; 
-                overflow: hidden;
-                width: 1920px;
-                height: 1080px;
-              }
-              /* 
-                 Reset any global styles that might interfere 
-                 but preserve the AI's internal layout 100%
-              */
-              section, .slide, .presentation-slide { 
-                width: 1920px; 
-                height: 1080px; 
-                position: relative;
-                overflow: hidden;
-                box-sizing: border-box;
-                page-break-after: always;
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                background-size: cover !important;
-                background-position: center !important;
-              }
-              img {
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                max-width: none !important;
-                max-height: none !important;
-              }
-            </style>
-          </head>
-          <body>${html}</body>
-        </html>
-      `, { waitUntil: 'networkidle0', timeout: 90000 });
-      
-      // Wait for all assets (images, fonts, etc) to be fully loaded
-      await page.evaluate(async () => {
-        const loadAsset = (el: any) => {
-          if (el.complete) return Promise.resolve();
-          return new Promise(resolve => {
-            el.onload = resolve;
-            el.onerror = resolve;
-            setTimeout(resolve, 15000); // 15s timeout per asset
-          });
-        };
 
-        const imgs = Array.from(document.querySelectorAll('img'));
-        const bgElements = Array.from(document.querySelectorAll('*')).filter(el => {
-          const bg = window.getComputedStyle(el).backgroundImage;
-          return bg && bg !== 'none' && bg.includes('url');
-        });
+      // Cleanup temp file
+      if (fs.existsSync(tempHtmlPath)) fs.unlinkSync(tempHtmlPath);
 
-        // Preload background images
-        const bgPromises = bgElements.map(el => {
-          const bg = window.getComputedStyle(el).backgroundImage;
-          const url = bg.match(/url\(["']?([^"']+)["']?\)/)?.[1];
-          if (url) {
-            const img = new Image();
-            img.src = url;
-            return loadAsset(img);
-          }
-          return Promise.resolve();
-        });
-
-        await Promise.all([...imgs.map(loadAsset), ...bgPromises]);
-        
-        // Wait for fonts
-        if ((document as any).fonts) {
-          await (document as any).fonts.ready;
-        }
-      });
-      
-      // Extra breathing room for any scripts/renderings
-      await new Promise(r => setTimeout(r, 3000));
-
-      
-      // Wait for all images to be fully loaded
-      await page.evaluate(async () => {
-        const selectors = ['img', 'video', 'iframe'];
-        const elements = Array.from(document.querySelectorAll(selectors.join(',')));
-        await Promise.all(elements.map(img => {
-          if (img.tagName === 'IMG' && (img as HTMLImageElement).complete) return;
-          return new Promise((resolve, reject) => {
-            img.addEventListener('load', resolve);
-            img.addEventListener('error', resolve);
-            setTimeout(resolve, 5000); // Timeout after 5s
-          });
-        }));
-      });
-      
-      const pres = new pptxgen();
-      pres.layout = 'LAYOUT_16x9';
-
-      const slideSelectors = ['section', '.slide', '.presentation-slide', '.slide-container', '.mb-8.border-b', '.presentation-item'];
-      
-      const slideHandlesCount = await page.evaluate((selectors) => {
-        let elements: Element[] = [];
-        for (const selector of selectors) {
-          const found = document.querySelectorAll(selector);
-          if (found.length > 0) {
-            elements = Array.from(found);
-            break;
-          }
-        }
-        if (elements.length === 0) {
-          // If no specific slides found, try to treat large divs as slides
-          const divs = Array.from(document.body.querySelectorAll('div')).filter(d => d.parentElement === document.body);
-          if (divs.length > 0) elements = divs;
-          else elements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName));
-        }
-        return elements.length;
-      }, slideSelectors);
-
-      console.log(`[Manus PPTX] Capturing ${slideHandlesCount} slides with Hybrid (Image Background + Text Overlay) method`);
-
-      for (let i = 0; i < slideHandlesCount; i++) {
-        const slide = pres.addSlide();
-        
-        // 1. Get slide elements data from browser
-        const slideData = await page.evaluate(async (selectors, index) => {
-          let elements: Element[] = [];
-          for (const selector of selectors) {
-            const found = document.querySelectorAll(selector);
-            if (found.length > 0) {
-              elements = Array.from(found);
-              break;
-            }
-          }
-          if (elements.length === 0) {
-            const divs = Array.from(document.body.querySelectorAll('div')).filter(d => d.parentElement === document.body);
-            if (divs.length > 0) elements = divs;
-            else elements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName));
-          }
-          const el = elements[index] as HTMLElement;
-          if (!el) return null;
-
-          el.scrollIntoView();
-          
-          // Helper to get element details for overlay
-          const getElementInfo = (child: HTMLElement) => {
-            const rect = child.getBoundingClientRect();
-            const slideRect = el.getBoundingClientRect();
-            const style = window.getComputedStyle(child);
-            
-            // Convert pixels to PPTX inches (approx 96 DPI)
-            // 1920px = 10 inches wide, 1080px = 5.625 inches high
-            const pxToInX = (px: number) => (px / slideRect.width) * 10;
-            const pxToInY = (px: number) => (px / slideRect.height) * 5.625;
-
-            return {
-              text: child.innerText.trim(),
-              tagName: child.tagName,
-              x: pxToInX(rect.left - slideRect.left),
-              y: pxToInY(rect.top - slideRect.top),
-              w: pxToInX(rect.width),
-              h: pxToInY(rect.height),
-              fontSize: parseFloat(style.fontSize) * (10 / slideRect.width) * 72, // Scale font size
-              color: style.color,
-              textAlign: style.textAlign,
-              fontWeight: style.fontWeight,
-              isText: child.childNodes.length === 1 && child.childNodes[0].nodeType === 3 && child.innerText.trim().length > 0
-            };
-          };
-
-          // Find text elements to overlay
-          const textElements: any[] = [];
-          const walk = (node: HTMLElement) => {
-            if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE') return;
-            
-            // If it's a leaf node with text, or a specific heading/paragraph
-            if (['H1', 'H2', 'H3', 'P', 'LI', 'SPAN'].includes(node.tagName) || 
-                (node.childNodes.length === 1 && node.childNodes[0].nodeType === 3 && node.innerText.trim().length > 0)) {
-              textElements.push(getElementInfo(node));
-              // Don't recurse into text nodes we already captured
-              return;
-            }
-            
-            for (let i = 0; i < node.children.length; i++) {
-              walk(node.children[i] as HTMLElement);
-            }
-          };
-          
-          // Before capturing background, temporarily hide text to get "canvas" only
-          // This is tricky because backgrounds might be tied to text containers.
-          // For now, we'll capture everything as background and overlay editable text.
-          walk(el);
-
-          return {
-            textElements
-          };
-        }, slideSelectors, i);
-
-        if (slideData) {
-          // 2. Capture background (canvas/images/layout)
-          const elements = await page.$$(slideSelectors.join(',') || 'body > *');
-          const targetElement = elements[i];
-          
-          if (targetElement) {
-            // Option: Hide text via CSS injection before screenshot to get pure background
-            // But some backgrounds are tied to text elements. We'll keep them and overlay.
-            const buffer = await targetElement.screenshot({
-              type: 'png',
-              omitBackground: false
-            });
-            
-            // Add Background Image
-            slide.addImage({
-              data: `image/png;base64,${buffer.toString('base64')}`,
-              x: 0, y: 0, w: '100%', h: '100%'
-            });
-
-            // 3. Add Invisible/Transparent Text Layer for editability and accessibility
-            // Or overlay visible text if background capture was text-free.
-            // For now, we add them as nearly transparent layers so they are selectable.
-            for (const te of slideData.textElements) {
-              if (te.text && te.text.length > 0) {
-                // Parse color
-                let color = '000000';
-                const rgb = te.color.match(/\d+/g);
-                if (rgb && rgb.length >= 3) {
-                  color = ((1 << 24) + (parseInt(rgb[0]) << 16) + (parseInt(rgb[1]) << 8) + parseInt(rgb[2])).toString(16).slice(1);
-                }
-
-                slide.addText(te.text, {
-                  x: te.x,
-                  y: te.y,
-                  w: te.w,
-                  h: te.h,
-                  fontSize: Math.max(te.fontSize, 8),
-                  color: color,
-                  bold: te.fontWeight === 'bold' || parseInt(te.fontWeight) >= 700,
-                  align: (te.textAlign as any) || 'left',
-                  valign: 'middle',
-                  // We can't make it truly "invisible" but selectable in PptxGenJS easily
-                  // without it being a shape. This makes it a real PPTX text object.
-                });
-              }
-            }
-          }
-        }
-      }
-
-      await browser.close();
-      
-      const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
       const safeFileName = encodeURIComponent(fileName || 'presentation');
-      
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
       res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.pptx"; filename*=UTF-8''${safeFileName}.pptx`);
-      return res.send(buffer);
+      return res.send(Buffer.from(nutrientResponse.data));
 
-    } catch (puppeteerErr: any) {
-      console.error('[Manus PPTX] High-precision capture failed:', puppeteerErr);
-      res.status(500).json({ error: 'Lỗi chuyển đổi chính xác cao: ' + puppeteerErr.message });
+    } catch (apiErr: any) {
+      console.error('[Manus PPTX] Nutrient API Error:', apiErr.response?.data?.toString() || apiErr.message);
+      res.status(500).json({ error: 'Lỗi khi gọi Nutrient API: ' + (apiErr.response?.data?.toString() || apiErr.message) });
     }
 
   } catch (error: any) {
