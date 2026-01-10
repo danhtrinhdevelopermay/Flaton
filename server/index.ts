@@ -142,6 +142,15 @@ app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res
 
 app.get('/api/admin/settings', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    // Check if table exists
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_settings (
+        setting_key TEXT PRIMARY KEY,
+        setting_value TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
     const result = await pool.query("SELECT setting_key, setting_value FROM admin_settings");
     const settings: Record<string, string> = {};
     result.rows.forEach(row => {
@@ -149,6 +158,7 @@ app.get('/api/admin/settings', authMiddleware, async (req: AuthRequest, res: Res
     });
     res.json(settings);
   } catch (error: any) {
+    console.error('Error fetching admin settings:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -156,12 +166,23 @@ app.get('/api/admin/settings', authMiddleware, async (req: AuthRequest, res: Res
 app.post('/api/admin/settings', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { key, value } = req.body;
+    
+    // Check if table exists, if not create it (safety)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_settings (
+        setting_key TEXT PRIMARY KEY,
+        setting_value TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     await pool.query(
-      "INSERT INTO admin_settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO UPDATE SET setting_value = $2",
+      "INSERT INTO admin_settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO UPDATE SET setting_value = $2, updated_at = CURRENT_TIMESTAMP",
       [key, value]
     );
     res.json({ success: true });
   } catch (error: any) {
+    console.error('Error saving admin setting:', error);
     res.status(500).json({ error: error.message });
   }
 });

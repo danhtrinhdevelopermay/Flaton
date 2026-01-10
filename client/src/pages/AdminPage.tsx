@@ -87,7 +87,9 @@ export default function AdminPage() {
   const saveManusKey = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingManus(true);
+    setError('');
     try {
+      console.log('Saving Manus Key:', manusKey);
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: {
@@ -96,11 +98,18 @@ export default function AdminPage() {
         },
         body: JSON.stringify({ key: 'manus_api_key', value: manusKey })
       });
+      
+      const data = await res.json();
+      console.log('Save Manus Key response:', data);
+
       if (res.ok) {
         setSuccess('Đã lưu Manus API Key');
         setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(data.error || 'Không thể lưu Manus API Key');
       }
     } catch (err: any) {
+      console.error('Save Manus Key error:', err);
       setError(err.message);
     } finally {
       setSavingManus(false);
