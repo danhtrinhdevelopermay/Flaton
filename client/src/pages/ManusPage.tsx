@@ -142,23 +142,42 @@ export default function ManusPage() {
       if (Array.isArray(obj)) {
         obj.forEach(item => findFiles(item));
       } else if (typeof obj === 'object') {
-        // Handle explicit file objects from List Files API
-        if (obj.file_name && obj.download_url) {
-          files.push({
-            id: obj.id || Math.random().toString(36).substr(2, 9),
-            name: obj.file_name,
-            url: obj.download_url,
-            type: obj.file_extension
+        // Handle all_files from server merged result
+        if (obj.all_files && Array.isArray(obj.all_files)) {
+          obj.all_files.forEach((f: any) => {
+            if (f.file_name && f.download_url) {
+              files.push({
+                id: f.id || Math.random().toString(36).substr(2, 9),
+                name: f.file_name,
+                url: f.download_url,
+                type: f.file_extension
+              });
+            }
           });
+        }
+
+        // Handle explicit file objects from List Files API or merged result
+        if (obj.file_name && obj.download_url) {
+          // Check if already added
+          if (!files.some(f => f.url === obj.download_url)) {
+            files.push({
+              id: obj.id || Math.random().toString(36).substr(2, 9),
+              name: obj.file_name,
+              url: obj.download_url,
+              type: obj.file_extension
+            });
+          }
         } 
         // Handle output_file objects from Task status API
         else if (obj.type === 'output_file' && obj.output_file) {
-          files.push({
-            id: obj.output_file.id,
-            name: obj.output_file.file_name,
-            url: obj.output_file.download_url,
-            type: obj.output_file.file_extension
-          });
+          if (!files.some(f => f.url === obj.output_file.download_url)) {
+            files.push({
+              id: obj.output_file.id,
+              name: obj.output_file.file_name,
+              url: obj.output_file.download_url,
+              type: obj.output_file.file_extension
+            });
+          }
         } else {
           Object.values(obj).forEach(val => findFiles(val));
         }
