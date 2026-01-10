@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { Image as ImageIcon, Loader2, Download, Zap, Check, RefreshCw, LogIn, Rocket, Sparkles, Palette, Shield, CheckCircle, ChevronDown } from 'lucide-react'
-import WaterDropAnimation from '../components/WaterDropAnimation'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 
@@ -44,7 +43,6 @@ export default function ImageGeneratorPage() {
   const [polling, setPolling] = useState(false)
   const [progress, setProgress] = useState(0)
   const [progressMessage, setProgressMessage] = useState('')
-  const [showWaterDrop, setShowWaterDrop] = useState(false)
   const generateButtonRef = useRef<HTMLButtonElement>(null)
   const loadingAreaRef = useRef<HTMLDivElement>(null)
 
@@ -189,9 +187,6 @@ export default function ImageGeneratorPage() {
       return;
     }
 
-    setShowWaterDrop(true)
-    setTimeout(() => setShowWaterDrop(false), 1200)
-
     setLoading(true)
     setResult(null)
 
@@ -269,11 +264,6 @@ export default function ImageGeneratorPage() {
 
   return (
     <div className="fade-in">
-      <WaterDropAnimation 
-        isActive={showWaterDrop}
-        fromButton={generateButtonRef as any}
-        toLoading={loadingAreaRef as any}
-      />
       <div className="flex items-center gap-4 mb-8">
         <div className="w-16 h-16 rounded-[1.2rem] bg-gradient-to-br from-[#FF6B6B] to-[#FF8E8E] flex items-center justify-center shadow-lg transform rotate-3">
           <ImageIcon className="w-8 h-8 text-white drop-shadow-md" />

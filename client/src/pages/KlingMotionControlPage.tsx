@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, ChangeEvent } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Video, Loader2, Zap, Check, Rocket, Shield, Wand2, Info, Upload, CheckCircle, ChevronDown } from 'lucide-react'
 import { motion } from 'framer-motion'
-import WaterDropAnimation from '../components/WaterDropAnimation'
 import VideoPlayer from '../components/VideoPlayer'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -34,7 +33,6 @@ export default function KlingMotionControlPage() {
   const [polling, setPolling] = useState(false)
   const [progress, setProgress] = useState(0)
   const [progressMessage, setProgressMessage] = useState('')
-  const [showWaterDrop, setShowWaterDrop] = useState(false)
   
   const generateButtonRef = useRef<HTMLButtonElement>(null) as React.MutableRefObject<HTMLButtonElement>
   const loadingAreaRef = useRef<HTMLDivElement>(null) as React.MutableRefObject<HTMLDivElement>
@@ -160,9 +158,6 @@ export default function KlingMotionControlPage() {
       return;
     }
 
-    setShowWaterDrop(true)
-    setTimeout(() => setShowWaterDrop(false), 1200)
-
     setLoading(true)
     setResult(null)
 
@@ -202,12 +197,6 @@ export default function KlingMotionControlPage() {
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 fade-in">
-      <WaterDropAnimation 
-        isActive={showWaterDrop}
-        fromButton={generateButtonRef}
-        toLoading={loadingAreaRef}
-      />
-      
       <div className="flex items-center gap-4 mb-8">
         <div className="w-16 h-16 rounded-[1.2rem] bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg transform rotate-3">
           <Wand2 className="w-8 h-8 text-white drop-shadow-md" />
