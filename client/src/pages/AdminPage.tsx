@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Key, Plus, Trash2, RefreshCw, Loader2, AlertTriangle, CheckCircle, Lock, LogOut, Zap } from 'lucide-react';
+import { Shield, Key, Plus, Trash2, RefreshCw, Loader2, AlertTriangle, CheckCircle, Lock, LogOut, Zap, Brain } from 'lucide-react';
 
 interface ApiKey {
   id: number;
@@ -34,6 +34,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [manusKey, setManusKey] = useState('');
+  const [savingManus, setSavingManus] = useState(false);
   
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
@@ -59,6 +61,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (isLoggedIn) {
       loadData();
+      loadSettings();
       
       // Set up 10s interval
       const interval = setInterval(() => {
@@ -68,6 +71,41 @@ export default function AdminPage() {
       return () => clearInterval(interval);
     }
   }, [isLoggedIn, adminToken]);
+
+  const loadSettings = async () => {
+    try {
+      const res = await fetch('/api/admin/settings', {
+        headers: { Authorization: `Bearer ${adminToken}` }
+      });
+      const data = await res.json();
+      if (data.manus_api_key) setManusKey(data.manus_api_key);
+    } catch (err) {
+      console.error('Error loading settings:', err);
+    }
+  };
+
+  const saveManusKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingManus(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ key: 'manus_api_key', value: manusKey })
+      });
+      if (res.ok) {
+        setSuccess('Đã lưu Manus API Key');
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSavingManus(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -487,6 +525,29 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      <div className="glass rounded-2xl p-6">
+        <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
+          <Brain className="w-5 h-5 text-indigo-500" />
+          Cấu hình Manus AI
+        </h2>
+        <form onSubmit={saveManusKey} className="flex gap-4">
+          <input
+            type="password"
+            value={manusKey}
+            onChange={(e) => setManusKey(e.target.value)}
+            placeholder="Nhập Manus API Key..."
+            className="flex-1 px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl focus:outline-none focus:border-indigo-500"
+          />
+          <button
+            type="submit"
+            disabled={savingManus}
+            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-medium transition-all"
+          >
+            {savingManus ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Lưu Key'}
+          </button>
+        </form>
+      </div>
 
       <div className="glass rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">

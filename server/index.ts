@@ -88,6 +88,85 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Manus AI Integration
+const MANUS_API_BASE = 'https://api.manus.ai/v1';
+
+async function getManusApiKey(): Promise<string> {
+  const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'manus_api_key' LIMIT 1");
+  if (result.rows.length > 0 && result.rows[0].setting_value) {
+    return result.rows[0].setting_value.trim();
+  }
+  return process.env.MANUS_API_KEY || '';
+}
+
+app.post('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { prompt, taskMode = 'agent', agentProfile = 'manus-1.6' } = req.body;
+    const apiKey = await getManusApiKey();
+    
+    if (!apiKey) {
+      return res.status(400).json({ error: 'Manus API key chưa được cấu hình.' });
+    }
+
+    const response = await fetch(`${MANUS_API_BASE}/tasks`, {
+      method: 'POST',
+      headers: {
+        'API_KEY': apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ prompt, taskMode, agentProfile })
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const apiKey = await getManusApiKey();
+    
+    const response = await fetch(`${MANUS_API_BASE}/tasks/${taskId}`, {
+      headers: { 'API_KEY': apiKey }
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/settings', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await pool.query("SELECT setting_key, setting_value FROM admin_settings");
+    const settings: Record<string, string> = {};
+    result.rows.forEach(row => {
+      settings[row.setting_key] = row.setting_value;
+    });
+    res.json(settings);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/settings', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { key, value } = req.body;
+    await pool.query(
+      "INSERT INTO admin_settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO UPDATE SET setting_value = $2",
+      [key, value]
+    );
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // PPTX generation endpoint
 app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {

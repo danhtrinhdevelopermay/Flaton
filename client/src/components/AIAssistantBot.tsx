@@ -13,6 +13,7 @@ interface Message {
 const quickActions = [
   { icon: Image, label: 'Tạo hình ảnh', color: 'from-blue-500 to-cyan-500' },
   { icon: Music, label: 'Tạo nhạc', color: 'from-purple-500 to-pink-500' },
+  { icon: Brain, label: 'Manus AI Agent', color: 'from-indigo-600 to-blue-600' },
 ]
 
 export default function AIAssistantBot() {
@@ -109,6 +110,10 @@ export default function AIAssistantBot() {
       } else if (data.action === 'redirect-music') {
         setTimeout(() => {
           window.location.href = `/music-generator?autoPrompt=${encodeURIComponent(data.prompt || '')}`
+        }, 1000)
+      } else if (data.action === 'redirect-manus') {
+        setTimeout(() => {
+          window.location.href = `/manus?autoPrompt=${encodeURIComponent(data.prompt || '')}`
         }, 1000)
       }
     } catch (err) {
