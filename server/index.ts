@@ -241,7 +241,7 @@ async function checkTaskStatus(taskId: string, taskType: string, apiKeyId?: numb
       case 'playground':
         endpoint = useRecordId 
           ? `/playground/recordInfo?taskId=${taskId}&recordId=${taskId}`
-          : `/playground/recordInfo?taskId=${taskId}`;
+          : `/playground/recordInfo?recordId=${taskId}`;
         break;
       case 'seedream':
       case 'grok':
@@ -250,7 +250,7 @@ async function checkTaskStatus(taskId: string, taskType: string, apiKeyId?: numb
       case 'topaz-video':
         endpoint = useRecordId
           ? `/jobs/recordInfo?taskId=${taskId}&recordId=${taskId}`
-          : `/jobs/recordInfo?taskId=${taskId}`;
+          : `/jobs/recordInfo?recordId=${taskId}`;
         break;
       case 'suno':
         endpoint = `/generate/record-info?taskId=${taskId}`;

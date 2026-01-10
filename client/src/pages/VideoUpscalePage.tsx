@@ -66,7 +66,7 @@ export default function VideoUpscalePage() {
 
     const poll = async (): Promise<any> => {
       try {
-        const response = await fetch(`/api/task/topaz-video/${taskId}`, {
+        const response = await fetch(`/api/task/topaz-video/${taskId}${selectedServer ? `?apiKeyId=${selectedServer}` : ''}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         const data = await response.json()

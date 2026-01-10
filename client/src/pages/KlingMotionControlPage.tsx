@@ -86,7 +86,7 @@ export default function KlingMotionControlPage() {
 
     const poll = async (): Promise<GenerationResult> => {
       try {
-        const response = await fetch(`/api/task/${taskType}/${taskId}`, {
+        const response = await fetch(`/api/task/${taskType}/${taskId}${selectedServer ? `?apiKeyId=${selectedServer}` : ''}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         const data = await response.json()
