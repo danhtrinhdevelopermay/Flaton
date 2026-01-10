@@ -349,84 +349,67 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const dom = new JSDOM(html);
     const document = dom.window.document;
     
-    // Remove all <style> tags as they contain CSS code that we don't want to extract as text
-    const styles = document.querySelectorAll('style');
-    styles.forEach(style => style.remove());
+    // CRITICAL: Filter out CSS/Style content that often appears as raw text in Manus AI responses
+    const filterGarbage = (text: string) => {
+      if (!text) return '';
+      // Remove common CSS patterns that might be misinterpreted as content
+      return text
+        .replace(/\{[^{}]*\}/g, '') // Remove CSS blocks
+        .replace(/\.[a-zA-Z0-9_-]+\s*\{/g, '') // Remove class definitions
+        .replace(/[a-zA-Z0-9_-]+\s*:\s*[^;]+;/g, '') // Remove property declarations
+        .replace(/html,body\{[^}]*\}/g, '')
+        .replace(/@media[^{]*\{[^{}]*\}/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
 
-    // Improved slide detection: try various common markers
-    let slides = Array.from(document.querySelectorAll('div.mb-8, section, hr'));
-    
-    // If no clear markers, split by H2 titles
+    // Remove all <style> and <script> tags
+    document.querySelectorAll('style, script').forEach(el => el.remove());
+
+    // Improved slide detection
     let slideCount = 0;
-    if (slides.length === 0) {
-      const h2s = Array.from(document.querySelectorAll('h2'));
-      if (h2s.length > 0) {
-        h2s.forEach((h2, idx) => {
+    
+    // Strategy 1: Look for sections or divs with slide-like classes
+    const potentialSlides = document.querySelectorAll('section, .slide, .slide-container, div[id^="slide"]');
+    
+    if (potentialSlides.length > 0) {
+      potentialSlides.forEach((el: any) => {
+        const title = el.querySelector('h1, h2, h3')?.textContent?.trim() || `Slide ${++slideCount}`;
+        const content = Array.from(el.querySelectorAll('p, li, span, div'))
+          .map((c: any) => c.textContent?.trim())
+          .filter(t => t && t.length > 3 && !t.includes('{') && !t.includes(':'))
+          .join('\n\n');
+        
+        if (content || title) {
           const slide = pres.addSlide();
-          slideCount++;
-          slide.addText(h2.textContent || `Slide ${idx + 1}`, { 
-            x: 0.5, y: 0.3, w: '90%', h: 1, 
-            fontSize: 36, bold: true, color: '2D3748', align: pres.AlignH.center 
-          });
-
-          // Collect content until next H2
-          let current = h2.nextElementSibling;
-          let contentParts: string[] = [];
-          while (current && current.tagName !== 'H2') {
-            // Ignore script or style tags if they somehow remained
-            if (current.tagName !== 'SCRIPT' && current.tagName !== 'STYLE') {
-              const text = current.textContent?.trim();
-              if (text) {
-                // Handle lists
-                if (current.tagName === 'UL' || current.tagName === 'OL') {
-                  Array.from(current.querySelectorAll('li')).forEach(li => {
-                    contentParts.push(`• ${li.textContent?.trim()}`);
-                  });
-                } else {
-                  contentParts.push(text);
-                }
-              }
-            }
-            current = current.nextElementSibling;
-          }
-          
-          if (contentParts.length > 0) {
-            slide.addText(contentParts.join('\n\n'), { 
-              x: 0.75, y: 1.5, w: '85%', h: 4.5, 
-              fontSize: 20, color: '4A5568', valign: pres.AlignV.top,
-              lineSpacing: 24
-            });
-          }
-        });
-      }
+          slide.addText(title, { x: 0.5, y: 0.3, w: '90%', h: 1, fontSize: 32, bold: true, color: '2D3748', align: pres.AlignH.center });
+          slide.addText(content, { x: 0.75, y: 1.5, w: '85%', h: 4.5, fontSize: 18, color: '4A5568', valign: pres.AlignV.top });
+        }
+      });
+    } else {
+      // Strategy 2: Split by headings
+      const headings = document.querySelectorAll('h1, h2, h3');
+      headings.forEach((h: any) => {
+        const slide = pres.addSlide();
+        slideCount++;
+        slide.addText(h.textContent?.trim() || 'Slide', { x: 0.5, y: 0.3, w: '90%', h: 1, fontSize: 32, bold: true, color: '2D3748', align: pres.AlignH.center });
+        
+        let next = h.nextElementSibling;
+        let content = '';
+        while (next && !['H1', 'H2', 'H3'].includes(next.tagName)) {
+          const text = filterGarbage(next.textContent?.trim() || '');
+          if (text) content += text + '\n\n';
+          next = next.nextElementSibling;
+        }
+        slide.addText(content, { x: 0.75, y: 1.5, w: '85%', h: 4.5, fontSize: 18, color: '4A5568', valign: pres.AlignV.top });
+      });
     }
 
     if (slideCount === 0) {
-      // Fallback: use containers if found
-      const containers = document.querySelectorAll('div.mb-8, section');
-      if (containers.length > 0) {
-        containers.forEach((container: any) => {
-          const slide = pres.addSlide();
-          slideCount++;
-          const title = container.querySelector('h2, h1, h3')?.textContent || 'Slide';
-          
-          const bodyContent = Array.from(container.children)
-            .filter((el: any) => !['H1', 'H2', 'H3', 'STYLE', 'SCRIPT'].includes(el.tagName))
-            .map((el: any) => el.textContent?.trim())
-            .filter(t => t)
-            .join('\n\n');
-
-          slide.addText(title, { x: 0.5, y: 0.3, w: '90%', h: 1, fontSize: 36, bold: true, color: '2D3748', align: pres.AlignH.center });
-          slide.addText(bodyContent, { x: 0.75, y: 1.5, w: '85%', h: 4.5, fontSize: 20, color: '4A5568', valign: pres.AlignV.top });
-        });
-      } else {
-        // Absolute fallback - clean everything before taking text
-        const slide = pres.addSlide();
-        const scripts = document.querySelectorAll('script');
-        scripts.forEach(s => s.remove());
-        const cleanText = document.body.textContent?.trim() || 'No content';
-        slide.addText(cleanText, { x: 0.5, y: 1.5, w: '90%', h: 4.5, fontSize: 18, color: '4A5568', valign: pres.AlignV.top });
-      }
+      const slide = pres.addSlide();
+      const text = filterGarbage(document.body.textContent || '');
+      slide.addText('Presentation', { x: 0.5, y: 0.3, w: '90%', h: 1, fontSize: 32, bold: true, align: pres.AlignH.center });
+      slide.addText(text, { x: 0.75, y: 1.5, w: '85%', h: 4.5, fontSize: 18, valign: pres.AlignV.top });
     }
 
     const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
