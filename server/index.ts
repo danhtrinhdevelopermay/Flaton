@@ -510,15 +510,15 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
         ],
         output: {
           type: "pptx",
-          // Use dynamic layout to match HTML content dimensions
-          layout: "auto"
+          // Nutrient Processor API documentation suggests these dimensions for 16:9
+          pageWidth: 960,
+          pageHeight: 540
         }
       }));
 
-      // Create a temporary HTML file for Nutrient with dynamic CSS
+      // Create a temporary HTML file for Nutrient with pixel-perfect dimensions
       const tempHtmlPath = path.join(__dirname, `temp_${Date.now()}.html`);
       
-      // Inject CSS that uses aspect-ratio and relative dimensions
       const optimizedHtml = `
 <!DOCTYPE html>
 <html>
@@ -526,20 +526,21 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     <meta charset="UTF-8">
     <style>
         @page {
+            size: 960px 540px;
             margin: 0;
-            size: auto;
         }
         html, body {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: auto;
+            width: 960px;
+            height: 540px;
             background-color: white;
             -webkit-print-color-adjust: exact;
+            overflow: hidden;
         }
         section, .slide, .presentation-slide {
-            width: 100vw;
-            aspect-ratio: 16 / 9;
+            width: 960px;
+            height: 540px;
             page-break-after: always;
             position: relative;
             overflow: hidden;
@@ -548,7 +549,7 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
             display: block !important;
             box-sizing: border-box;
         }
-        /* Preserve original element scaling */
+        /* Ensure all nested elements scale relative to the 960x540 canvas */
         * {
             box-sizing: border-box;
         }
