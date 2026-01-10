@@ -509,24 +509,24 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
           <head>
             <meta charset="UTF-8">
             <style>
-              body { margin: 0; padding: 0; background: transparent; overflow: visible; font-family: sans-serif; }
-              /* Ensure slides take up full viewport for capture */
+              body { 
+                margin: 0; 
+                padding: 0; 
+                background: transparent; 
+                overflow: visible;
+              }
+              /* 
+                 Reset any global styles that might interfere 
+                 but preserve the AI's internal layout 100%
+              */
               section, .slide, .presentation-slide { 
                 width: 1920px; 
                 height: 1080px; 
-                display: flex; 
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                page-break-after: always;
                 position: relative;
-                box-sizing: border-box;
-                padding: 40px;
                 overflow: hidden;
+                box-sizing: border-box;
+                page-break-after: always;
               }
-              img { max-width: 100%; max-height: 80%; object-fit: contain; }
-              h1, h2, h3 { margin-top: 0; }
-              p, li { font-size: 24px; line-height: 1.6; }
             </style>
           </head>
           <body>${html}</body>
