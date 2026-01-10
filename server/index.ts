@@ -342,7 +342,7 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const { html, fileName } = req.body;
     if (!html) return res.status(400).json({ error: 'HTML content is required' });
 
-    console.log('[Manus PPTX] Converting content to PPTX using Gemini for layout intelligence...');
+    console.log('[Manus PPTX] Converting content to PPTX with advanced CSS parsing...');
     
     const pres = new pptxgen();
     pres.layout = 'LAYOUT_16x9';
@@ -350,63 +350,120 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const dom = new JSDOM(html);
     const document = dom.window.document;
     
-    // Extract styles to help Gemini understand the intended look
-    const styles = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
+    // 1. Extract and Parse CSS
+    const styleTags = Array.from(document.querySelectorAll('style'));
+    const cssText = styleTags.map(s => s.textContent).join('\n');
     
-    // Detect slides - Manus often uses sections or specific div classes
-    let slideElements = Array.from(document.querySelectorAll('section, .slide, .presentation-slide'));
+    // Simple CSS parser to find background colors and text colors
+    const parseStyles = (css: string) => {
+      const styles: Record<string, any> = {};
+      const rules = css.split('}');
+      rules.forEach(rule => {
+        const [selector, body] = rule.split('{');
+        if (selector && body) {
+          const s = selector.trim();
+          styles[s] = {};
+          body.split(';').forEach(prop => {
+            const [k, v] = prop.split(':');
+            if (k && v) styles[s][k.trim()] = v.trim();
+          });
+        }
+      });
+      return styles;
+    };
+    const globalStyles = parseStyles(cssText);
+
+    // 2. Detect Slides
+    let slideElements = Array.from(document.querySelectorAll('section, .slide, .presentation-slide, .slide-container'));
     if (slideElements.length === 0) {
       slideElements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName)) as Element[];
     }
 
-    console.log(`[Manus PPTX] Processing ${slideElements.length} slides with AI intelligence`);
+    console.log(`[Manus PPTX] Rendering ${slideElements.length} slides`);
 
     for (const el of slideElements) {
       const slide = pres.addSlide();
       
-      // Use Gemini to parse the HTML/CSS and suggest a PptxGenJS layout
-      const model = await getGeminiModel();
-      if (model) {
-        const prompt = `
-          Analyze this HTML element and its associated CSS. 
-          Suggest a PptxGenJS configuration (JSON) to replicate this slide's visual design.
-          Focus on: Background color, Title position/style, Content text position/style, and any decorative shapes.
-          
-          HTML:
-          ${el.outerHTML.substring(0, 3000)}
-          
-          CSS Context:
-          ${styles.substring(0, 2000)}
-          
-          Return ONLY a JSON array of PptxGenJS objects to add to the slide. 
-          Format: [{"type": "background", "color": "HEX"}, {"type": "text", "text": "...", "options": {...}}, {"type": "shape", "shapeType": "...", "options": {...}}]
-          Use standard PptxGenJS option names.
-        `;
+      // Default styles
+      let bgColor = '1A1D21';
+      let titleColor = '60A5FA';
+      let textColor = 'E2E8F0';
 
-        try {
-          const result = await (model as any).generateContent(prompt);
-          const response = await result.response;
-          let jsonText = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
-          const configs = JSON.parse(jsonText);
-
-          configs.forEach((config: any) => {
-            if (config.type === 'background') {
-              slide.background = { color: config.color.replace('#', '') };
-            } else if (config.type === 'text') {
-              slide.addText(config.text, config.options);
-            } else if (config.type === 'shape') {
-              slide.addShape(pres.ShapeType[config.shapeType as keyof typeof pres.ShapeType] || pres.ShapeType.rect, config.options);
-            } else if (config.type === 'image' && config.path) {
-              slide.addImage({ path: config.path, ...config.options });
-            }
-          });
-        } catch (e) {
-          console.error('[Manus PPTX] Gemini layout error, using fallback:', e);
-          // Fallback to basic dark theme
-          slide.background = { color: '1A1D21' };
-          slide.addText(el.textContent?.substring(0, 100) || 'Slide', { x: 0.5, y: 0.5, color: '60A5FA', fontSize: 24 });
+      // Try to extract styles for this specific slide
+      const elStyles = (el as HTMLElement).style;
+      if (elStyles.backgroundColor) bgColor = elStyles.backgroundColor.replace('#', '');
+      
+      // Look for specific style rules in the parsed CSS
+      for (const selector in globalStyles) {
+        if (el.matches(selector)) {
+          if (globalStyles[selector].background) bgColor = globalStyles[selector].background.replace('#', '');
+          if (globalStyles[selector]['background-color']) bgColor = globalStyles[selector]['background-color'].replace('#', '');
         }
       }
+
+      slide.background = { color: bgColor.replace(/[^a-fA-F0-9]/g, '') || '1A1D21' };
+
+      // Process content
+      const elements = Array.from(el.querySelectorAll('h1, h2, h3, h4, p, li, span, .title, .text, .content'));
+      
+      let currentY = 0.5;
+      elements.forEach(item => {
+        // Skip items that are inside other processed items to avoid duplication
+        if (elements.some(parent => parent !== item && parent.contains(item))) return;
+
+        const text = item.textContent?.trim();
+        if (!text || text.length < 2) return;
+
+        const tagName = item.tagName;
+        const isHeader = ['H1', 'H2', 'H3', 'H4'].includes(tagName) || item.classList.contains('title') || item.classList.contains('header');
+        
+        let fontSize = 18;
+        let color = textColor;
+        let align: 'left' | 'center' | 'right' = 'left';
+        let bold = false;
+
+        if (isHeader) {
+          fontSize = tagName === 'H1' ? 36 : tagName === 'H2' ? 32 : 28;
+          color = titleColor;
+          bold = true;
+          align = 'center';
+        }
+
+        // Try to get inline styles
+        const itemStyle = (item as HTMLElement).style;
+        if (itemStyle.color) color = itemStyle.color.replace('#', '');
+        if (itemStyle.fontSize) fontSize = parseInt(itemStyle.fontSize) || fontSize;
+        if (itemStyle.textAlign) align = itemStyle.textAlign as any;
+
+        // Check global styles for this item
+        for (const selector in globalStyles) {
+          if (item.matches(selector)) {
+            if (globalStyles[selector].color) color = globalStyles[selector].color.replace('#', '');
+            if (globalStyles[selector]['font-size']) fontSize = parseInt(globalStyles[selector]['font-size']) || fontSize;
+            if (globalStyles[selector]['text-align']) align = globalStyles[selector]['text-align'] as any;
+          }
+        }
+
+        slide.addText(text, {
+          x: 0.5, y: currentY, w: '90%', 
+          fontSize, color: color.replace(/[^a-fA-F0-9]/g, '') || 'E2E8F0',
+          bold, align: align as any,
+          fontFace: 'Arial'
+        });
+
+        currentY += (fontSize / 72) * 1.5 + 0.2; // Adjust vertical spacing
+      });
+
+      // Images
+      const images = Array.from(el.querySelectorAll('img'));
+      images.forEach((img, idx) => {
+        try {
+          slide.addImage({
+            path: img.src,
+            x: 6, y: 1.5, w: 3, h: 3 // Simplistic image placement
+          });
+        } catch (e) {}
+      });
     }
 
     const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
