@@ -346,10 +346,15 @@ export default function ManusPage() {
         
         let htmlContent = '';
         if (data.files && Array.isArray(data.files)) {
+          // Cải thiện giao diện xem trước để giống Slide hơn
           htmlContent = data.files.map((f: any) => `
-            <div class="mb-8 border-b pb-4">
-              <h2 class="text-xl font-bold mb-4 text-indigo-600">${f.id || 'Slide'}</h2>
-              ${f.content}
+            <div class="mb-12 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-xl bg-slate-900 aspect-video flex flex-col p-12 relative group transition-all hover:scale-[1.02]">
+              <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/20 to-transparent pointer-events-none"></div>
+              <h2 class="text-4xl font-black mb-8 text-indigo-400 border-b-4 border-indigo-500/30 pb-4 inline-block z-10">${f.id || 'Slide'}</h2>
+              <div class="text-2xl text-slate-200 leading-relaxed z-10 flex-1 flex flex-col justify-center">
+                ${f.content}
+              </div>
+              <div class="absolute bottom-6 right-8 text-indigo-500/50 font-black tracking-widest text-sm uppercase">Flaton AI • Manus</div>
             </div>
           `).join('');
         } else if (data.content) {

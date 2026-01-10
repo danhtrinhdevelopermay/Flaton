@@ -387,9 +387,15 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
         };
         const globalStyles = parseStyles(cssText);
 
-        // 2. Detect Slides
-        // Increased specificity for Manus slides
+        // 2. Detect Slides - Cải thiện để trích xuất nội dung từ dữ liệu JSON cấu trúc
         let slideElements = Array.from(document.querySelectorAll('section, .slide, .presentation-slide, .slide-container, .mb-8.border-b'));
+        if (slideElements.length === 0) {
+          // Thử tìm các div chứa nội dung tiêu đề và văn bản nếu không thấy cấu trúc slide chuẩn
+          slideElements = Array.from(document.body.querySelectorAll('div')).filter(el => {
+            return el.querySelector('h1, h2, h3, .title, .font-bold') && el.textContent && el.textContent.length > 20;
+          });
+        }
+        
         if (slideElements.length === 0) {
           slideElements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName)) as Element[];
         }
@@ -412,55 +418,62 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
           }
           slide.background = { color: bgColor.replace(/[^a-fA-F0-9]/g, '') || '1A1D21' };
 
-          // Extract content
-          const headers = Array.from(el.querySelectorAll('h1, h2, h3, .title, .font-bold.text-indigo-600'));
+          // Extract content - Thêm các selector linh hoạt hơn cho Manus
+          const headers = Array.from(el.querySelectorAll('h1, h2, h3, .title, .font-bold.text-indigo-600, .slide-title, b, strong'));
           const paragraphs = Array.from(el.querySelectorAll('p, li, .text, span, div:not(:has(*))'));
           const images = Array.from(el.querySelectorAll('img'));
 
-          let currentY = 0.5;
+          // Tiêu đề chính của slide
+          let mainTitle = '';
+          const headerEl = headers.shift();
+          if (headerEl) mainTitle = headerEl.textContent?.trim() || '';
 
-          // Render Headers
-          headers.forEach(h => {
-            const text = h.textContent?.trim();
-            if (!text) return;
-            
-            slide.addText(text, {
-              x: 0.5, y: currentY, w: '90%', h: 1,
+          if (mainTitle) {
+            slide.addText(mainTitle, {
+              x: 0.5, y: 0.5, w: '90%', h: 1,
               fontSize: 32, color: '60A5FA', bold: true, align: 'center'
             });
-            currentY += 1.2;
-          });
+          }
+
+          let currentY = mainTitle ? 1.5 : 0.5;
 
           // Render Images
           if (images.length > 0) {
-            images.forEach((img, idx) => {
+            const imgCount = Math.min(images.length, 3);
+            const imgW = 3;
+            const imgH = 3;
+            
+            for (let i = 0; i < imgCount; i++) {
               try {
-                const imgSrc = (img as HTMLImageElement).src;
+                const imgSrc = (images[i] as HTMLImageElement).src;
                 if (imgSrc && imgSrc.startsWith('http')) {
                   slide.addImage({
                     path: imgSrc,
-                    x: 0.5 + (idx * 3), y: currentY, w: 3, h: 3
+                    x: 0.5 + (i * (imgW + 0.2)), y: currentY, w: imgW, h: imgH
                   });
                 }
               } catch (e) {}
-            });
+            }
             currentY += 3.2;
           }
 
           // Render Text Content
           const uniqueTexts = new Set();
-          const pText = paragraphs
+          const textItems = paragraphs
             .map(p => p.textContent?.trim())
             .filter(t => {
-              if (!t || t.length < 2 || uniqueTexts.has(t)) return false;
+              if (!t || t.length < 5 || uniqueTexts.has(t)) return false;
+              // Bỏ qua nếu text trùng với tiêu đề
+              if (t === mainTitle) return false;
               uniqueTexts.add(t);
               return true;
-            })
-            .join('\n\n');
+            });
+
+          const pText = textItems.join('\n\n');
 
           if (pText) {
             slide.addText(pText, {
-              x: 0.75, y: Math.min(currentY, 6), w: '85%', h: 4,
+              x: 0.75, y: Math.min(currentY, 6.5), w: '85%', h: 4,
               fontSize: 18, color: 'E2E8F0', align: 'left', valign: 'top'
             });
           }
