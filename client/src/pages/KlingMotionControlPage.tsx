@@ -135,7 +135,15 @@ export default function KlingMotionControlPage() {
         });
         const data = await response.json();
         setServers(data);
-        if (data.length > 0) setSelectedServer(data[0].id);
+        
+        // Auto-select the first server that has enough credits (48 for Kling Motion)
+        const requiredCredits = 48;
+        const availableServer = data.find((s: any) => s.credits >= requiredCredits);
+        if (availableServer) {
+          setSelectedServer(availableServer.id);
+        } else if (data.length > 0) {
+          setSelectedServer(data[0].id);
+        }
       } catch (err) {
         console.error('Failed to fetch servers:', err);
       }

@@ -164,13 +164,21 @@ export default function ImageGeneratorPage() {
         });
         const data = await response.json();
         setServers(data);
-        if (data.length > 0) setSelectedServer(data[0].id);
+        
+        // Auto-select the first server that has enough credits for the current tool
+        const currentToolCredits = currentTool?.credits || 0;
+        const availableServer = data.find((s: any) => s.credits >= currentToolCredits);
+        if (availableServer) {
+          setSelectedServer(availableServer.id);
+        } else if (data.length > 0) {
+          setSelectedServer(data[0].id);
+        }
       } catch (err) {
         console.error('Failed to fetch servers:', err);
       }
     };
     if (isAuthenticated && token) fetchServers();
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, token, selectedTool]);
 
   const handleGenerate = async () => {
     if (!prompt.trim() || !selectedServer) return;

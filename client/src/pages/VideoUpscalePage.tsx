@@ -110,7 +110,15 @@ export default function VideoUpscalePage() {
         });
         const data = await response.json();
         setServers(data);
-        if (data.length > 0) setSelectedServer(data[0].id);
+        
+        // Auto-select the first server that has enough credits (72 for Upscale)
+        const requiredCredits = 72;
+        const availableServer = data.find((s: any) => s.credits >= requiredCredits);
+        if (availableServer) {
+          setSelectedServer(availableServer.id);
+        } else if (data.length > 0) {
+          setSelectedServer(data[0].id);
+        }
       } catch (err) {
         console.error('Failed to fetch servers:', err);
       }
