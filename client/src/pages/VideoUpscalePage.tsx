@@ -111,13 +111,17 @@ export default function VideoUpscalePage() {
         const data = await response.json();
         setServers(data);
         
-        // Auto-select the first server that has enough credits (72 for Upscale)
+        // Auto-select logic
         const requiredCredits = 72;
         const availableServer = data.find((s: any) => s.credits >= requiredCredits);
+        
         if (availableServer) {
           setSelectedServer(availableServer.id);
         } else if (data.length > 0) {
+          // If no server has enough credits, still select the first one so the dropdown isn't empty
           setSelectedServer(data[0].id);
+        } else {
+          setSelectedServer(null);
         }
       } catch (err) {
         console.error('Failed to fetch servers:', err);

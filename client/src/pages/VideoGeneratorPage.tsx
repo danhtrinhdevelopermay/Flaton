@@ -186,13 +186,17 @@ export default function VideoGeneratorPage() {
         const data = await response.json();
         setServers(data);
         
-        // Auto-select the first server that has enough credits for the current tool
+        // Auto-select logic
         const currentToolCredits = currentTool?.credits || 0;
         const availableServer = data.find((s: any) => s.credits >= currentToolCredits);
+        
         if (availableServer) {
           setSelectedServer(availableServer.id);
         } else if (data.length > 0) {
+          // If no server has enough credits, still select the first one so the dropdown isn't empty
           setSelectedServer(data[0].id);
+        } else {
+          setSelectedServer(null);
         }
       } catch (err) {
         console.error('Failed to fetch servers:', err);
