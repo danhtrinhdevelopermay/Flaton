@@ -278,6 +278,25 @@ export async function initDatabase() {
       )
     `);
 
+    // Create manus_tasks table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS manus_tasks (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        task_id TEXT NOT NULL,
+        status TEXT NOT NULL,
+        prompt TEXT NOT NULL,
+        result JSONB,
+        error TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Add indexes for manus_tasks
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_manus_tasks_user_id ON manus_tasks(user_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_manus_tasks_task_id ON manus_tasks(task_id)`);
+
     console.log('Database tables created successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
