@@ -100,11 +100,15 @@ export default function ManusPage() {
           console.log('[Manus UI] Poll result:', data)
           
           if (data.status) {
-            setCurrentTask(prev => prev ? { ...prev, status: data.status, result: data.result, error: data.error } : null)
-            setTasks(prev => prev.map(t => t.id === data.id ? { ...t, status: data.status, result: data.result, error: data.error } : t))
+            const finalStatus = data.status === 'success' ? 'completed' : 
+                               (data.status === 'failed' || data.status === 'fail' || data.status === 'error') ? 'failed' : 
+                               data.status;
             
-            if (data.status === 'completed' || data.status === 'failed') {
-              console.log('[Manus UI] Task finished with status:', data.status)
+            setCurrentTask(prev => prev ? { ...prev, status: finalStatus, result: data.result || data.output, error: data.error } : null)
+            setTasks(prev => prev.map(t => t.id === data.id ? { ...t, status: finalStatus, result: data.result || data.output, error: data.error } : t))
+            
+            if (finalStatus === 'completed' || finalStatus === 'failed') {
+              console.log('[Manus UI] Task finished with status:', finalStatus)
               clearInterval(interval)
             }
           }
