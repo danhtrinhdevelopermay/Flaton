@@ -21,6 +21,31 @@ export default function ManusPage() {
   const [tasks, setTasks] = useState<ManusTask[]>([])
   const [currentTask, setCurrentTask] = useState<ManusTask | null>(null)
 
+  useEffect(() => {
+    if (token) {
+      loadTasks()
+    }
+  }, [token])
+
+  const loadTasks = async () => {
+    try {
+      const res = await fetch('/api/manus/tasks', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (Array.isArray(data)) {
+        setTasks(data)
+        // Check if any task is still running
+        const runningTask = data.find(t => t.status === 'pending' || t.status === 'running')
+        if (runningTask) {
+          setCurrentTask(runningTask)
+        }
+      }
+    } catch (err) {
+      console.error('[Manus UI] Error loading tasks:', err)
+    }
+  }
+
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!prompt.trim() || loading) return

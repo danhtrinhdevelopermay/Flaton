@@ -126,10 +126,32 @@ app.post('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Respo
       console.error('[Manus] API Error:', data);
       return res.status(response.status).json(data);
     }
+
+    // Save task to database
+    const taskId = data.task_id || data.id;
+    if (taskId) {
+      await pool.query(
+        'INSERT INTO manus_tasks (user_id, task_id, status, prompt) VALUES ($1, $2, $3, $4)',
+        [req.userId, taskId, 'pending', prompt]
+      );
+    }
     
     res.json(data);
   } catch (error: any) {
     console.error('[Manus] Request Exception:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await pool.query(
+      'SELECT task_id as id, status, prompt, result, error, created_at as "createdAt" FROM manus_tasks WHERE user_id = $1 ORDER BY created_at DESC',
+      [req.userId]
+    );
+    res.json(result.rows);
+  } catch (error: any) {
+    console.error('[Manus] Get tasks error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -148,6 +170,14 @@ app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res
     if (!response.ok) {
       console.error('[Manus] Poll API Error:', data);
       return res.status(response.status).json(data);
+    }
+
+    // Update status in database if changed
+    if (data.status) {
+      await pool.query(
+        'UPDATE manus_tasks SET status = $1, result = $2, error = $3, updated_at = CURRENT_TIMESTAMP WHERE task_id = $4 AND user_id = $5',
+        [data.status, data.result || null, data.error || null, taskId, req.userId]
+      );
     }
     
     res.json(data);
