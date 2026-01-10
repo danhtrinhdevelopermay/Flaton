@@ -181,7 +181,8 @@ export default function ManusPage() {
           if (!type) {
             const urlParts = url.split('?')[0].split('.');
             if (urlParts.length > 1) {
-              type = urlParts.pop();
+              const ext = urlParts.pop()?.toLowerCase();
+              if (ext && ext.length <= 5) type = ext;
             }
           }
 
@@ -214,10 +215,19 @@ export default function ManusPage() {
         addFile(obj.output_file);
       } 
       
+      // 5. Special case: Check result.output or result.result for files
+      if (obj.output && typeof obj.output === 'object') {
+        findFiles(obj.output);
+      }
+      if (obj.result && typeof obj.result === 'object') {
+        findFiles(obj.result);
+      }
+      
       // Recursively check all properties
       try {
         Object.keys(obj).forEach(key => {
-          if (key !== 'all_files' && key !== 'data' && obj[key] && typeof obj[key] === 'object') {
+          // Avoid re-checking already handled special keys
+          if (!['all_files', 'data', 'output', 'result'].includes(key) && obj[key] && typeof obj[key] === 'object') {
             findFiles(obj[key]);
           }
         });
