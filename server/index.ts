@@ -174,16 +174,18 @@ app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res
 
     // Try to get full list of files for this task
     try {
-      const filesResponse = await fetch(`${MANUS_API_BASE}/files?taskId=${taskId}`, {
+      const filesResponse = await fetch(`${MANUS_API_BASE}/files?task_id=${taskId}`, {
         headers: { 'API_KEY': apiKey }
       });
       if (filesResponse.ok) {
         const filesData = await filesResponse.json();
-        // If files are found, attach them to the response or result
-        if (filesData && (Array.isArray(filesData) || filesData.data)) {
-          const files = Array.isArray(filesData) ? filesData : filesData.data;
-          data.all_files = files;
-          console.log(`[Manus] Found ${files.length} files for task ${taskId}`);
+        // The API returns { "files": [...] } according to the docs
+        if (filesData && filesData.files && Array.isArray(filesData.files)) {
+          data.all_files = filesData.files;
+          console.log(`[Manus] Found ${filesData.files.length} files for task ${taskId}`);
+        } else if (Array.isArray(filesData)) {
+          data.all_files = filesData;
+          console.log(`[Manus] Found ${filesData.length} files for task ${taskId}`);
         }
       }
     } catch (fileErr) {
