@@ -297,9 +297,34 @@ app.get('/api/manus/download', authMiddleware, async (req: AuthRequest, res: Res
     const fileUrl = req.query.url as string;
     if (!fileUrl) return res.status(400).send('URL is required');
 
+    console.log('[Manus Download] Handling URL:', fileUrl);
+    
+    // For JSON files that are actually data for slides, we want to force a download
+    // instead of just redirecting which might cause the browser to just display the JSON.
+    if (fileUrl.toLowerCase().includes('.json')) {
+      try {
+        const response = await fetch(fileUrl);
+        if (response.ok) {
+          const contentType = response.headers.get('content-type') || 'application/json';
+          res.setHeader('Content-Type', contentType);
+          
+          // Force download with a better filename
+          let fileName = 'presentation_data.json';
+          const urlParts = fileUrl.split('/');
+          const lastPart = urlParts[urlParts.length - 1].split('?')[0];
+          if (lastPart) fileName = lastPart;
+          
+          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+          
+          const arrayBuffer = await response.arrayBuffer();
+          return res.send(Buffer.from(arrayBuffer));
+        }
+      } catch (fetchError) {
+        console.error('[Manus Download] Fetch error for JSON:', fetchError);
+      }
+    }
+
     console.log('[Manus Download] Redirecting to URL to preserve format:', fileUrl);
-    // Directly redirecting to the Manus URL is the safest way to ensure the file format
-    // and headers (like content-type) are handled correctly by the browser.
     return res.redirect(fileUrl);
   } catch (error: any) {
     console.error('[Manus Download] Exception:', error);
