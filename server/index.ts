@@ -517,6 +517,7 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
       const tempHtmlPath = path.join(__dirname, `temp_${Date.now()}.html`);
       
       // Inject CSS to handle slide breaking and dimensions for Nutrient's engine
+      // Using standard PPTX 16:9 ratio in pixels (960x540) which maps better to slide size
       const optimizedHtml = `
 <!DOCTYPE html>
 <html>
@@ -524,20 +525,21 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     <meta charset="UTF-8">
     <style>
         @page {
-            size: 1920px 1080px;
+            size: 19.05cm 10.72cm;
             margin: 0;
         }
         body {
             margin: 0;
             padding: 0;
-            width: 1920px;
-            height: 1080px;
+            width: 19.05cm;
+            height: 10.72cm;
             font-family: Arial, sans-serif;
             -webkit-print-color-adjust: exact;
+            background-color: white;
         }
         section, .slide, .presentation-slide {
-            width: 1920px;
-            height: 1080px;
+            width: 19.05cm;
+            height: 10.72cm;
             page-break-after: always;
             position: relative;
             overflow: hidden;
@@ -546,12 +548,16 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
             display: block !important;
             box-sizing: border-box;
         }
-        /* Ensure images don't overflow */
+        /* Ensure content scales correctly */
+        .slide-content, .content {
+            width: 100%;
+            height: 100%;
+            transform-origin: top left;
+        }
         img {
             max-width: 100%;
             height: auto;
         }
-        /* Handle absolute positioning from AI */
         [style*="position: absolute"] {
             display: block !important;
         }
