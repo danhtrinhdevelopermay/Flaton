@@ -225,25 +225,25 @@ async function checkTaskStatus(taskId: string, taskType: string) {
       endpoint = `/mj/record-info?taskId=${taskId}`;
       break;
     case 'playground':
-      endpoint = `/playground/recordInfo?taskId=${taskId}`;
+      endpoint = `/playground/recordInfo?taskId=${taskId}&recordId=${taskId}`;
       break;
     case 'seedream':
-      endpoint = `/jobs/recordInfo?taskId=${taskId}`;
+      endpoint = `/jobs/recordInfo?taskId=${taskId}&recordId=${taskId}`;
       break;
     case 'grok':
-      endpoint = `/jobs/recordInfo?taskId=${taskId}`;
+      endpoint = `/jobs/recordInfo?taskId=${taskId}&recordId=${taskId}`;
       break;
     case 'sora2':
-      endpoint = `/jobs/recordInfo?taskId=${taskId}`;
+      endpoint = `/jobs/recordInfo?taskId=${taskId}&recordId=${taskId}`;
       break;
     case 'kling':
-      endpoint = `/jobs/recordInfo?taskId=${taskId}`;
+      endpoint = `/jobs/recordInfo?taskId=${taskId}&recordId=${taskId}`;
       break;
     case 'suno':
       endpoint = `/generate/record-info?taskId=${taskId}`;
       break;
     case 'topaz-video':
-      endpoint = `/jobs/recordInfo?taskId=${taskId}`;
+      endpoint = `/jobs/recordInfo?taskId=${taskId}&recordId=${taskId}`;
       break;
     case 'gpt4o-image':
       endpoint = `/gpt4o-image/record-info?taskId=${taskId}`;
