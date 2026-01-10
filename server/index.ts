@@ -334,6 +334,7 @@ app.get('/api/manus/download', authMiddleware, async (req: AuthRequest, res: Res
 
 import pptxgen from 'pptxgenjs';
 import { JSDOM } from 'jsdom';
+import puppeteer from 'puppeteer';
 
 // Manus PPTX Conversion API
 app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res: Response) => {
@@ -341,81 +342,101 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const { html, fileName } = req.body;
     if (!html) return res.status(400).json({ error: 'HTML content is required' });
 
-    console.log('[Manus PPTX] Converting content to PPTX...');
+    console.log('[Manus PPTX] Converting content to PPTX using Puppeteer rendering...');
     const pres = new pptxgen();
     pres.layout = 'LAYOUT_16x9';
 
-    // Parse HTML content to extract slides
     const dom = new JSDOM(html);
     const document = dom.window.document;
     
-    // CRITICAL: Filter out CSS/Style content that often appears as raw text in Manus AI responses
-    const filterGarbage = (text: string) => {
-      if (!text) return '';
-      // Remove common CSS patterns that might be misinterpreted as content
-      return text
-        .replace(/\{[^{}]*\}/g, '') // Remove CSS blocks
-        .replace(/\.[a-zA-Z0-9_-]+\s*\{/g, '') // Remove class definitions
-        .replace(/[a-zA-Z0-9_-]+\s*:\s*[^;]+;/g, '') // Remove property declarations
-        .replace(/html,body\{[^}]*\}/g, '')
-        .replace(/@media[^{]*\{[^{}]*\}/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-    };
-
-    // Remove all <style> and <script> tags
-    document.querySelectorAll('style, script').forEach(el => el.remove());
-
-    // Improved slide detection
-    let slideCount = 0;
+    // Strategy: Each section or h2-based block becomes a slide render
+    let slideElements = Array.from(document.querySelectorAll('section, .slide, .slide-container, div.mb-8'));
     
-    // Strategy 1: Look for sections or divs with slide-like classes
-    const potentialSlides = document.querySelectorAll('section, .slide, .slide-container, div[id^="slide"]');
-    
-    if (potentialSlides.length > 0) {
-      potentialSlides.forEach((el: any) => {
-        const title = el.querySelector('h1, h2, h3')?.textContent?.trim() || `Slide ${++slideCount}`;
-        const content = Array.from(el.querySelectorAll('p, li, span, div'))
-          .map((c: any) => c.textContent?.trim())
-          .filter(t => t && t.length > 3 && !t.includes('{') && !t.includes(':'))
-          .join('\n\n');
-        
-        if (content || title) {
-          const slide = pres.addSlide();
-          slide.addText(title, { x: 0.5, y: 0.3, w: '90%', h: 1, fontSize: 32, bold: true, color: '2D3748', align: pres.AlignH.center });
-          slide.addText(content, { x: 0.75, y: 1.5, w: '85%', h: 4.5, fontSize: 18, color: '4A5568', valign: pres.AlignV.top });
-        }
-      });
-    } else {
-      // Strategy 2: Split by headings
-      const headings = document.querySelectorAll('h1, h2, h3');
-      headings.forEach((h: any) => {
-        const slide = pres.addSlide();
-        slideCount++;
-        slide.addText(h.textContent?.trim() || 'Slide', { x: 0.5, y: 0.3, w: '90%', h: 1, fontSize: 32, bold: true, color: '2D3748', align: pres.AlignH.center });
-        
-        let next = h.nextElementSibling;
-        let content = '';
-        while (next && !['H1', 'H2', 'H3'].includes(next.tagName)) {
-          const text = filterGarbage(next.textContent?.trim() || '');
-          if (text) content += text + '\n\n';
-          next = next.nextElementSibling;
-        }
-        slide.addText(content, { x: 0.75, y: 1.5, w: '85%', h: 4.5, fontSize: 18, color: '4A5568', valign: pres.AlignV.top });
-      });
+    if (slideElements.length === 0) {
+      // If no markers, split by H2
+      const h2s = Array.from(document.querySelectorAll('h2'));
+      if (h2s.length > 0) {
+        h2s.forEach(h2 => {
+          let content = h2.outerHTML;
+          let next = h2.nextElementSibling;
+          while (next && next.tagName !== 'H2') {
+            content += next.outerHTML;
+            next = next.nextElementSibling;
+          }
+          const wrapper = document.createElement('div');
+          wrapper.className = 'rendered-slide';
+          wrapper.innerHTML = content;
+          slideElements.push(wrapper);
+        });
+      }
     }
 
-    if (slideCount === 0) {
-      const slide = pres.addSlide();
-      const text = filterGarbage(document.body.textContent || '');
-      slide.addText('Presentation', { x: 0.5, y: 0.3, w: '90%', h: 1, fontSize: 32, bold: true, align: pres.AlignH.center });
-      slide.addText(text, { x: 0.75, y: 1.5, w: '85%', h: 4.5, fontSize: 18, valign: pres.AlignV.top });
+    if (slideElements.length === 0) {
+      slideElements = [document.body];
+    }
+
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    try {
+      for (const el of slideElements) {
+        const page = await browser.newPage();
+        await page.setViewport({ width: 1280, height: 720 });
+        
+        // Construct full HTML for rendering with original styles
+        const slideHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            ${Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('\n')}
+            <style>
+              body { 
+                margin: 0; 
+                padding: 0; 
+                overflow: hidden;
+                background: white;
+                width: 1280px;
+                height: 720px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+              }
+              .slide-render-root {
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box;
+                padding: 40px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="slide-render-root">
+              ${el.innerHTML}
+            </div>
+          </body>
+          </html>
+        `;
+
+        await page.setContent(slideHtml, { waitUntil: 'networkidle0' });
+        const screenshot = await page.screenshot({ encoding: 'base64' });
+        await page.close();
+
+        const slide = pres.addSlide();
+        slide.addImage({
+          data: `image/png;base64,${screenshot}`,
+          x: 0, y: 0, w: '100%', h: '100%'
+        });
+      }
+    } finally {
+      await browser.close();
     }
 
     const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
-    
-    // Use encodeURIComponent and RFC 5987 to handle Vietnamese characters in filenames
     const safeFileName = encodeURIComponent(fileName || 'presentation');
+    
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.pptx"; filename*=UTF-8''${safeFileName}.pptx`);
     res.send(buffer);
