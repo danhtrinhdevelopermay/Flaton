@@ -492,47 +492,119 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
       }
     }
 
-    console.log('[Manus PPTX] Converting content using Nutrient API...');
+    console.log('[Manus PPTX] Converting content using high-precision Puppeteer method...');
     
-    const formData = new FormData();
-    formData.append('instructions', JSON.stringify({
-      parts: [
-        {
-          html: "document"
-        }
-      ],
-      output: {
-        type: "pptx"
-      }
-    }));
-
-    // Create a temporary HTML file for Nutrient
-    const tempHtmlPath = path.join(__dirname, `temp_${Date.now()}.html`);
-    fs.writeFileSync(tempHtmlPath, html);
-
-    formData.append('document', fs.createReadStream(tempHtmlPath));
-
     try {
-      const nutrientResponse = await axios.post('https://api.nutrient.io/build', formData, {
-        headers: {
-          ...formData.getHeaders(),
-          'Authorization': `Bearer ${nutrientApiKey}`
-        },
-        responseType: 'arraybuffer'
+      const browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
+      const page = await browser.newPage();
+      
+      // Use a higher scale factor for crystal clear images
+      await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 3 });
+      
+      // Load the HTML content with all styles
+      await page.setContent(`
+        <html>
+          <head>
+            <style>
+              body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+              /* Ensure slides take up full viewport for capture */
+              section, .slide, .presentation-slide { 
+                width: 1920px; 
+                height: 1080px; 
+                display: flex; 
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                page-break-after: always;
+                position: relative;
+              }
+            </style>
+          </head>
+          <body>${html}</body>
+        </html>
+      `, { waitUntil: 'networkidle0' });
+      
+      const pres = new pptxgen();
+      pres.layout = 'LAYOUT_16x9';
 
-      // Cleanup temp file
-      if (fs.existsSync(tempHtmlPath)) fs.unlinkSync(tempHtmlPath);
+      const slideSelectors = ['section', '.slide', '.presentation-slide', '.slide-container', '.mb-8.border-b'];
+      
+      const slideHandles = await page.evaluate((selectors) => {
+        let elements: Element[] = [];
+        for (const selector of selectors) {
+          const found = document.querySelectorAll(selector);
+          if (found.length > 0) {
+            elements = Array.from(found);
+            break;
+          }
+        }
+        if (elements.length === 0) {
+          elements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName));
+        }
+        return elements.length;
+      }, slideSelectors);
 
+      console.log(`[Manus PPTX] Capturing ${slideHandles} slides with pixel-perfect precision`);
+
+      for (let i = 0; i < slideHandles; i++) {
+        const slide = pres.addSlide();
+        
+        const screenshot = await page.evaluate(async (selectors, index) => {
+          let elements: Element[] = [];
+          for (const selector of selectors) {
+            const found = document.querySelectorAll(selector);
+            if (found.length > 0) {
+              elements = Array.from(found);
+              break;
+            }
+          }
+          if (elements.length === 0) {
+            elements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName));
+          }
+          const el = elements[index];
+          if (!el) return null;
+
+          // Scroll to element to ensure it's rendered
+          el.scrollIntoView();
+          
+          // Use a small delay for any animations to settle
+          await new Promise(r => setTimeout(r, 100));
+          
+          return index;
+        }, slideSelectors, i);
+
+        if (screenshot !== null) {
+          const elements = await page.$$(slideSelectors.join(',') || 'body > *');
+          const targetElement = elements[i] || (await page.$('body'));
+          
+          if (targetElement) {
+            const buffer = await targetElement.screenshot({
+              type: 'png',
+              omitBackground: false
+            });
+            
+            slide.addImage({
+              data: `image/png;base64,${buffer.toString('base64')}`,
+              x: 0, y: 0, w: '100%', h: '100%'
+            });
+          }
+        }
+      }
+
+      await browser.close();
+      
+      const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
       const safeFileName = encodeURIComponent(fileName || 'presentation');
+      
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
       res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.pptx"; filename*=UTF-8''${safeFileName}.pptx`);
-      res.send(Buffer.from(nutrientResponse.data));
+      return res.send(buffer);
 
-    } catch (apiErr: any) {
-      if (fs.existsSync(tempHtmlPath)) fs.unlinkSync(tempHtmlPath);
-      console.error('[Manus PPTX] Nutrient API Error:', apiErr.response?.data?.toString() || apiErr.message);
-      res.status(500).json({ error: 'Lỗi khi gọi Nutrient API: ' + (apiErr.response?.data?.toString() || apiErr.message) });
+    } catch (puppeteerErr: any) {
+      console.error('[Manus PPTX] High-precision capture failed:', puppeteerErr);
+      res.status(500).json({ error: 'Lỗi chuyển đổi chính xác cao: ' + puppeteerErr.message });
     }
 
   } catch (error: any) {
