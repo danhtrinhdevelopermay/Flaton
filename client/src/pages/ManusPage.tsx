@@ -139,6 +139,8 @@ export default function ManusPage() {
     const findFiles = (obj: any) => {
       if (!obj) return;
       
+      console.log('Checking object for files:', obj);
+
       if (Array.isArray(obj)) {
         obj.forEach(item => findFiles(item));
       } else if (typeof obj === 'object') {
@@ -187,13 +189,35 @@ export default function ManusPage() {
         // Always recurse into properties
         Object.keys(obj).forEach(key => {
           if (key !== 'all_files') { // Already handled
-            findFiles(obj[key]);
+            try {
+              findFiles(obj[key]);
+            } catch (e) {}
           }
         });
       }
     };
 
     findFiles(result);
+    console.log('Total files found:', files.length, files);
+
+    if (files.length === 0) {
+      // Emergency fallback: search the whole result for anything that looks like a URL with an extension
+      const searchStrings = (val: any) => {
+        if (typeof val === 'string' && val.startsWith('http') && (val.includes('.pptx') || val.includes('.docx') || val.includes('.pdf') || val.includes('.zip'))) {
+          if (!files.some(f => f.url === val)) {
+            files.push({
+              id: Math.random().toString(36).substr(2, 9),
+              name: val.split('/').pop() || 'Generated File',
+              url: val,
+              type: val.split('.').pop()
+            });
+          }
+        } else if (typeof val === 'object' && val !== null) {
+          Object.values(val).forEach(searchStrings);
+        }
+      };
+      searchStrings(result);
+    }
 
     if (files.length === 0) return null;
 
