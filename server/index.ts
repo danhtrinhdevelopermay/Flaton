@@ -494,8 +494,8 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
 
     console.log('[Manus PPTX] Converting content using Nutrient API...');
     
-    const nutrientApiKey = process.env.NUTRIENT_API_KEY || '';
-    if (!nutrientApiKey) {
+    const nutrientApiKeyFromEnv = process.env.NUTRIENT_API_KEY || '';
+    if (!nutrientApiKeyFromEnv) {
       console.error('[Manus PPTX] NUTRIENT_API_KEY not found');
       return res.status(400).json({ error: 'NUTRIENT_API_KEY chưa được cấu hình.' });
     }
@@ -522,7 +522,7 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
       const nutrientResponse = await axios.post('https://api.nutrient.io/build', formData, {
         headers: {
           ...formData.getHeaders(),
-          'Authorization': `Bearer ${nutrientApiKey}`
+          'Authorization': `Bearer ${nutrientApiKeyFromEnv}`
         },
         responseType: 'arraybuffer'
       });
