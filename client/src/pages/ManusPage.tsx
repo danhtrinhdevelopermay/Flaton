@@ -150,20 +150,19 @@ export default function ManusPage() {
         const lowerUrl = url.toLowerCase();
         const lowerName = name.toLowerCase();
         
-        // Always include slides or document files even if they have .json extension (sometimes used for presentation data)
-        if (lowerName.includes('slides') || lowerName.includes('presentation') || lowerName.includes('document')) return true;
-
-        // Skip common technical/log files
+        // Skip common technical/log/config files
         if (lowerUrl.includes('.log') || lowerName.includes('.log')) return false;
         
-        // If it's a generic JSON without "slides" or similar in name, skip it
-        if (lowerUrl.includes('.json') || lowerName.includes('.json')) {
-           // If the name is very generic like "config.json" or "task.json", hide it
-           const genericNames = ['config', 'task', 'status', 'meta', 'info', 'log'];
-           if (genericNames.some(gn => lowerName.includes(gn))) return false;
-        }
+        // Hide ALL .json files unless they are explicitly meant to be viewed (unlikely for Manus outputs)
+        if (lowerUrl.includes('.json') || lowerName.includes('.json')) return false;
 
-        return true;
+        // Common valid document extensions for Manus
+        const validExtensions = ['.pptx', '.docx', '.pdf', '.zip', '.xlsx', '.txt', '.csv'];
+        if (validExtensions.some(ext => lowerUrl.includes(ext) || lowerName.includes(ext))) return true;
+
+        // If no known extension, but it doesn't look like a config/log, we might want to show it
+        // but for now let's be strict to avoid showing the .json files
+        return false;
       };
 
       // Helper to add file with better deduplication and type detection
