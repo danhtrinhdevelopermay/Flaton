@@ -283,7 +283,7 @@ export default function ManusPage() {
               </div>
             </div>
             <a 
-              href={`/api/manus/download?url=${encodeURIComponent(file.url)}`}
+              href={`/api/manus/download?url=${encodeURIComponent(file.url)}&token=${token}`}
               target="_blank" 
               rel="noopener noreferrer"
               className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-500/20"

@@ -41,7 +41,7 @@ export function verifyToken(token: string): any {
 
 export async function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
+    const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token || (req.query.token as string);
     
     if (!token) {
       console.log('[AuthMiddleware] No token provided');
