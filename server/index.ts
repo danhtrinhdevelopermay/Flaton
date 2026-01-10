@@ -509,40 +509,37 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
           }
         ],
         output: {
-          type: "pptx"
+          type: "pptx",
+          // Use dynamic layout to match HTML content dimensions
+          layout: "auto"
         }
       }));
 
-      // Create a temporary HTML file for Nutrient with optimized CSS for PDF/PPTX
+      // Create a temporary HTML file for Nutrient with dynamic CSS
       const tempHtmlPath = path.join(__dirname, `temp_${Date.now()}.html`);
       
-      // Inject CSS to handle slide breaking and dimensions for Nutrient's engine
-      // Using standard PPTX 16:9 ratio in pixels (960x540) which maps better to slide size
-      // Force viewport and zoom to ensure HTML fits exactly into the slide area
+      // Inject CSS that uses aspect-ratio and relative dimensions
       const optimizedHtml = `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1920, initial-scale=1.0">
     <style>
         @page {
-            size: 1920px 1080px;
             margin: 0;
+            size: auto;
         }
         html, body {
             margin: 0;
             padding: 0;
-            width: 1920px;
-            height: 1080px;
-            font-family: Arial, sans-serif;
-            -webkit-print-color-adjust: exact;
+            width: 100%;
+            height: auto;
             background-color: white;
-            overflow: hidden;
+            -webkit-print-color-adjust: exact;
         }
         section, .slide, .presentation-slide {
-            width: 1920px;
-            height: 1080px;
+            width: 100vw;
+            aspect-ratio: 16 / 9;
             page-break-after: always;
             position: relative;
             overflow: hidden;
@@ -550,16 +547,17 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
             background-position: center;
             display: block !important;
             box-sizing: border-box;
-            zoom: 1 !important;
         }
-        /* Handle absolute positioning from AI */
-        [style*="position: absolute"] {
-            display: block !important;
+        /* Preserve original element scaling */
+        * {
+            box-sizing: border-box;
         }
-        /* Ensure images don't overflow */
         img {
             max-width: 100%;
             height: auto;
+        }
+        [style*="position: absolute"] {
+            display: block !important;
         }
     </style>
 </head>
