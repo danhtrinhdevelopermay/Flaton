@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Key, Plus, Trash2, RefreshCw, Loader2, AlertTriangle, CheckCircle, Lock, LogOut, Zap, Brain } from 'lucide-react';
+import { Shield, Key, Plus, Trash2, RefreshCw, Loader2, AlertTriangle, CheckCircle, Lock, LogOut, Zap, Brain, ArrowLeft } from 'lucide-react';
 
 interface ApiKey {
   id: number;
@@ -58,84 +58,19 @@ export default function AdminPage() {
     }
   }, []);
 
-  const [usersNoManus, setUsersNoManus] = useState<any[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [allUsersManus, setAllUsersManus] = useState<any[]>([]);
-  const [manusLogs, setManusLogs] = useState<any[]>([]);
-
   useEffect(() => {
     if (isLoggedIn) {
       loadData();
       loadSettings();
-      loadUsersNoManus();
-      loadAllUsersManus();
-      loadManusLogs();
       
       // Set up 10s interval
       const interval = setInterval(() => {
         loadData();
-        loadUsersNoManus();
-        loadAllUsersManus();
-        loadManusLogs();
       }, 10000);
       
       return () => clearInterval(interval);
     }
   }, [isLoggedIn, adminToken]);
-
-  const loadAllUsersManus = async () => {
-    try {
-      const res = await fetch('/api/admin/users-all-manus', {
-        headers: { Authorization: `Bearer ${adminToken}` }
-      });
-      if (res.ok) setAllUsersManus(await res.json());
-    } catch (err) {
-      console.error('Error loading all manus users:', err);
-    }
-  };
-
-  const loadManusLogs = async () => {
-    try {
-      const res = await fetch('/api/admin/manus-logs', {
-        headers: { Authorization: `Bearer ${adminToken}` }
-      });
-      if (res.ok) setManusLogs(await res.json());
-    } catch (err) {
-      console.error('Error loading manus logs:', err);
-    }
-  };
-
-  const loadUsersNoManus = async () => {
-    try {
-      const res = await fetch('/api/admin/users-no-manus', {
-        headers: { Authorization: `Bearer ${adminToken}` }
-      });
-      if (res.ok) setUsersNoManus(await res.json());
-    } catch (err) {
-      console.error('Error loading users without manus key:', err);
-    }
-  };
-
-  const assignManusKey = async (userId: number, key: string) => {
-    if (!key) return;
-    try {
-      const res = await fetch('/api/admin/update-user-manus', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminToken}`
-        },
-        body: JSON.stringify({ userId, apiKey: key })
-      });
-      if (res.ok) {
-        setSuccess('Đã cập nhật API Key cho người dùng');
-        loadUsersNoManus();
-        setTimeout(() => setSuccess(''), 3000);
-      }
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
 
   const loadSettings = async () => {
     try {
@@ -484,6 +419,13 @@ export default function AdminPage() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Link
+            to="/admin/manus"
+            className="px-4 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 rounded-xl flex items-center gap-2 transition-all"
+          >
+            <Brain className="w-4 h-4" />
+            Quản lý Manus
+          </Link>
           <button
             onClick={() => setShowChangePassword(!showChangePassword)}
             className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl flex items-center gap-2 transition-all"
@@ -602,121 +544,6 @@ export default function AdminPage() {
           </div>
         </div>
       )}
-
-      <div className="glass rounded-2xl p-6">
-        <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
-          <Shield className="w-5 h-5 text-red-500" />
-          Quản lý API Manus & Logs
-        </h2>
-        
-        <div className="space-y-8">
-          {/* User List with Keys */}
-          <div>
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Danh sách tài khoản & API</h3>
-            <div className="space-y-3">
-              {allUsersManus.length === 0 ? (
-                <p className="text-slate-500 text-sm">Chưa có dữ liệu người dùng.</p>
-              ) : (
-                allUsersManus.map(user => (
-                  <div key={user.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-800/30 rounded-xl border border-slate-700 gap-4">
-                    <div className="min-w-0">
-                      <div className="font-bold truncate">{user.name || 'N/A'}</div>
-                      <div className="text-xs text-slate-400 truncate">{user.email}</div>
-                    </div>
-                    <div className="flex gap-2 flex-1 max-w-md">
-                      <input
-                        type="password"
-                        defaultValue={user.manus_api_key || ''}
-                        placeholder="API Key..."
-                        className="flex-1 px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm focus:border-indigo-500 outline-none"
-                        onBlur={(e) => {
-                          if (e.target.value !== (user.manus_api_key || '')) {
-                            assignManusKey(user.id, e.target.value);
-                          }
-                        }}
-                      />
-                      <button 
-                        onClick={(e) => {
-                          const input = (e.currentTarget.previousSibling as HTMLInputElement);
-                          assignManusKey(user.id, input.value);
-                        }}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium transition-all"
-                      >
-                        Lưu
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Error Logs */}
-          <div>
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Logs lỗi Manus AI</h3>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-              {manusLogs.length === 0 ? (
-                <p className="text-slate-500 text-sm">Không có log lỗi nào.</p>
-              ) : (
-                manusLogs.map((log, i) => (
-                  <div key={i} className="p-3 bg-red-500/5 border border-red-500/20 rounded-lg text-xs">
-                    <div className="flex justify-between mb-1">
-                      <span className="font-bold text-red-400">{log.email}</span>
-                      <span className="text-slate-500">{new Date(log.updated_at).toLocaleString()}</span>
-                    </div>
-                    <div className="text-slate-300 font-mono mb-1">Prompt: {log.prompt}</div>
-                    <div className="text-red-300 bg-red-950/30 p-2 rounded">Lỗi: {log.error}</div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="glass rounded-2xl p-6">
-        <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
-          <Brain className="w-5 h-5 text-indigo-500" />
-          Người dùng chưa có Manus API
-        </h2>
-        {usersNoManus.length === 0 ? (
-          <p className="text-slate-400">Tất cả người dùng đã có API Key.</p>
-        ) : (
-          <div className="space-y-4">
-            {usersNoManus.map(user => (
-              <div key={user.id} className="flex items-center justify-between p-4 bg-slate-800/30 rounded-xl border border-slate-700">
-                <div>
-                  <div className="font-bold">{user.name || 'N/A'}</div>
-                  <div className="text-sm text-slate-400">{user.email}</div>
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    type="password"
-                    placeholder="Nhập Manus Key..."
-                    className="px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm focus:border-indigo-500 outline-none"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        assignManusKey(user.id, (e.target as HTMLInputElement).value);
-                        (e.target as HTMLInputElement).value = '';
-                      }
-                    }}
-                  />
-                  <button 
-                    onClick={(e) => {
-                      const input = (e.currentTarget.previousSibling as HTMLInputElement);
-                      assignManusKey(user.id, input.value);
-                      input.value = '';
-                    }}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium transition-all"
-                  >
-                    Cấp Key
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       <div className="glass rounded-2xl p-6">
         <h2 className="text-xl font-bold flex items-center gap-2 mb-4">

@@ -20,6 +20,7 @@ import ShopPage from './pages/ShopPage'
 import KlingMotionControlPage from './pages/KlingMotionControlPage'
 import AdminPage from './pages/AdminPage'
 import AdminUpgradePage from './pages/AdminUpgradePage'
+import ManusAdminPage from './pages/ManusAdminPage'
 import LessonsListPage from './pages/LessonsListPage'
 import LessonDetailPage from './pages/LessonDetailPage'
 import MilestonesPage from './pages/MilestonesPage'
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/manus" element={<ProtectedRoute><ManusPage /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
             <Route path="/admin/upgrade" element={<ProtectedRoute><AdminUpgradePage /></ProtectedRoute>} />
+            <Route path="/admin/manus" element={<ProtectedRoute><ManusAdminPage /></ProtectedRoute>} />
             <Route path="/lessons" element={<ProtectedRoute><LessonsListPage /></ProtectedRoute>} />
             <Route path="/lesson/:id" element={<ProtectedRoute><LessonDetailPage /></ProtectedRoute>} />
             <Route path="/milestones" element={<ProtectedRoute><MilestonesPage /></ProtectedRoute>} />
