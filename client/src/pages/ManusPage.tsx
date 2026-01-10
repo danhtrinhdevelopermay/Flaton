@@ -135,28 +135,27 @@ export default function ManusPage() {
 
     let files: ManusFile[] = [];
     
-    // Parse files from different possible Manus result structures
-    if (Array.isArray(result)) {
-      // Look for output_file types in the message content
-      result.forEach(item => {
-        if (item.content && Array.isArray(item.content)) {
-          item.content.forEach((c: any) => {
-            if (c.type === 'output_file' && c.output_file) {
-              files.push({
-                id: c.output_file.id,
-                name: c.output_file.file_name,
-                url: c.output_file.download_url,
-                type: c.output_file.file_extension
-              });
-            }
+    // Recursive function to find all output_file objects in the nested structure
+    const findFiles = (obj: any) => {
+      if (!obj) return;
+      
+      if (Array.isArray(obj)) {
+        obj.forEach(item => findFiles(item));
+      } else if (typeof obj === 'object') {
+        if (obj.type === 'output_file' && obj.output_file) {
+          files.push({
+            id: obj.output_file.id,
+            name: obj.output_file.file_name,
+            url: obj.output_file.download_url,
+            type: obj.output_file.file_extension
           });
+        } else {
+          Object.values(obj).forEach(val => findFiles(val));
         }
-      });
-    } else if (result.files && Array.isArray(result.files)) {
-      files = result.files;
-    } else if (result.output && Array.isArray(result.output)) {
-      return renderFiles(result.output);
-    }
+      }
+    };
+
+    findFiles(result);
 
     if (files.length === 0) return null;
 
@@ -174,8 +173,8 @@ export default function ManusPage() {
               <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
                 <FileText className="w-6 h-6" />
               </div>
-              <div>
-                <p className="font-bold text-sm truncate max-w-[200px] sm:max-w-[400px]">{file.name}</p>
+              <div className="min-w-0">
+                <p className="font-bold text-sm truncate max-w-[150px] sm:max-w-[300px]">{file.name}</p>
                 {file.type && <p className="text-[10px] font-bold opacity-50 uppercase">{file.type}</p>}
               </div>
             </div>
@@ -183,7 +182,7 @@ export default function ManusPage() {
               href={file.url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+              className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
             >
               <Download className="w-4 h-4" />
               TẢI XUỐNG
