@@ -172,11 +172,37 @@ app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res
       return res.status(response.status).json(data);
     }
 
+    // Try to get full list of files for this task
+    try {
+      const filesResponse = await fetch(`${MANUS_API_BASE}/files?taskId=${taskId}`, {
+        headers: { 'API_KEY': apiKey }
+      });
+      if (filesResponse.ok) {
+        const filesData = await filesResponse.json();
+        // If files are found, attach them to the response or result
+        if (filesData && (Array.isArray(filesData) || filesData.data)) {
+          const files = Array.isArray(filesData) ? filesData : filesData.data;
+          data.all_files = files;
+          console.log(`[Manus] Found ${files.length} files for task ${taskId}`);
+        }
+      }
+    } catch (fileErr) {
+      console.error('[Manus] Error fetching files list:', fileErr);
+    }
+
     // Update status in database if changed
     if (data.status) {
+      // If we have all_files, merge it into result for storage
+      const resultToSave = data.result || data.output || {};
+      if (data.all_files) {
+        if (typeof resultToSave === 'object') {
+          resultToSave.all_files = data.all_files;
+        }
+      }
+
       await pool.query(
         'UPDATE manus_tasks SET status = $1, result = $2, error = $3, updated_at = CURRENT_TIMESTAMP WHERE task_id = $4 AND user_id = $5',
-        [data.status, data.result || null, data.error || null, taskId, req.userId]
+        [data.status, resultToSave, data.error || null, taskId, req.userId]
       );
     }
     
