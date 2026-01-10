@@ -513,9 +513,56 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
         }
       }));
 
-      // Create a temporary HTML file for Nutrient
+      // Create a temporary HTML file for Nutrient with optimized CSS for PDF/PPTX
       const tempHtmlPath = path.join(__dirname, `temp_${Date.now()}.html`);
-      fs.writeFileSync(tempHtmlPath, `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;width:1920px;height:1080px;} section,.slide{width:1920px;height:1080px;page-break-after:always;position:relative;overflow:hidden;}</style></head><body>${html}</body></html>`);
+      
+      // Inject CSS to handle slide breaking and dimensions for Nutrient's engine
+      const optimizedHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: 1920px 1080px;
+            margin: 0;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            width: 1920px;
+            height: 1080px;
+            font-family: Arial, sans-serif;
+            -webkit-print-color-adjust: exact;
+        }
+        section, .slide, .presentation-slide {
+            width: 1920px;
+            height: 1080px;
+            page-break-after: always;
+            position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            display: block !important;
+            box-sizing: border-box;
+        }
+        /* Ensure images don't overflow */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        /* Handle absolute positioning from AI */
+        [style*="position: absolute"] {
+            display: block !important;
+        }
+    </style>
+</head>
+<body>
+    ${html}
+</body>
+</html>`;
+
+      fs.writeFileSync(tempHtmlPath, optimizedHtml);
 
       formData.append('document', fs.createReadStream(tempHtmlPath));
 
