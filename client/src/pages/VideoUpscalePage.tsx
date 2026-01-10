@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Video, Loader2, Zap, Check, Upload, Sparkles, AlertCircle } from 'lucide-react'
+import { Video, Loader2, Zap, Check, Upload, Sparkles, AlertCircle, Shield, CheckCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import VideoPlayer from '../components/VideoPlayer'
@@ -191,21 +191,59 @@ export default function VideoUpscalePage() {
             CÀI ĐẶT
           </h2>
 
-          <div className="mb-6">
-            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Chọn Server (KIE AI)</label>
-            <select
-              value={selectedServer || ''}
-              onChange={(e) => setSelectedServer(Number(e.target.value))}
-              className={`w-full p-3 rounded-xl border transition-all ${
-                theme === 'dark' ? 'bg-slate-800 border-slate-600 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
-              }`}
-            >
-              {servers.map(server => (
-                <option key={server.id} value={server.id} disabled={server.credits < 72}>
-                  {server.name || `Server ${server.id}`} - {server.credits} credits {(server.credits < 72) ? '(Không đủ)' : ''}
-                </option>
-              ))}
-            </select>
+          <div className="mb-8">
+            <label className={`block text-xs font-black uppercase tracking-[0.2em] mb-3 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+              Cơ sở hạ tầng (KIE AI)
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {servers.map(server => {
+                const isSelected = selectedServer === server.id;
+                const isDisabled = server.credits < 72;
+                return (
+                  <button
+                    key={server.id}
+                    onClick={() => !isDisabled && setSelectedServer(server.id)}
+                    disabled={isDisabled}
+                    className={`relative flex items-center gap-3 p-4 rounded-2xl border-2 transition-all group ${
+                      isSelected
+                        ? 'border-indigo-500 bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
+                        : isDisabled
+                          ? 'opacity-50 grayscale cursor-not-allowed border-transparent bg-slate-100 dark:bg-slate-800/30'
+                          : theme === 'dark'
+                            ? 'border-slate-700 bg-slate-800/50 hover:border-slate-500 hover:bg-slate-800'
+                            : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                      isSelected ? 'bg-indigo-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                    }`}>
+                      <Shield className="w-5 h-5" />
+                    </div>
+                    <div className="text-left flex-1 min-w-0">
+                      <div className={`font-black text-sm truncate ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                        {server.name || `Server ${server.id}`}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Zap className={`w-3 h-3 ${isSelected ? 'text-yellow-400' : 'text-yellow-500'}`} />
+                        <span className={`text-[10px] font-bold ${isSelected ? 'text-indigo-400' : 'text-slate-500'}`}>
+                          {server.credits} CREDITS
+                        </span>
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <div className="absolute top-2 right-2">
+                        <CheckCircle className="w-4 h-4 text-indigo-500" />
+                      </div>
+                    )}
+                    {isDisabled && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-2xl">
+                        <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">Cạn kiệt</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="mb-6">
