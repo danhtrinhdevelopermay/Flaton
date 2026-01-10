@@ -332,6 +332,57 @@ app.get('/api/manus/download', authMiddleware, async (req: AuthRequest, res: Res
   }
 });
 
+import pptxgen from 'pptxgenjs';
+import { JSDOM } from 'jsdom';
+
+// Manus PPTX Conversion API
+app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { html, fileName } = req.body;
+    if (!html) return res.status(400).json({ error: 'HTML content is required' });
+
+    console.log('[Manus PPTX] Converting content to PPTX...');
+    const pres = new pptxgen();
+    pres.layout = 'LAYOUT_16x9';
+
+    // Parse HTML content to extract slides
+    // In our case, slides are separated by <hr/> or <div> markers
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+    
+    // Attempt to split by slide markers or just take the whole thing if not found
+    const slideContainers = document.querySelectorAll('div.mb-8');
+    
+    if (slideContainers.length > 0) {
+      slideContainers.forEach((container: any) => {
+        const slide = pres.addSlide();
+        const title = container.querySelector('h2')?.textContent || 'Slide';
+        
+        // Remove the title from content for the body
+        const bodyContent = container.innerHTML.replace(/<h2.*?>.*?<\/h2>/i, '').trim();
+        const cleanText = bodyContent.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
+
+        slide.addText(title, { x: 0.5, y: 0.5, w: '90%', h: 1, fontSize: 32, bold: true, color: '363636', align: pres.AlignH.center });
+        slide.addText(cleanText, { x: 0.5, y: 1.5, w: '90%', h: 4, fontSize: 18, color: '666666', valign: pres.AlignV.top });
+      });
+    } else {
+      // Single slide fallback
+      const slide = pres.addSlide();
+      const cleanText = html.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
+      slide.addText(cleanText, { x: 0.5, y: 0.5, w: '90%', h: 5, fontSize: 18, color: '666666', valign: pres.AlignV.top });
+    }
+
+    const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName || 'presentation'}.pptx"`);
+    res.send(buffer);
+  } catch (error: any) {
+    console.error('[Manus PPTX] Conversion error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/admin/settings', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     // Check if table exists

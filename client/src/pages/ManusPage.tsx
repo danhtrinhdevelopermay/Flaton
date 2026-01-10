@@ -31,6 +31,41 @@ export default function ManusPage() {
   const [currentTask, setCurrentTask] = useState<ManusTask | null>(null)
   const [previewFile, setPreviewFile] = useState<ManusFile | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportPPTX = async () => {
+    if (!previewFile || !previewFile.html) return;
+    setExporting(true);
+    try {
+      const response = await fetch('/api/manus/convert-pptx', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          html: previewFile.html,
+          fileName: previewFile.name.replace('.json', '')
+        })
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${previewFile.name.replace('.json', '')}.pptx`;
+        a.click();
+      } else {
+        alert('Lỗi khi chuyển đổi sang PowerPoint.');
+      }
+    } catch (error) {
+      console.error('Export PPTX error:', error);
+      alert('Lỗi kết nối khi xuất file PowerPoint.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     if (token) {
@@ -529,6 +564,14 @@ export default function ManusPage() {
 
               <div className="p-6 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3 bg-slate-50 dark:bg-slate-900/50">
                 <button
+                  onClick={handleExportPPTX}
+                  disabled={exporting}
+                  className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm transition-all active:scale-95 shadow-lg shadow-indigo-500/20 disabled:opacity-50"
+                >
+                  {exporting ? <Loader2 className="w-4 h-4 animate-spin mr-2 inline" /> : null}
+                  XUẤT POWERPOINT (.pptx)
+                </button>
+                <button
                   onClick={() => {
                     const fullHtml = `
                       <!DOCTYPE html>
@@ -553,7 +596,7 @@ export default function ManusPage() {
                     a.download = `${previewFile.name.replace('.json', '.html')}`;
                     a.click();
                   }}
-                  className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                  className="px-8 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-black text-sm transition-all active:scale-95"
                 >
                   TẢI VỀ DẠNG HTML
                 </button>
