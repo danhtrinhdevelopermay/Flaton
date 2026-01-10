@@ -291,36 +291,18 @@ app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res
   }
 });
 
-// Manus File Download Proxy (to bypass CORS and secure URLs)
+// Manus File Download Proxy (Bypass proxy to preserve file format)
 app.get('/api/manus/download', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const fileUrl = req.query.url as string;
     if (!fileUrl) return res.status(400).send('URL is required');
 
-    console.log('[Manus Download] Proxying URL:', fileUrl);
-
-    const response = await fetch(fileUrl);
-    if (!response.ok) {
-      console.error('[Manus Download] Failed to fetch:', response.status, response.statusText);
-      // Fallback: redirect to the URL if direct proxy fails
-      return res.redirect(fileUrl);
-    }
-
-    const contentType = response.headers.get('content-type');
-    if (contentType) res.setHeader('Content-Type', contentType);
-
-    const fileName = fileUrl.split('/').pop()?.split('?')[0] || 'downloaded_file';
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-
-    const arrayBuffer = await response.arrayBuffer();
-    res.send(Buffer.from(arrayBuffer));
+    console.log('[Manus Download] Redirecting to URL to preserve format:', fileUrl);
+    // Directly redirecting to the Manus URL is the safest way to ensure the file format
+    // and headers (like content-type) are handled correctly by the browser.
+    return res.redirect(fileUrl);
   } catch (error: any) {
     console.error('[Manus Download] Exception:', error);
-    // Emergency fallback to redirect
-    try {
-      const fileUrl = req.query.url as string;
-      if (fileUrl) return res.redirect(fileUrl);
-    } catch (e) {}
     res.status(500).send(error.message);
   }
 });
