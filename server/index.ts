@@ -356,8 +356,126 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
 
     if (!nutrientApiKey) {
       console.log('[Manus PPTX] Nutrient API key not found, falling back to local auto-layout...');
-      // ... existing fallback logic or just inform user
-      return res.status(400).json({ error: 'Nutrient API Key chưa được cấu hình trong cài đặt admin.' });
+      
+      try {
+        const pres = new pptxgen();
+        pres.layout = 'LAYOUT_16x9';
+
+        const dom = new JSDOM(html);
+        const document = dom.window.document;
+        
+        // 1. Extract and Parse CSS
+        const styleTags = Array.from(document.querySelectorAll('style'));
+        const cssText = styleTags.map(s => s.textContent).join('\n');
+        
+        const parseStyles = (css: string) => {
+          const styles: Record<string, any> = {};
+          const rules = css.split('}');
+          rules.forEach(rule => {
+            const parts = rule.split('{');
+            if (parts.length === 2) {
+              const selector = parts[0].trim();
+              const body = parts[1];
+              styles[selector] = {};
+              body.split(';').forEach(prop => {
+                const [k, v] = prop.split(':');
+                if (k && v) styles[selector][k.trim()] = v.trim();
+              });
+            }
+          });
+          return styles;
+        };
+        const globalStyles = parseStyles(cssText);
+
+        // 2. Detect Slides
+        // Increased specificity for Manus slides
+        let slideElements = Array.from(document.querySelectorAll('section, .slide, .presentation-slide, .slide-container, .mb-8.border-b'));
+        if (slideElements.length === 0) {
+          slideElements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName)) as Element[];
+        }
+
+        console.log(`[Manus PPTX] Rendering ${slideElements.length} slides using fallback...`);
+
+        for (const el of slideElements) {
+          const slide = pres.addSlide();
+          
+          // Background detection
+          let bgColor = '1A1D21';
+          for (const selector in globalStyles) {
+            try {
+              if (el.matches(selector)) {
+                const s = globalStyles[selector];
+                if (s.background) bgColor = s.background.replace('#', '');
+                if (s['background-color']) bgColor = s['background-color'].replace('#', '');
+              }
+            } catch (e) {}
+          }
+          slide.background = { color: bgColor.replace(/[^a-fA-F0-9]/g, '') || '1A1D21' };
+
+          // Extract content
+          const headers = Array.from(el.querySelectorAll('h1, h2, h3, .title, .font-bold.text-indigo-600'));
+          const paragraphs = Array.from(el.querySelectorAll('p, li, .text, span, div:not(:has(*))'));
+          const images = Array.from(el.querySelectorAll('img'));
+
+          let currentY = 0.5;
+
+          // Render Headers
+          headers.forEach(h => {
+            const text = h.textContent?.trim();
+            if (!text) return;
+            
+            slide.addText(text, {
+              x: 0.5, y: currentY, w: '90%', h: 1,
+              fontSize: 32, color: '60A5FA', bold: true, align: 'center'
+            });
+            currentY += 1.2;
+          });
+
+          // Render Images
+          if (images.length > 0) {
+            images.forEach((img, idx) => {
+              try {
+                const imgSrc = (img as HTMLImageElement).src;
+                if (imgSrc && imgSrc.startsWith('http')) {
+                  slide.addImage({
+                    path: imgSrc,
+                    x: 0.5 + (idx * 3), y: currentY, w: 3, h: 3
+                  });
+                }
+              } catch (e) {}
+            });
+            currentY += 3.2;
+          }
+
+          // Render Text Content
+          const uniqueTexts = new Set();
+          const pText = paragraphs
+            .map(p => p.textContent?.trim())
+            .filter(t => {
+              if (!t || t.length < 2 || uniqueTexts.has(t)) return false;
+              uniqueTexts.add(t);
+              return true;
+            })
+            .join('\n\n');
+
+          if (pText) {
+            slide.addText(pText, {
+              x: 0.75, y: Math.min(currentY, 6), w: '85%', h: 4,
+              fontSize: 18, color: 'E2E8F0', align: 'left', valign: 'top'
+            });
+          }
+        }
+
+        const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
+        const safeFileName = encodeURIComponent(fileName || 'presentation');
+        
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+        res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}.pptx"; filename*=UTF-8''${safeFileName}.pptx`);
+        return res.send(buffer);
+      } catch (fallbackErr: any) {
+        console.error('[Manus PPTX] Local fallback failed:', fallbackErr);
+        return res.status(500).json({ error: 'Lỗi khi tạo slide nội bộ: ' + fallbackErr.message });
+      }
     }
 
     console.log('[Manus PPTX] Converting content using Nutrient API...');

@@ -57,7 +57,8 @@ export default function ManusPage() {
         a.download = `${previewFile.name.replace('.json', '')}.pptx`;
         a.click();
       } else {
-        alert('Lỗi khi chuyển đổi sang PowerPoint.');
+        const errorData = await response.json().catch(() => ({}));
+        alert(`Lỗi khi chuyển đổi: ${errorData.error || 'Vui lòng kiểm tra API Key Nutrient trong cài đặt Admin.'}`);
       }
     } catch (error) {
       console.error('Export PPTX error:', error);
