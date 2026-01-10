@@ -346,17 +346,77 @@ export default function ManusPage() {
         
         let htmlContent = '';
         if (data.files && Array.isArray(data.files)) {
-          // Cải thiện giao diện xem trước để giống Slide hơn
-          htmlContent = data.files.map((f: any) => `
-            <div class="mb-12 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-xl bg-slate-900 aspect-video flex flex-col p-12 relative group transition-all hover:scale-[1.02]">
-              <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/20 to-transparent pointer-events-none"></div>
-              <h2 class="text-4xl font-black mb-8 text-indigo-400 border-b-4 border-indigo-500/30 pb-4 inline-block z-10">${f.id || 'Slide'}</h2>
-              <div class="text-2xl text-slate-200 leading-relaxed z-10 flex-1 flex flex-col justify-center">
-                ${f.content}
-              </div>
-              <div class="absolute bottom-6 right-8 text-indigo-500/50 font-black tracking-widest text-sm uppercase">Flaton AI • Manus</div>
+          // Cải thiện giao diện xem trước để giống Slide hơn và tự động co giãn
+          htmlContent = `
+            <style>
+              .manus-preview-container {
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+                padding-bottom: 2rem;
+              }
+              .manus-slide {
+                width: 100%;
+                aspect-ratio: 16 / 9;
+                background-color: #0f172a;
+                border-radius: 1rem;
+                overflow: hidden;
+                position: relative;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+                display: flex;
+                flex-direction: column;
+                padding: 5%;
+                box-sizing: border-box;
+                color: white;
+                border: 2px solid #1e293b;
+              }
+              .manus-slide-title {
+                font-size: clamp(1.5rem, 4vw, 3rem);
+                font-weight: 900;
+                color: #818cf8;
+                border-bottom: 2px solid rgba(129, 140, 248, 0.3);
+                margin-bottom: 5%;
+                padding-bottom: 2%;
+              }
+              .manus-slide-content {
+                font-size: clamp(0.875rem, 2vw, 1.5rem);
+                line-height: 1.6;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+              }
+              .manus-slide-footer {
+                position: absolute;
+                bottom: 3%;
+                right: 4%;
+                font-size: clamp(0.6rem, 1vw, 0.875rem);
+                color: rgba(129, 140, 248, 0.5);
+                font-weight: bold;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+              }
+              /* Đảm bảo hình ảnh trong slide không bị tràn */
+              .manus-slide img {
+                max-width: 100%;
+                max-height: 60%;
+                object-fit: contain;
+                margin: auto;
+                border-radius: 0.5rem;
+              }
+            </style>
+            <div class="manus-preview-container">
+              ${data.files.map((f: any) => `
+                <div class="manus-slide">
+                  <div class="manus-slide-title">${f.id || 'Slide'}</div>
+                  <div class="manus-slide-content">
+                    ${f.content}
+                  </div>
+                  <div class="manus-slide-footer">Flaton AI • Manus</div>
+                </div>
+              `).join('')}
             </div>
-          `).join('');
+          `;
         } else if (data.content) {
           htmlContent = data.content;
         }
@@ -561,10 +621,10 @@ export default function ManusPage() {
                 </button>
               </div>
               
-              <div className="flex-1 overflow-auto bg-white p-8 custom-scrollbar">
+              <div className="flex-1 overflow-auto bg-slate-50 dark:bg-slate-950 p-4 sm:p-8 custom-scrollbar">
                 <div 
+                  className="max-w-4xl mx-auto"
                   dangerouslySetInnerHTML={{ __html: previewFile.html || '' }} 
-                  className="slide-preview-content"
                 />
               </div>
 
