@@ -149,82 +149,66 @@ export default function ManusPage() {
       const isDesirable = (url: string, name: string) => {
         const lowerUrl = url.toLowerCase();
         const lowerName = name.toLowerCase();
+        
         // Skip common config/log files unless specifically asked
+        // But keep them if they are the only output
         if (lowerUrl.includes('.json') || lowerName.includes('.json')) return false;
         if (lowerUrl.includes('.log') || lowerName.includes('.log')) return false;
         return true;
       };
 
-      // 1. Handle all_files from server merged result (High priority)
-      if (obj.all_files && Array.isArray(obj.all_files)) {
-        obj.all_files.forEach((f: any) => {
-          if (f && f.download_url) {
-            const url = f.download_url;
-            const name = f.file_name || f.name || 'Generated File';
-            if (isDesirable(url, name)) {
-              if (!files.some(existing => existing.url === url)) {
-                files.push({
-                  id: f.id || Math.random().toString(36).substr(2, 9),
-                  name: name,
-                  url: url,
-                  type: f.file_extension || f.extension || (url.split('?')[0].split('.').pop())
-                });
-              }
+      // Helper to add file with better deduplication and type detection
+      const addFile = (fileObj: any) => {
+        const url = fileObj.download_url || fileObj.fileUrl || fileObj.url;
+        if (!url) return;
+
+        const name = fileObj.file_name || fileObj.fileName || fileObj.name || 'Generated File';
+        
+        // If it's not desirable (json/log), we skip it for the main UI
+        if (!isDesirable(url, name)) return;
+
+        if (!files.some(f => f.url === url)) {
+          let type = fileObj.file_extension || fileObj.extension;
+          if (!type) {
+            const urlParts = url.split('?')[0].split('.');
+            if (urlParts.length > 1) {
+              type = urlParts.pop();
             }
           }
-        });
+
+          files.push({
+            id: fileObj.id || Math.random().toString(36).substr(2, 9),
+            name: name,
+            url: url,
+            type: type
+          });
+        }
+      };
+
+      // 1. Handle all_files from server merged result (High priority)
+      if (obj.all_files && Array.isArray(obj.all_files)) {
+        obj.all_files.forEach((f: any) => addFile(f));
       }
 
-      // 2. Handle explicit file objects (Manus AI often uses download_url or fileUrl)
-      if (obj.download_url || obj.fileUrl) {
-        const url = obj.download_url || obj.fileUrl;
-        const name = obj.file_name || obj.fileName || obj.name || 'Generated File';
-        if (isDesirable(url, name)) {
-          if (!files.some(f => f.url === url)) {
-            files.push({
-              id: obj.id || Math.random().toString(36).substr(2, 9),
-              name: name,
-              url: url,
-              type: obj.file_extension || obj.extension || (url.split('?')[0].split('.').pop())
-            });
-          }
-        }
-      } 
-      // 3. Handle output_file objects
-      else if (obj.type === 'output_file' && obj.output_file && (obj.output_file.download_url || obj.output_file.fileUrl)) {
-        const url = obj.output_file.download_url || obj.output_file.fileUrl;
-        const name = obj.output_file.file_name || obj.output_file.fileName || obj.output_file.name || 'Generated File';
-        if (isDesirable(url, name)) {
-          if (!files.some(f => f.url === url)) {
-            files.push({
-              id: obj.output_file.id || Math.random().toString(36).substr(2, 9),
-              name: name,
-              url: url,
-              type: obj.output_file.file_extension || obj.output_file.extension || (url.split('?')[0].split('.').pop())
-            });
-          }
-        }
-      } 
-      // 4. Case where type is output_file and the object itself has fileUrl
-      else if (obj.type === 'output_file' && (obj.fileUrl || obj.download_url)) {
-        const url = obj.fileUrl || obj.download_url;
-        const name = obj.fileName || obj.file_name || obj.name || 'Generated File';
-        if (isDesirable(url, name)) {
-          if (!files.some(f => f.url === url)) {
-            files.push({
-              id: obj.id || Math.random().toString(36).substr(2, 9),
-              name: name,
-              url: url,
-              type: obj.file_extension || obj.extension || (url.split('?')[0].split('.').pop())
-            });
-          }
-        }
+      // 2. Handle data property (Manus API often wraps results in data)
+      if (obj.data && Array.isArray(obj.data)) {
+        obj.data.forEach((f: any) => addFile(f));
+      }
+
+      // 3. Handle explicit file fields
+      if (obj.download_url || obj.fileUrl || obj.url) {
+        addFile(obj);
       } 
       
-      // Always recurse into properties safely
+      // 4. Handle output_file objects
+      if (obj.type === 'output_file' && obj.output_file) {
+        addFile(obj.output_file);
+      } 
+      
+      // Recursively check all properties
       try {
         Object.keys(obj).forEach(key => {
-          if (key !== 'all_files' && obj[key] && typeof obj[key] === 'object') {
+          if (key !== 'all_files' && key !== 'data' && obj[key] && typeof obj[key] === 'object') {
             findFiles(obj[key]);
           }
         });
