@@ -231,6 +231,28 @@ app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res
   }
 });
 
+// Manus File Download Proxy (to bypass CORS and secure URLs)
+app.get('/api/manus/download', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const fileUrl = req.query.url as string;
+    if (!fileUrl) return res.status(400).send('URL is required');
+
+    const response = await fetch(fileUrl);
+    if (!response.ok) return res.status(response.status).send('Failed to fetch file');
+
+    const contentType = response.headers.get('content-type');
+    if (contentType) res.setHeader('Content-Type', contentType);
+
+    const fileName = fileUrl.split('/').pop()?.split('?')[0] || 'downloaded_file';
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+    const arrayBuffer = await response.arrayBuffer();
+    res.send(Buffer.from(arrayBuffer));
+  } catch (error: any) {
+    res.status(500).send(error.message);
+  }
+});
+
 app.get('/api/admin/settings', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     // Check if table exists
