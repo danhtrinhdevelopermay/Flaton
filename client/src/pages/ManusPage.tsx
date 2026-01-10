@@ -184,25 +184,24 @@ export default function ManusPage() {
         return;
       }
 
-      // Helper to determine if a file is desirable (not a configuration JSON)
+      // Helper to determine if a file is desirable
       const isDesirable = (url: string, name: string) => {
         const lowerUrl = url.toLowerCase();
         const lowerName = name.toLowerCase();
         
-        // Skip common technical/log/config files
+        // Skip common technical/log files
         if (lowerUrl.includes('.log') || lowerName.includes('.log')) return false;
         
-        // Hide most .json files EXCEPT if they likely contain the presentation data we want
+        // Always show .pptx, .docx, .pdf, .xlsx
+        const priorityExtensions = ['.pptx', '.docx', '.pdf', '.xlsx', '.zip'];
+        if (priorityExtensions.some(ext => lowerUrl.includes(ext) || lowerName.includes(ext))) return true;
+
+        // Show .json if it likely contains presentation data
         if (lowerUrl.includes('.json') || lowerName.includes('.json')) {
-           const isPresentation = lowerName.includes('slides') || lowerName.includes('presentation') || lowerName.includes('lesson');
-           if (!isPresentation) return false;
+           return lowerName.includes('slides') || lowerName.includes('presentation') || lowerName.includes('lesson') || lowerName.includes('task');
         }
 
-        // Common valid document extensions for Manus
-        const validExtensions = ['.pptx', '.docx', '.pdf', '.zip', '.xlsx', '.txt', '.csv', '.json'];
-        if (validExtensions.some(ext => lowerUrl.includes(ext) || lowerName.includes(ext))) return true;
-
-        return false;
+        return true;
       };
 
       // Helper to add file with better deduplication and type detection
