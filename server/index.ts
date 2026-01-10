@@ -342,144 +342,71 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const { html, fileName } = req.body;
     if (!html) return res.status(400).json({ error: 'HTML content is required' });
 
-    console.log('[Manus PPTX] Converting content to PPTX using pure PptxGenJS (Enhanced structured parsing)...');
+    console.log('[Manus PPTX] Converting content to PPTX using Gemini for layout intelligence...');
+    
     const pres = new pptxgen();
     pres.layout = 'LAYOUT_16x9';
 
     const dom = new JSDOM(html);
     const document = dom.window.document;
     
-    // Improved slide detection
-    // Manus often uses <section> or <div> with specific classes
-    let slideElements = Array.from(document.querySelectorAll('section, .slide, .presentation-slide, .content-block, div[style*="background"]'));
+    // Extract styles to help Gemini understand the intended look
+    const styles = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
     
-    // If no clear sections, we'll try to split by headers
+    // Detect slides - Manus often uses sections or specific div classes
+    let slideElements = Array.from(document.querySelectorAll('section, .slide, .presentation-slide'));
     if (slideElements.length === 0) {
-      const headers = Array.from(document.querySelectorAll('h1, h2, h3'));
-      if (headers.length > 0) {
-        headers.forEach((header) => {
-          const slide = pres.addSlide();
-          slide.background = { color: '1A1D21' }; // Dark theme
+      slideElements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName)) as Element[];
+    }
 
-          // Add Title
-          slide.addText(header.textContent || '', {
-            x: 0.5, y: 0.5, w: '90%', h: 1,
-            fontSize: 32, bold: true, color: '60A5FA',
-            align: pres.AlignH.center
+    console.log(`[Manus PPTX] Processing ${slideElements.length} slides with AI intelligence`);
+
+    for (const el of slideElements) {
+      const slide = pres.addSlide();
+      
+      // Use Gemini to parse the HTML/CSS and suggest a PptxGenJS layout
+      const model = await getGeminiModel();
+      if (model) {
+        const prompt = `
+          Analyze this HTML element and its associated CSS. 
+          Suggest a PptxGenJS configuration (JSON) to replicate this slide's visual design.
+          Focus on: Background color, Title position/style, Content text position/style, and any decorative shapes.
+          
+          HTML:
+          ${el.outerHTML.substring(0, 3000)}
+          
+          CSS Context:
+          ${styles.substring(0, 2000)}
+          
+          Return ONLY a JSON array of PptxGenJS objects to add to the slide. 
+          Format: [{"type": "background", "color": "HEX"}, {"type": "text", "text": "...", "options": {...}}, {"type": "shape", "shapeType": "...", "options": {...}}]
+          Use standard PptxGenJS option names.
+        `;
+
+        try {
+          const result = await (model as any).generateContent(prompt);
+          const response = await result.response;
+          let jsonText = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+          const configs = JSON.parse(jsonText);
+
+          configs.forEach((config: any) => {
+            if (config.type === 'background') {
+              slide.background = { color: config.color.replace('#', '') };
+            } else if (config.type === 'text') {
+              slide.addText(config.text, config.options);
+            } else if (config.type === 'shape') {
+              slide.addShape(pres.ShapeType[config.shapeType as keyof typeof pres.ShapeType] || pres.ShapeType.rect, config.options);
+            } else if (config.type === 'image' && config.path) {
+              slide.addImage({ path: config.path, ...config.options });
+            }
           });
-
-          // Add separator
-          slide.addShape(pres.ShapeType.rect, {
-            x: 0.5, y: 1.4, w: '90%', h: 0.02, fill: { color: '334155' }
-          });
-
-          // Find following content until next header
-          let content = '';
-          let next = header.nextElementSibling;
-          while (next && !['H1', 'H2', 'H3'].includes(next.tagName)) {
-            content += (next.textContent?.trim() || '') + '\n\n';
-            next = next.nextElementSibling;
-          }
-
-          if (content.trim()) {
-            slide.addText(content.trim(), {
-              x: 0.75, y: 1.8, w: '85%', h: 4.5,
-              fontSize: 18, color: 'E2E8F0',
-              valign: pres.AlignV.top,
-              lineSpacing: 24
-            });
-          }
-        });
-      } else {
-        // Last resort: just the body
-        const slide = pres.addSlide();
-        slide.background = { color: '1A1D21' };
-        slide.addText(document.body.textContent || 'Presentation', {
-          x: 0.5, y: 0.5, w: '90%', h: 6,
-          fontSize: 18, color: 'E2E8F0',
-          valign: pres.AlignV.middle
-        });
+        } catch (e) {
+          console.error('[Manus PPTX] Gemini layout error, using fallback:', e);
+          // Fallback to basic dark theme
+          slide.background = { color: '1A1D21' };
+          slide.addText(el.textContent?.substring(0, 100) || 'Slide', { x: 0.5, y: 0.5, color: '60A5FA', fontSize: 24 });
+        }
       }
-    } else {
-      // Process detected slide elements
-      slideElements.forEach((el, idx) => {
-        // Skip very small elements that might not be slides
-        if (el.textContent && el.textContent.length < 10 && !el.querySelector('img')) return;
-
-        const slide = pres.addSlide();
-        
-        // Try to detect background color from style
-        let bgColor = '1A1D21'; // Default dark
-        const style = (el as HTMLElement).style?.backgroundColor;
-        if (style) {
-          // Simplistic hex conversion if needed, but PptxGenJS accepts many formats
-          // For now stick to dark theme as it matches Manus best
-        }
-        slide.background = { color: bgColor };
-
-        // Find main title in this section
-        const titleEl = el.querySelector('h1, h2, h3, h4, .title, .header');
-        const title = titleEl?.textContent?.trim() || `Slide ${idx + 1}`;
-
-        // Find images
-        const imgEl = el.querySelector('img');
-        if (imgEl && imgEl.src) {
-          // If there's an image, we'll try a split layout
-          slide.addText(title, {
-            x: 0.5, y: 0.3, w: '90%', h: 0.8,
-            fontSize: 28, bold: true, color: '60A5FA',
-            align: pres.AlignH.left
-          });
-
-          // Text content
-          const textContent = Array.from(el.querySelectorAll('p, li, .text'))
-            .map(c => c.textContent?.trim())
-            .filter(Boolean)
-            .join('\n\n');
-
-          slide.addText(textContent, {
-            x: 0.5, y: 1.2, w: '45%', h: 5,
-            fontSize: 16, color: 'E2E8F0',
-            valign: pres.AlignV.top
-          });
-
-          // Image (we use placeholder or link if possible, but PptxGenJS needs data or reachable URL)
-          try {
-            slide.addImage({
-              path: imgEl.src,
-              x: 5.2, y: 1.2, w: 4.5, h: 4.5
-            });
-          } catch (e) {
-            console.log('[Manus PPTX] Image add failed:', e);
-          }
-        } else {
-          // Content only layout
-          slide.addText(title, {
-            x: 0.5, y: 0.5, w: '90%', h: 1,
-            fontSize: 32, bold: true, color: '60A5FA',
-            align: pres.AlignH.center
-          });
-
-          slide.addShape(pres.ShapeType.rect, {
-            x: 0.5, y: 1.4, w: '90%', h: 0.02, fill: { color: '334155' }
-          });
-
-          const content = Array.from(el.querySelectorAll('p, li, span, .content'))
-            .filter(c => c !== titleEl)
-            .map(c => c.textContent?.trim())
-            .filter(Boolean)
-            .join('\n\n');
-
-          if (content) {
-            slide.addText(content, {
-              x: 0.75, y: 1.8, w: '85%', h: 4.5,
-              fontSize: 18, color: 'E2E8F0',
-              valign: pres.AlignV.top,
-              lineSpacing: 24
-            });
-          }
-        }
-      });
     }
 
     const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
