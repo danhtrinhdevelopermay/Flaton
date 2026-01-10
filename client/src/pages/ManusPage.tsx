@@ -438,22 +438,20 @@ export default function ManusPage() {
       <div className="mt-4 space-y-3">
         <p className="text-sm font-bold opacity-70 uppercase tracking-wider mb-2">Tệp kết quả:</p>
         {files.map((file) => (
-          <div 
-            key={file.id} 
-            className={`flex items-center justify-between p-4 rounded-xl border-l-4 border-indigo-500 transition-all ${
+            <div key={file.id} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border-l-4 border-indigo-500 transition-all gap-4 ${
               theme === 'dark' ? 'bg-[#1e202f] hover:bg-[#252839]' : 'bg-white shadow-sm hover:shadow-md'
             }`}
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
                 <FileText className="w-6 h-6" />
               </div>
-              <div className="min-w-0">
-                <p className="font-bold text-sm truncate max-w-[150px] sm:max-w-[300px]">{file.name}</p>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-sm truncate pr-2">{file.name}</p>
                 {file.type && <p className="text-[10px] font-bold opacity-50 uppercase">{file.type}</p>}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:ml-auto">
               {file.type === 'json' && (
                 <button
                   onClick={() => handlePreview(file)}
