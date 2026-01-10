@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Brain, Send, Loader2, CheckCircle, AlertCircle, Clock, FileText, Download, Code, X, Eye, Trash2 } from 'lucide-react'
+import { Brain, Send, Loader2, CheckCircle, AlertCircle, Clock, FileText, Download, Code, X, Eye, Trash2, Settings } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -68,11 +68,49 @@ export default function ManusPage() {
     }
   };
 
+  const [manusApiKey, setManusApiKey] = useState('')
+  const [showSettings, setShowSettings] = useState(false)
+
   useEffect(() => {
     if (token) {
       loadTasks()
+      fetchUserApiKey()
     }
   }, [token])
+
+  const fetchUserApiKey = async () => {
+    try {
+      const res = await fetch('/api/user/manus-key', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.apiKey) setManusApiKey(data.apiKey)
+    } catch (err) {
+      console.error('[Manus UI] Error fetching API key:', err)
+    }
+  }
+
+  const handleUpdateApiKey = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const res = await fetch('/api/user/manus-key', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ apiKey: manusApiKey })
+      })
+      const data = await res.json()
+      if (data.success) {
+        alert('Cập nhật API Key thành công!')
+        setShowSettings(false)
+      }
+    } catch (err) {
+      console.error('[Manus UI] Error updating API key:', err)
+      alert('Lỗi cập nhật API Key')
+    }
+  }
 
   const loadTasks = async () => {
     try {
@@ -499,18 +537,68 @@ export default function ManusPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 fade-in">
       {/* ... existing header and form ... */}
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-16 h-16 rounded-[1.2rem] bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center shadow-lg transform rotate-3">
-          <Brain className="w-8 h-8 text-white drop-shadow-md" />
-        </div>
-        <div>
-          <h1 className={`text-4xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>MANUS AI AGENT</h1>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse" />
-            <p className={`font-bold uppercase tracking-widest text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>ĐẠI LÝ AI TỰ HÀNH</p>
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-[1.2rem] bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center shadow-lg transform rotate-3">
+            <Brain className="w-8 h-8 text-white drop-shadow-md" />
+          </div>
+          <div>
+            <h1 className={`text-4xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>MANUS AI AGENT</h1>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse" />
+              <p className={`font-bold uppercase tracking-widest text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>ĐẠI LÝ AI TỰ HÀNH</p>
+            </div>
           </div>
         </div>
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className={`p-3 rounded-2xl transition-all ${
+            theme === 'dark' ? 'bg-[#2a2d3e] hover:bg-[#32354a]' : 'bg-white shadow-md hover:shadow-lg'
+          }`}
+        >
+          <Settings className={`w-6 h-6 ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`} />
+        </button>
       </div>
+
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className={`overflow-hidden mb-8 rounded-[2rem] border-b-4 transition-all ${
+              theme === 'dark' ? 'bg-[#2a2d3e] border-[#1e202f]' : 'bg-white border-slate-100 shadow-xl'
+            }`}
+          >
+            <div className="p-8">
+              <h2 className="text-xl font-black mb-4 flex items-center gap-2">
+                <Settings className="w-5 h-5" /> CÀI ĐẶT API KEY
+              </h2>
+              <form onSubmit={handleUpdateApiKey} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold opacity-70 uppercase tracking-wider">Manus API Key</label>
+                  <input
+                    type="password"
+                    value={manusApiKey}
+                    onChange={(e) => setManusApiKey(e.target.value)}
+                    placeholder="Nhập API Key cá nhân của bạn..."
+                    className={`w-full p-4 rounded-xl border-2 focus:border-indigo-500 focus:outline-none transition-all ${
+                      theme === 'dark' ? 'bg-[#1e202f] border-[#32354a]' : 'bg-slate-50 border-slate-100'
+                    }`}
+                  />
+                  <p className="text-[10px] opacity-50 italic">API Key này chỉ được sử dụng cho riêng tài khoản của bạn.</p>
+                </div>
+                <button
+                  type="submit"
+                  className="px-8 py-3 rounded-xl bg-indigo-600 text-white font-black hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                >
+                  LƯU CÀI ĐẶT
+                </button>
+              </form>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className={`rounded-[2.5rem] p-8 mb-8 border-b-8 transition-all ${
         theme === 'dark' ? 'bg-[#2a2d3e] border-[#1e202f] text-white' : 'bg-white border-slate-200 shadow-xl text-slate-900'

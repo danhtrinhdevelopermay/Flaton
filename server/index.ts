@@ -91,13 +91,41 @@ app.use(cookieParser());
 // Manus AI Integration
 const MANUS_API_BASE = 'https://api.manus.ai/v1';
 
-async function getManusApiKey(): Promise<string> {
+async function getManusApiKey(userId?: number): Promise<string> {
+  if (userId) {
+    const userResult = await pool.query('SELECT manus_api_key FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length > 0 && userResult.rows[0].manus_api_key) {
+      return userResult.rows[0].manus_api_key.trim();
+    }
+  }
+  
   const result = await pool.query("SELECT setting_value FROM admin_settings WHERE setting_key = 'manus_api_key' LIMIT 1");
   if (result.rows.length > 0 && result.rows[0].setting_value) {
     return result.rows[0].setting_value.trim();
   }
   return process.env.MANUS_API_KEY || '';
 }
+
+// Get User Manus API Key
+app.get('/api/user/manus-key', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await pool.query('SELECT manus_api_key FROM users WHERE id = $1', [req.userId]);
+    res.json({ apiKey: result.rows[0]?.manus_api_key });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update User Manus API Key
+app.post('/api/user/manus-key', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { apiKey } = req.body;
+    await pool.query('UPDATE users SET manus_api_key = $1 WHERE id = $2', [apiKey, req.userId]);
+    res.json({ success: true, message: "Cập nhật API Key thành công" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Manus Webhook Handler
 app.post('/api/manus/webhook', async (req: Request, res: Response) => {
@@ -148,10 +176,10 @@ app.post('/api/manus/tasks', authMiddleware, async (req: AuthRequest, res: Respo
     const { prompt, taskMode = 'agent', agentProfile = 'manus-1.6' } = req.body;
     console.log('[Manus] Creating task:', { prompt, taskMode, agentProfile });
     
-    const apiKey = await getManusApiKey();
+    const apiKey = await getManusApiKey(req.userId);
     if (!apiKey) {
       console.error('[Manus] Error: API key not configured');
-      return res.status(400).json({ error: 'Manus API key chưa được cấu hình.' });
+      return res.status(400).json({ error: 'Vui lòng cài đặt Manus API key trong phần Cài đặt của bạn.' });
     }
 
     // Attempt to get public URL for webhook
@@ -219,7 +247,7 @@ app.get('/api/manus/tasks/:taskId', authMiddleware, async (req: AuthRequest, res
     const { taskId } = req.params;
     console.log('[Manus] Polling task:', taskId);
     
-    const apiKey = await getManusApiKey();
+    const apiKey = await getManusApiKey(req.userId);
     const response = await fetch(`${MANUS_API_BASE}/tasks/${taskId}`, {
       headers: { 'API_KEY': apiKey }
     });

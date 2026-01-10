@@ -297,6 +297,14 @@ export async function initDatabase() {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_manus_tasks_user_id ON manus_tasks(user_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_manus_tasks_task_id ON manus_tasks(task_id)`);
 
+    const manusApiKeyColumnCheck = await client.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'users' AND column_name = 'manus_api_key'
+    `);
+    if (manusApiKeyColumnCheck.rows.length === 0) {
+      await client.query(`ALTER TABLE users ADD COLUMN manus_api_key TEXT`);
+    }
+
     console.log('Database tables created successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
