@@ -74,8 +74,9 @@ export default function AdminPage() {
 
   const loadSettings = async () => {
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/admin/settings', {
-        headers: { Authorization: `Bearer ${adminToken}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       if (data.manus_api_key) setManusKey(data.manus_api_key);
@@ -90,11 +91,13 @@ export default function AdminPage() {
     setError('');
     try {
       console.log('Saving Manus Key:', manusKey);
+      // Use standard auth token if adminToken is just a password string
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminToken}`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ key: 'manus_api_key', value: manusKey })
       });
