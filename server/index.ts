@@ -342,7 +342,7 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const { html, fileName } = req.body;
     if (!html) return res.status(400).json({ error: 'HTML content is required' });
 
-    console.log('[Manus PPTX] Converting content to PPTX with coordinate-based layout...');
+    console.log('[Manus PPTX] Converting content to PPTX with balanced auto-layout...');
     
     const pres = new pptxgen();
     pres.layout = 'LAYOUT_16x9';
@@ -379,18 +379,11 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
       slideElements = Array.from(document.body.children).filter(el => !['SCRIPT', 'STYLE'].includes(el.tagName)) as Element[];
     }
 
-    // Slide dimensions for coordinate conversion
-    const PAGE_W = 1280;
-    const PAGE_H = 720;
-
     for (const el of slideElements) {
       const slide = pres.addSlide();
       
-      // Default Background
+      // Background
       let bgColor = '1A1D21';
-      const elStyles = (el as HTMLElement).style;
-      if (elStyles.backgroundColor) bgColor = elStyles.backgroundColor.replace('#', '');
-      
       for (const selector in globalStyles) {
         if (el.matches(selector)) {
           const s = globalStyles[selector];
@@ -400,77 +393,46 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
       }
       slide.background = { color: bgColor.replace(/[^a-fA-F0-9]/g, '') || '1A1D21' };
 
-      // Recursive function to process elements and maintain layout
-      const processElement = (item: Element, parentX = 0, parentY = 0) => {
-        const tagName = item.tagName;
-        if (['SCRIPT', 'STYLE'].includes(tagName)) return;
+      // Content processing with better flow
+      const headers = Array.from(el.querySelectorAll('h1, h2, h3, .title'));
+      const paragraphs = Array.from(el.querySelectorAll('p, li, .text'));
+      const images = Array.from(el.querySelectorAll('img'));
 
-        // Try to estimate position from styles
-        let x = parentX;
-        let y = parentY;
-        let w = 100;
-        let h = 10;
-        let fontSize = 18;
-        let color = 'E2E8F0';
-        let align: 'left' | 'center' | 'right' = 'left';
-        let bold = false;
+      let currentY = 0.5;
 
-        const itemStyle = (item as HTMLElement).style;
-        const s = (selector: string) => {
-          for (const sel in globalStyles) {
-            if (item.matches(sel)) return globalStyles[sel][selector];
-          }
-          return null;
-        };
+      // Render Headers
+      headers.forEach(h => {
+        const text = h.textContent?.trim();
+        if (!text) return;
+        
+        slide.addText(text, {
+          x: 0.5, y: currentY, w: '90%', h: 1,
+          fontSize: 32, color: '60A5FA', bold: true, align: 'center'
+        });
+        currentY += 1.2;
+      });
 
-        // Extraction
-        const cssW = itemStyle.width || s('width');
-        const cssH = itemStyle.height || s('height');
-        const cssTop = itemStyle.top || s('top');
-        const cssLeft = itemStyle.left || s('left');
-        const cssColor = itemStyle.color || s('color');
-        const cssFontSize = itemStyle.fontSize || s('font-size');
-        const cssTextAlign = itemStyle.textAlign || s('text-align');
-        const cssDisplay = itemStyle.display || s('display');
-
-        if (cssW && cssW.includes('px')) w = (parseInt(cssW) / PAGE_W) * 100;
-        if (cssH && cssH.includes('px')) h = (parseInt(cssH) / PAGE_H) * 100;
-        if (cssTop && cssTop.includes('px')) y = (parseInt(cssTop) / PAGE_H) * 10;
-        if (cssLeft && cssLeft.includes('px')) x = (parseInt(cssLeft) / PAGE_W) * 10;
-        if (cssColor) color = cssColor.replace('#', '');
-        if (cssFontSize) fontSize = parseInt(cssFontSize) || fontSize;
-        if (cssTextAlign) align = cssTextAlign as any;
-        if (['H1', 'H2', 'H3'].includes(tagName)) bold = true;
-
-        // Render Text or Image
-        if (tagName === 'IMG') {
+      // Render Images (if any)
+      if (images.length > 0) {
+        images.forEach((img, idx) => {
           try {
             slide.addImage({
-              path: (item as HTMLImageElement).src,
-              x: (x / 10) * 10, y: (y / 10) * 5.625, // Convert to inches for 16x9
-              w: (w / 100) * 10, h: (h / 100) * 5.625
+              path: (img as HTMLImageElement).src,
+              x: 0.5 + (idx * 3), y: currentY, w: 3, h: 3
             });
           } catch (e) {}
-        } else if (item.children.length === 0 || Array.from(item.childNodes).every(n => n.nodeType === 3)) {
-          const text = item.textContent?.trim();
-          if (text && text.length > 0) {
-            slide.addText(text, {
-              x: (x / 10) * 10 || 0.5, 
-              y: (y / 10) * 5.625 || parentY, 
-              w: (w / 100) * 10 || '90%',
-              fontSize, color: color.replace(/[^a-fA-F0-9]/g, '') || 'E2E8F0',
-              bold, align: align as any,
-              fontFace: 'Arial'
-            });
-            parentY += (fontSize / 72) * 1.2; // Move down for next sibling if no absolute pos
-          }
-        } else {
-          // Process children
-          Array.from(item.children).forEach(child => processElement(child, x, y));
-        }
-      };
+        });
+        currentY += 3.2;
+      }
 
-      Array.from(el.children).forEach(child => processElement(child, 0.5, 0.5));
+      // Render Paragraphs
+      const pText = paragraphs.map(p => p.textContent?.trim()).filter(Boolean).join('\n\n');
+      if (pText) {
+        slide.addText(pText, {
+          x: 0.75, y: currentY, w: '85%', h: 4,
+          fontSize: 18, color: 'E2E8F0', align: 'left', valign: 'top'
+        });
+      }
     }
 
     const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
