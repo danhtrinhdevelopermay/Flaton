@@ -342,85 +342,50 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
     const { html, fileName } = req.body;
     if (!html) return res.status(400).json({ error: 'HTML content is required' });
 
-    console.log('[Manus PPTX] Converting content to PPTX using Puppeteer for high fidelity...');
-    
+    console.log('[Manus PPTX] Converting content to PPTX using pure PptxGenJS (Text extraction - Puppeteer disabled due to environment)...');
     const pres = new pptxgen();
     pres.layout = 'LAYOUT_16x9';
-
-    // Start Puppeteer to capture high-quality screenshots of the HTML/CSS
-    const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    const page = await browser.newPage();
-    
-    // Set viewport to slide aspect ratio (16:9)
-    // 1280x720 is a good standard for 16:9 slides
-    await page.setViewport({ width: 1280, height: 720 });
 
     const dom = new JSDOM(html);
     const document = dom.window.document;
     
-    // Check if the HTML contains multiple slide-like elements or is just one block
-    // Manus AI usually outputs multiple sections for slides
-    let slideElements = Array.from(document.querySelectorAll('.slide, section, .presentation-slide'));
+    // Check for slides
+    let slideElements = Array.from(document.querySelectorAll('.slide, section, .presentation-slide, h1, h2, h3'));
     
     if (slideElements.length === 0) {
-      // Fallback: If no explicit slides, try to find top-level divs or just use the body
-      const bodyChildren = Array.from(document.body.children).filter(el => el.tagName !== 'SCRIPT' && el.tagName !== 'STYLE');
-      if (bodyChildren.length > 0) {
-        slideElements = bodyChildren as Element[];
-      } else {
-        slideElements = [document.body];
-      }
+      slideElements = [document.body];
     }
 
-    console.log(`[Manus PPTX] Found ${slideElements.length} slide elements`);
+    console.log(`[Manus PPTX] Processing ${slideElements.length} sections`);
 
-    for (const el of slideElements) {
-      // Wrap the element in a basic HTML structure with styles
-      // We extract styles from the original HTML to preserve look and feel
-      const styles = Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('\n');
-      const elementHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          ${styles}
-          <style>
-            body { margin: 0; padding: 0; overflow: hidden; background: #1A1D21; }
-            .capture-container { 
-              width: 1280px; 
-              height: 720px; 
-              display: flex; 
-              flex-direction: column; 
-              justify-content: center; 
-              align-items: center;
-              box-sizing: border-box;
-              padding: 40px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="capture-container">
-            ${el.outerHTML}
-          </div>
-        </body>
-        </html>
-      `;
-
-      await page.setContent(elementHtml, { waitUntil: 'networkidle0' });
-      
-      // Take screenshot as base64
-      const screenshot = await page.screenshot({ encoding: 'base64' });
-      
+    slideElements.forEach((el, idx) => {
       const slide = pres.addSlide();
-      slide.addImage({
-        data: `image/png;base64,${screenshot}`,
-        x: 0, y: 0, w: '100%', h: '100%'
-      });
-    }
+      slide.background = { color: '1A1D21' }; // Dark theme like Manus
 
-    await browser.close();
+      const title = el.tagName.startsWith('H') ? el.textContent : (el.querySelector('h1, h2, h3')?.textContent || `Slide ${idx + 1}`);
+      const contentElements = Array.from(el.querySelectorAll('p, li, span'));
+      const content = contentElements.map(c => c.textContent?.trim()).filter(Boolean).join('\n\n');
+
+      slide.addText(title || 'Presentation', {
+        x: 0.5, y: 0.5, w: '90%', h: 1,
+        fontSize: 32, bold: true, color: '60A5FA',
+        align: pres.AlignH.center
+      });
+
+      if (content) {
+        slide.addText(content, {
+          x: 0.75, y: 1.8, w: '85%', h: 4.5,
+          fontSize: 18, color: 'E2E8F0',
+          valign: pres.AlignV.top,
+          lineSpacing: 24
+        });
+      }
+
+      // Add a separator line
+      slide.addShape(pres.ShapeType.rect, {
+        x: 0.5, y: 1.4, w: '90%', h: 0.02, fill: { color: '334155' }
+      });
+    });
 
     const buffer = await pres.write({ outputType: 'nodebuffer' }) as Buffer;
     const safeFileName = encodeURIComponent(fileName || 'presentation');
