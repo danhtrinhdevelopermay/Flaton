@@ -228,56 +228,58 @@ async function checkTaskStatus(taskId: string, taskType: string, apiKeyId?: numb
     apiKey = await getActiveApiKey();
   }
 
-  let endpoint = '';
-  switch (taskType) {
-    case 'veo3':
-      endpoint = `/veo/record-info?taskId=${taskId}`;
-      break;
-    case 'midjourney':
-    case 'midjourney-video':
-      endpoint = `/mj/record-info?taskId=${taskId}`;
-      break;
-    case 'playground':
-      endpoint = `/playground/recordInfo?taskId=${taskId}&recordId=${taskId}`;
-      break;
-    case 'seedream':
-    case 'grok':
-    case 'sora2':
-    case 'kling':
-    case 'topaz-video':
-      endpoint = `/jobs/recordInfo?taskId=${taskId}&recordId=${taskId}`;
-      break;
-    case 'suno':
-      endpoint = `/generate/record-info?taskId=${taskId}`;
-      break;
-    case 'gpt4o-image':
-      endpoint = `/gpt4o-image/record-info?taskId=${taskId}`;
-      break;
-    default:
-      throw new Error('Unknown task type');
-  }
+  const checkStatus = async (useRecordId: boolean) => {
+    let endpoint = '';
+    switch (taskType) {
+      case 'veo3':
+        endpoint = `/veo/record-info?taskId=${taskId}`;
+        break;
+      case 'midjourney':
+      case 'midjourney-video':
+        endpoint = `/mj/record-info?taskId=${taskId}`;
+        break;
+      case 'playground':
+        endpoint = useRecordId 
+          ? `/playground/recordInfo?taskId=${taskId}&recordId=${taskId}`
+          : `/playground/recordInfo?taskId=${taskId}`;
+        break;
+      case 'seedream':
+      case 'grok':
+      case 'sora2':
+      case 'kling':
+      case 'topaz-video':
+        endpoint = useRecordId
+          ? `/jobs/recordInfo?taskId=${taskId}&recordId=${taskId}`
+          : `/jobs/recordInfo?taskId=${taskId}`;
+        break;
+      case 'suno':
+        endpoint = `/generate/record-info?taskId=${taskId}`;
+        break;
+      case 'gpt4o-image':
+        endpoint = `/gpt4o-image/record-info?taskId=${taskId}`;
+        break;
+      default:
+        throw new Error('Unknown task type');
+    }
 
-  const response = await fetch(`${KIE_API_BASE}${endpoint}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-    },
-  });
-
-  const result = await response.json();
-  console.log(`Task status check for ${taskType}/${taskId}:`, JSON.stringify(result, null, 2));
-  
-  // Critical fix: If recordInfo is null, it might be because the taskId/recordId mapping is wrong or the task hasn't propagated
-  if (result.code === 422 && result.msg === 'recordInfo is null' && (taskType === 'playground' || taskType === 'seedream' || taskType === 'topaz-video' || taskType === 'grok' || taskType === 'sora2' || taskType === 'kling')) {
-    const retryEndpoint = taskType === 'playground' ? `/playground/recordInfo?taskId=${taskId}` : `/jobs/recordInfo?taskId=${taskId}`;
-    const retryResponse = await fetch(`${KIE_API_BASE}${retryEndpoint}`, {
+    const response = await fetch(`${KIE_API_BASE}${endpoint}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
       },
     });
-    const retryResult = await retryResponse.json();
-    if (retryResult.code === 200) return parseKieStatus(retryResult, taskType);
+
+    return await response.json();
+  };
+
+  let result = await checkStatus(true);
+  console.log(`Task status check (with recordId) for ${taskType}/${taskId}:`, JSON.stringify(result, null, 2));
+
+  // Fallback if recordInfo is null
+  if (result.code === 422 && result.msg === 'recordInfo is null') {
+    console.log(`[DEBUG] recordInfo is null for ${taskType}/${taskId}. Retrying without recordId...`);
+    result = await checkStatus(false);
+    console.log(`Task status check (without recordId) for ${taskType}/${taskId}:`, JSON.stringify(result, null, 2));
   }
 
   return parseKieStatus(result, taskType);
