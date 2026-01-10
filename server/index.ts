@@ -93,8 +93,11 @@ app.post('/api/generate-pptx-content', authMiddleware, async (req: AuthRequest, 
   try {
     const { prompt, style } = req.body;
     
-    const systemPrompt = `Bạn là một chuyên gia soạn thảo bài giảng. Hãy tạo nội dung slide cho bài giảng theo yêu cầu.`;
+    const systemPrompt = `Bạn là một chuyên gia soạn thảo bài giảng. Hãy tạo nội dung slide cho bài giảng dưới dạng JSON. Trả về mảng các slide, mỗi slide có tiêu đề và nội dung.`;
     const model = await getGeminiModel();
+    if (!model) {
+      throw new Error('Gemini model not initialized');
+    }
     const result = await (model as any).generateContent(systemPrompt + "\n\n" + prompt);
     const response = await result.response;
     let text = response.text();
@@ -213,8 +216,8 @@ async function callKieApi(endpoint: string, data: any, apiKeyId?: number) {
   return result;
 }
 
-async function checkTaskStatus(taskId: string, taskType: string) {
-  const apiKey = await getActiveApiKey();
+async function checkTaskStatus(taskId: string, taskType: string, apiKeyId?: number) {
+  const apiKey = apiKeyId ? await getApiKeyById(apiKeyId) : await getActiveApiKey();
 
   let endpoint = '';
   switch (taskType) {
@@ -1088,7 +1091,8 @@ app.post('/api/generate/suno', authMiddleware, async (req: AuthRequest, res: Res
 app.get('/api/task/:taskType/:taskId', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { taskType, taskId } = req.params;
-    const result = await checkTaskStatus(taskId, taskType);
+    const apiKeyId = req.query.apiKeyId ? parseInt(req.query.apiKeyId as string) : undefined;
+    const result = await checkTaskStatus(taskId, taskType, apiKeyId);
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
