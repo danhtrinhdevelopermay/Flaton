@@ -583,8 +583,8 @@ app.post('/api/manus/convert-pptx', authMiddleware, async (req: AuthRequest, res
         output: {
           type: "pptx",
           // Nutrient Processor API documentation suggests these dimensions for 16:9
-          pageWidth: 960,
-          pageHeight: 540
+          pageWidth: 960 as any,
+          pageHeight: 540 as any
         }
       }));
 

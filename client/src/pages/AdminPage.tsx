@@ -58,6 +58,8 @@ export default function AdminPage() {
     }
   }, []);
 
+  const [usersNoManus, setUsersNoManus] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const [allUsersManus, setAllUsersManus] = useState<any[]>([]);
   const [manusLogs, setManusLogs] = useState<any[]>([]);
 
