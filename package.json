@@ -51,7 +51,7 @@
     "express": "^5.2.1",
     "express-session": "^1.18.2",
     "form-data": "^4.0.5",
-    "framer-motion": "^12.23.25",
+    "framer-motion": "^12.25.0",
     "jsdom": "^27.4.0",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.555.0",

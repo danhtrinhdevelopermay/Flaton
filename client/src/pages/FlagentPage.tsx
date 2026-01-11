@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Brain, Send, Loader2, CheckCircle, AlertCircle, Clock, FileText, Download, Code, Eye, Trash2 } from 'lucide-react'
+import { Brain, Send, Loader2, CheckCircle, AlertCircle, Clock, FileText, Trash2, Zap } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
-import { AnimatePresence, motion } from 'framer-motion'
 
 interface FlagentFile {
   id: string
@@ -29,8 +28,6 @@ export default function FlagentPage() {
   const [loading, setLoading] = useState(false)
   const [tasks, setTasks] = useState<FlagentTask[]>([])
   const [currentTask, setCurrentTask] = useState<FlagentTask | null>(null)
-  const [previewFile, setPreviewFile] = useState<FlagentFile | null>(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
   const [flagentApiKey, setFlagentApiKey] = useState('')
 
   useEffect(() => {
@@ -177,38 +174,36 @@ export default function FlagentPage() {
     return (
       <div className="mt-4 space-y-4">
         {files.map((file) => (
-          <motion.div 
+          <div 
             key={file.id} 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className={`flex items-center justify-between p-5 rounded-3xl border-2 transition-all group ${
+            className={`flex items-center justify-between p-5 rounded-3xl border-2 transition-all ${
               theme === 'dark' 
-                ? 'bg-slate-800/40 border-slate-700/50 hover:border-indigo-500/50 shadow-lg shadow-indigo-500/5' 
-                : 'bg-white border-slate-100 hover:border-indigo-500/30 shadow-xl shadow-indigo-500/10'
+                ? 'bg-slate-800 border-slate-700 hover:border-indigo-500 shadow-lg' 
+                : 'bg-white border-slate-100 hover:border-indigo-500 shadow-xl'
             }`}
           >
             <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-6 ${
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
                 theme === 'dark' ? 'bg-indigo-500/20' : 'bg-indigo-50'
               }`}>
                 <FileText className={`w-6 h-6 ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`} />
               </div>
               <div>
-                <p className="font-black text-sm truncate max-w-[200px] sm:max-w-md">{file.name}</p>
+                <p className={`font-black text-sm truncate max-w-[200px] sm:max-w-md ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{file.name}</p>
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">{file.type || 'FILE'}</p>
               </div>
             </div>
             <button
               onClick={() => window.open(`/api/flagent/download?url=${encodeURIComponent(file.url)}&token=${token}`, '_blank')}
-              className={`px-6 py-2.5 rounded-2xl text-xs font-black transition-all active:scale-95 shadow-lg ${
+              className={`px-6 py-2.5 rounded-2xl text-xs font-black transition-all shadow-lg ${
                 theme === 'dark'
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/20'
-                  : 'bg-indigo-500 hover:bg-indigo-600 text-white shadow-indigo-500/30'
+                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                  : 'bg-indigo-500 hover:bg-indigo-600 text-white'
               }`}
             >
               TẢI XUỐNG
             </button>
-          </motion.div>
+          </div>
         ))}
       </div>
     );
@@ -216,18 +211,14 @@ export default function FlagentPage() {
 
   if (!flagentApiKey) {
     return (
-      <div className="max-w-4xl mx-auto py-24 px-4 text-center">
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className={`w-32 h-32 rounded-[3rem] flex items-center justify-center mx-auto mb-10 shadow-2xl relative ${
-            theme === 'dark' ? 'bg-indigo-500/10' : 'bg-indigo-50'
-          }`}
-        >
+      <div className={`max-w-4xl mx-auto py-24 px-4 text-center ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+        <div className={`w-32 h-32 rounded-[3rem] flex items-center justify-center mx-auto mb-10 shadow-2xl relative ${
+          theme === 'dark' ? 'bg-indigo-500/10' : 'bg-indigo-50'
+        }`}>
           <Brain className="w-16 h-16 text-indigo-500 relative z-10" />
           <div className="absolute inset-0 rounded-[3rem] bg-indigo-500/20 animate-ping opacity-20" />
-        </motion.div>
-        <h1 className={`text-4xl font-black mb-6 tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Chúng tôi đang chuẩn bị cho bạn không gian mới</h1>
+        </div>
+        <h1 className="text-4xl font-black mb-6 tracking-tight">Chúng tôi đang chuẩn bị cho bạn không gian mới</h1>
         <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-xs max-w-lg mx-auto leading-loose">
           Tính năng Flagent đang được thiết lập. Tài khoản của bạn sẽ sớm được cấp API Key để trải nghiệm sức mạnh của AI Agent.
         </p>
@@ -236,14 +227,11 @@ export default function FlagentPage() {
   }
 
   return (
-    <div className={`max-w-5xl mx-auto py-12 px-4 fade-in ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+    <div className={`max-w-5xl mx-auto py-12 px-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
       <div className="flex items-center gap-6 mb-12">
-        <motion.div 
-          whileHover={{ rotate: 12, scale: 1.1 }}
-          className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-indigo-600 via-indigo-500 to-blue-600 flex items-center justify-center shadow-2xl shadow-indigo-500/30"
-        >
-          <Brain className="w-10 h-10 text-white drop-shadow-lg" />
-        </motion.div>
+        <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-indigo-600 via-indigo-500 to-blue-600 flex items-center justify-center shadow-2xl shadow-indigo-500/30">
+          <Brain className="w-10 h-10 text-white" />
+        </div>
         <div>
           <h1 className="text-4xl font-black tracking-tighter">FLATON FLAGENT</h1>
           <div className="flex items-center gap-2 mt-1">
@@ -253,15 +241,11 @@ export default function FlagentPage() {
         </div>
       </div>
 
-      <motion.div 
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className={`rounded-[3rem] p-10 mb-12 border-b-8 transition-all shadow-2xl ${
-          theme === 'dark' 
-            ? 'glass border-slate-800' 
-            : 'bg-white border-slate-200'
-        }`}
-      >
+      <div className={`rounded-[3rem] p-10 mb-12 border-b-8 shadow-2xl ${
+        theme === 'dark' 
+          ? 'bg-slate-800 border-slate-700' 
+          : 'bg-white border-slate-200'
+      }`}>
         <form onSubmit={handleCreateTask} className="space-y-6">
           <div className="flex items-center gap-2 text-indigo-500">
             <Send className="w-4 h-4" />
@@ -271,16 +255,16 @@ export default function FlagentPage() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Ví dụ: Phân tích báo cáo tài chính, lập kế hoạch marketing, hoặc viết code ứng dụng..."
-            className={`w-full h-40 p-6 rounded-3xl border-4 text-xl font-bold outline-none transition-all resize-none shadow-inner ${
+            className={`w-full h-40 p-6 rounded-3xl border-4 text-xl font-bold outline-none resize-none shadow-inner ${
               theme === 'dark'
-                ? 'bg-slate-900/50 border-slate-800 focus:border-indigo-500/50 text-white'
-                : 'bg-slate-50 border-slate-100 focus:border-indigo-400/30 text-slate-900'
+                ? 'bg-slate-900 border-slate-800 text-white'
+                : 'bg-slate-50 border-slate-100 text-slate-900'
             }`}
           />
           <button
             type="submit"
             disabled={loading || !prompt.trim()}
-            className={`w-full py-6 rounded-[2rem] text-white font-black text-xl flex items-center justify-center gap-3 transition-all active:translate-y-2 active:border-b-0 border-b-8 ${
+            className={`w-full py-6 rounded-[2rem] text-white font-black text-xl flex items-center justify-center gap-3 active:translate-y-2 active:border-b-0 border-b-8 ${
               loading || !prompt.trim()
                 ? 'opacity-50 cursor-not-allowed bg-slate-500 border-slate-600'
                 : 'bg-indigo-600 border-indigo-800 hover:bg-indigo-500 hover:translate-y-1 hover:border-b-4 shadow-xl shadow-indigo-500/20'
@@ -290,7 +274,7 @@ export default function FlagentPage() {
             THỰC THI NHIỆM VỤ
           </button>
         </form>
-      </motion.div>
+      </div>
 
       <div className="space-y-8">
         <div className="flex items-center justify-between border-b border-dashed border-slate-700/20 pb-4">
@@ -304,78 +288,68 @@ export default function FlagentPage() {
         </div>
         
         <div className="grid grid-cols-1 gap-6">
-          <AnimatePresence>
-            {tasks.length === 0 ? (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="py-20 text-center opacity-30 font-black uppercase tracking-widest text-sm"
+          {tasks.length === 0 ? (
+            <div className="py-20 text-center opacity-30 font-black uppercase tracking-widest text-sm">
+              Chưa có nhiệm vụ nào được ghi lại
+            </div>
+          ) : (
+            tasks.map((task) => (
+              <div
+                key={task.id}
+                className={`p-8 rounded-[2.5rem] border-b-4 ${
+                  theme === 'dark' 
+                    ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' 
+                    : 'bg-white border-slate-100 shadow-xl hover:shadow-2xl'
+                }`}
               >
-                Chưa có nhiệm vụ nào được ghi lại
-              </motion.div>
-            ) : (
-              tasks.map((task) => (
-                <motion.div
-                  key={task.id}
-                  layout
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  className={`p-8 rounded-[2.5rem] border-b-4 transition-all hover:scale-[1.01] ${
-                    theme === 'dark' 
-                      ? 'bg-slate-800/30 border-slate-700/50 hover:bg-slate-800/50' 
-                      : 'bg-white border-slate-100 shadow-xl hover:shadow-2xl'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-6 mb-6">
-                    <div className="flex-1 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
-                          task.status === 'completed' ? 'bg-green-500/20 text-green-500' :
-                          task.status === 'failed' ? 'bg-red-500/20 text-red-500' :
-                          'bg-blue-500/20 text-blue-500 animate-pulse'
-                        }`}>
-                          {task.status === 'completed' ? 'Thành công' :
+                <div className="flex items-start justify-between gap-6 mb-6">
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+                        task.status === 'completed' ? 'bg-green-500 text-green-100' :
+                        task.status === 'failed' ? 'bg-red-500 text-red-100' :
+                        'bg-blue-500 text-blue-100 animate-pulse'
+                      }`}>
+                        {task.status === 'completed' ? 'Thành công' :
                            task.status === 'failed' ? 'Thất bại' :
                            task.status === 'running' ? 'Đang chạy' : 'Đang chờ'}
-                        </span>
-                        <span className="text-[10px] font-bold opacity-30 flex items-center gap-1 uppercase">
-                          <Clock className="w-3 h-3" />
-                          {new Date(task.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                      <p className={`font-black text-xl leading-snug tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{task.prompt}</p>
+                      </span>
+                      <span className="text-[10px] font-bold opacity-30 flex items-center gap-1 uppercase">
+                        <Clock className="w-3 h-3" />
+                        {new Date(task.createdAt).toLocaleString()}
+                      </span>
                     </div>
-                    <button
-                      onClick={() => handleDeleteTask(task.id)}
-                      className={`p-3 rounded-2xl transition-all active:scale-90 ${
-                        theme === 'dark' ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'
-                      }`}
-                    >
-                      <Trash2 className="w-6 h-6" />
-                    </button>
+                    <p className={`font-black text-xl leading-snug tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{task.prompt}</p>
                   </div>
-                  
-                  {task.status === 'completed' && task.result && (
-                    <div className="mt-8 pt-8 border-t border-dashed border-slate-700/20">
-                      <div className="flex items-center gap-2 mb-4 text-indigo-500">
-                        <CheckCircle className="w-4 h-4" />
-                        <span className="text-xs font-black uppercase tracking-widest">Kết quả thực thi</span>
-                      </div>
-                      {renderFiles(task.result)}
+                  <button
+                    onClick={() => handleDeleteTask(task.id)}
+                    className={`p-3 rounded-2xl active:scale-90 ${
+                      theme === 'dark' ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'
+                    }`}
+                  >
+                    <Trash2 className="w-6 h-6" />
+                  </button>
+                </div>
+                
+                {task.status === 'completed' && task.result && (
+                  <div className="mt-8 pt-8 border-t border-dashed border-slate-700/20">
+                    <div className="flex items-center gap-2 mb-4 text-indigo-500">
+                      <CheckCircle className="w-4 h-4" />
+                      <span className="text-xs font-black uppercase tracking-widest">Kết quả thực thi</span>
                     </div>
-                  )}
+                    {renderFiles(task.result)}
+                  </div>
+                )}
 
-                  {task.status === 'failed' && (
-                    <div className="mt-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-sm font-bold">
-                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                      {task.error || 'Đã có lỗi xảy ra trong quá trình thực thi.'}
-                    </div>
-                  )}
-                </motion.div>
-              ))
-            )}
-          </AnimatePresence>
+                {task.status === 'failed' && (
+                  <div className="mt-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-sm font-bold">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    {task.error || 'Đã có lỗi xảy ra trong quá trình thực thi.'}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
