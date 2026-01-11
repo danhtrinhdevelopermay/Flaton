@@ -214,8 +214,6 @@ export default function FlagentPage() {
     );
   };
 
-  const [activeTab, setActiveTab] = useState<'status' | 'chat'>('status')
-
   if (!flagentApiKey) {
     return (
       <div className={`max-w-4xl mx-auto py-24 px-4 text-center ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -283,194 +281,81 @@ export default function FlagentPage() {
         </form>
       </div>
 
-      <div className="mb-8 flex gap-4 p-2 rounded-2xl bg-slate-500/5">
-        <button
-          onClick={() => setActiveTab('status')}
-          className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
-            activeTab === 'status'
-              ? (theme === 'dark' ? 'bg-indigo-600 text-white' : 'bg-indigo-500 text-white shadow-lg')
-              : 'opacity-50 hover:opacity-100'
-          }`}
-        >
-          Trạng thái & Lịch sử
-        </button>
-        <button
-          onClick={() => setActiveTab('chat')}
-          disabled={!currentTask}
-          className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
-            !currentTask ? 'opacity-20 cursor-not-allowed' :
-            activeTab === 'chat'
-              ? (theme === 'dark' ? 'bg-indigo-600 text-white' : 'bg-indigo-500 text-white shadow-lg')
-              : 'opacity-50 hover:opacity-100'
-          }`}
-        >
-          Phòng chat Manus
-        </button>
-      </div>
-
       <div className="space-y-8">
-        {activeTab === 'status' ? (
-          <>
-            <div className="flex items-center justify-between border-b border-dashed border-slate-700/20 pb-4">
-              <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
-                <Clock className="w-6 h-6 text-indigo-500" />
-                NHIỆM VỤ GẦN ĐÂY
-              </h2>
-              <div className="px-4 py-1.5 rounded-full bg-slate-500/10 text-[10px] font-black uppercase tracking-widest opacity-50">
-                {tasks.length} THỰC THI
-              </div>
+        <div className="flex items-center justify-between border-b border-dashed border-slate-700/20 pb-4">
+          <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+            <Clock className="w-6 h-6 text-indigo-500" />
+            NHIỆM VỤ GẦN ĐÂY
+          </h2>
+          <div className="px-4 py-1.5 rounded-full bg-slate-500/10 text-[10px] font-black uppercase tracking-widest opacity-50">
+            {tasks.length} THỰC THI
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-6">
+          {tasks.length === 0 ? (
+            <div className="py-20 text-center opacity-30 font-black uppercase tracking-widest text-sm">
+              Chưa có nhiệm vụ nào được ghi lại
             </div>
-            
-            <div className="grid grid-cols-1 gap-6">
-              {tasks.length === 0 ? (
-                <div className="py-20 text-center opacity-30 font-black uppercase tracking-widest text-sm">
-                  Chưa có nhiệm vụ nào được ghi lại
-                </div>
-              ) : (
-                tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className={`p-8 rounded-[2.5rem] border-b-4 ${
-                      theme === 'dark' 
-                        ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' 
-                        : 'bg-white border-slate-100 shadow-xl hover:shadow-2xl'
-                    } ${currentTask?.id === task.id ? 'ring-4 ring-indigo-500/30' : ''}`}
-                    onClick={() => {
-                      setCurrentTask(task);
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-6 mb-6">
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-center gap-3">
-                          <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
-                            task.status === 'completed' ? 'bg-green-500 text-green-100' :
-                            task.status === 'failed' ? 'bg-red-500 text-red-100' :
-                            'bg-blue-500 text-blue-100 animate-pulse'
-                          }`}>
-                            {task.status === 'completed' ? 'Thành công' :
-                               task.status === 'failed' ? 'Thất bại' :
-                               task.status === 'running' ? 'Đang chạy' : 'Đang chờ'}
-                          </span>
-                          <span className="text-[10px] font-bold opacity-30 flex items-center gap-1 uppercase">
-                            <Clock className="w-3 h-3" />
-                            {new Date(task.createdAt).toLocaleString()}
-                          </span>
-                          {task.id && (
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCurrentTask(task);
-                                setActiveTab('chat');
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                              }}
-                              className="text-[10px] font-black text-indigo-500 underline uppercase tracking-tighter"
-                            >
-                              Mở Chat
-                            </button>
-                          )}
-                        </div>
-                        <p className={`font-black text-xl leading-snug tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{task.prompt}</p>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCurrentTask(task);
-                            setActiveTab('chat');
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                            theme === 'dark'
-                              ? 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20'
-                              : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-                          }`}
-                        >
-                          <Send className="w-3 h-3" />
-                          Tiếp tục chat
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteTask(task.id);
-                          }}
-                          className={`p-3 rounded-2xl active:scale-90 flex items-center justify-center ${
-                            theme === 'dark' ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'
-                          }`}
-                        >
-                          <Trash2 className="w-6 h-6" />
-                        </button>
-                      </div>
+          ) : (
+            tasks.map((task) => (
+              <div
+                key={task.id}
+                className={`p-8 rounded-[2.5rem] border-b-4 ${
+                  theme === 'dark' 
+                    ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' 
+                    : 'bg-white border-slate-100 shadow-xl hover:shadow-2xl'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-6 mb-6">
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+                        task.status === 'completed' ? 'bg-green-500 text-green-100' :
+                        task.status === 'failed' ? 'bg-red-500 text-red-100' :
+                        'bg-blue-500 text-blue-100 animate-pulse'
+                      }`}>
+                        {task.status === 'completed' ? 'Thành công' :
+                           task.status === 'failed' ? 'Thất bại' :
+                           task.status === 'running' ? 'Đang chạy' : 'Đang chờ'}
+                      </span>
+                      <span className="text-[10px] font-bold opacity-30 flex items-center gap-1 uppercase">
+                        <Clock className="w-3 h-3" />
+                        {new Date(task.createdAt).toLocaleString()}
+                      </span>
                     </div>
-                    
-                    {task.status === 'completed' && task.result && (
-                      <div className="mt-8 pt-8 border-t border-dashed border-slate-700/20">
-                        <div className="flex items-center gap-2 mb-4 text-indigo-500">
-                          <CheckCircle className="w-4 h-4" />
-                          <span className="text-xs font-black uppercase tracking-widest">Kết quả thực thi</span>
-                        </div>
-                        {renderFiles(task.result)}
-                      </div>
-                    )}
-
-                    {task.status === 'failed' && (
-                      <div className="mt-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-sm font-bold">
-                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                        {task.error || 'Đã có lỗi xảy ra trong quá trình thực thi.'}
-                      </div>
-                    )}
+                    <p className={`font-black text-xl leading-snug tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{task.prompt}</p>
                   </div>
-                ))
-              )}
-            </div>
-          </>
-        ) : (
-          <div className={`rounded-[3rem] overflow-hidden border-4 shadow-2xl h-[800px] flex flex-col ${
-            theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'
-          }`}>
-            {currentTask ? (
-              <>
-                <div className={`p-4 border-b flex items-center justify-between ${
-                  theme === 'dark' ? 'border-slate-800 bg-slate-800' : 'border-slate-100 bg-slate-50'
-                }`}>
-                  <div className="flex items-center gap-3">
-                    <Brain className="w-5 h-5 text-indigo-500" />
-                    <span className="text-xs font-black uppercase tracking-widest opacity-70 truncate max-w-[200px]">
-                      {currentTask.prompt}
-                    </span>
-                  </div>
-                  <button 
-                    onClick={() => window.open(currentTask.id.startsWith('http') ? currentTask.id : `https://manus.im/app/${currentTask.id}`, '_blank')}
-                    className="px-4 py-1.5 rounded-xl bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all"
+                  <button
+                    onClick={() => handleDeleteTask(task.id)}
+                    className={`p-3 rounded-2xl active:scale-90 ${
+                      theme === 'dark' ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'
+                    }`}
                   >
-                    Mở trong tab mới
+                    <Trash2 className="w-6 h-6" />
                   </button>
                 </div>
-                <div className="flex-1 relative">
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-slate-500/5">
-                    <AlertCircle className="w-12 h-12 text-indigo-500 mb-4 opacity-50" />
-                    <h3 className="text-lg font-black mb-2 uppercase">Kết nối bị chặn</h3>
-                    <p className="text-xs font-bold opacity-60 mb-6 max-w-sm">
-                      Manus.im không cho phép hiển thị trực tiếp trong ứng dụng khác vì lý do bảo mật.
-                    </p>
-                    <a 
-                      href={currentTask.id.startsWith('http') ? currentTask.id : `https://manus.im/app/${currentTask.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-8 py-4 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest hover:bg-indigo-500 shadow-xl shadow-indigo-500/20 transition-all"
-                    >
-                      Mở phòng chat Manus ngay
-                    </a>
+                
+                {task.status === 'completed' && task.result && (
+                  <div className="mt-8 pt-8 border-t border-dashed border-slate-700/20">
+                    <div className="flex items-center gap-2 mb-4 text-indigo-500">
+                      <CheckCircle className="w-4 h-4" />
+                      <span className="text-xs font-black uppercase tracking-widest">Kết quả thực thi</span>
+                    </div>
+                    {renderFiles(task.result)}
                   </div>
-                </div>
-              </>
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center p-12 text-center opacity-50">
-                <Brain className="w-20 h-20 mb-6 text-indigo-500" />
-                <p className="font-black uppercase tracking-widest">Vui lòng chọn hoặc tạo nhiệm vụ để bắt đầu trò chuyện</p>
+                )}
+
+                {task.status === 'failed' && (
+                  <div className="mt-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-sm font-bold">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    {task.error || 'Đã có lỗi xảy ra trong quá trình thực thi.'}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </div>
     </div>
   )
