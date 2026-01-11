@@ -87,7 +87,7 @@ export default function FlagentPage() {
     if (!prompt.trim() || loading) return
     setLoading(true)
     try {
-      const finalPrompt = prompt + " (Lưu ý: Sau khi tạo slide xong thì hãy chuyển đổi kết quả thành file .pptx và gửi cho tôi để tải xuống)";
+      const finalPrompt = prompt + " (Lưu ý: Nếu có tạo bài thuyết trình PowerPoint thì Sau khi tạo slide xong thì hãy chuyển đổi kết quả thành file .pptx và gửi cho tôi để tải xuống còn nếu không có tạo bài thuyết trình thì khỏi)";
       const res = await fetch('/api/flagent/tasks', {
         method: 'POST',
         headers: {
