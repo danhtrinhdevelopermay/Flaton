@@ -13,7 +13,7 @@ async function getGeminiModel() {
         console.log('[Gemini] Using API Key from database');
         const genAI = new GoogleGenerativeAI(apiKey);
         return genAI.getGenerativeModel({ 
-          model: "gemini-2.0-flash"
+          model: "gemini-1.5-flash"
         }, { apiVersion: 'v1' });
       }
     }
@@ -28,7 +28,7 @@ async function getGeminiModel() {
       console.log('[Gemini] Using API Key from environment variables');
       const genAI = new GoogleGenerativeAI(cleanedKey);
       return genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash"
+        model: "gemini-1.5-flash"
       }, { apiVersion: 'v1' });
     }
 
@@ -235,7 +235,7 @@ app.post('/api/flagent/tasks', authMiddleware, async (req: AuthRequest, res: Res
     let finalPrompt = prompt;
     const lowerPrompt = prompt.toLowerCase();
     const presentationKeywords = ['thuyết trình', 'slide', 'powerpoint', 'pptx', 'bài giảng', 'presentation'];
-    const hasKeywords = presentationKeywords.some(kw => lowerPrompt.includes(hasKeywords));
+    const hasKeywords = presentationKeywords.some(kw => lowerPrompt.includes(kw));
 
     try {
       const gemini = await getGeminiModel();
