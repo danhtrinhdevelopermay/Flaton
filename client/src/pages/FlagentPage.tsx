@@ -231,6 +231,8 @@ export default function FlagentPage() {
     )
   }
 
+  const [activeTab, setActiveTab] = useState<'status' | 'chat'>('status')
+
   return (
     <div className={`max-w-5xl mx-auto py-12 px-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
       <div className="flex items-center gap-6 mb-12">
@@ -281,81 +283,145 @@ export default function FlagentPage() {
         </form>
       </div>
 
-      <div className="space-y-8">
-        <div className="flex items-center justify-between border-b border-dashed border-slate-700/20 pb-4">
-          <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
-            <Clock className="w-6 h-6 text-indigo-500" />
-            NHIỆM VỤ GẦN ĐÂY
-          </h2>
-          <div className="px-4 py-1.5 rounded-full bg-slate-500/10 text-[10px] font-black uppercase tracking-widest opacity-50">
-            {tasks.length} THỰC THI
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-6">
-          {tasks.length === 0 ? (
-            <div className="py-20 text-center opacity-30 font-black uppercase tracking-widest text-sm">
-              Chưa có nhiệm vụ nào được ghi lại
-            </div>
-          ) : (
-            tasks.map((task) => (
-              <div
-                key={task.id}
-                className={`p-8 rounded-[2.5rem] border-b-4 ${
-                  theme === 'dark' 
-                    ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' 
-                    : 'bg-white border-slate-100 shadow-xl hover:shadow-2xl'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-6 mb-6">
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
-                        task.status === 'completed' ? 'bg-green-500 text-green-100' :
-                        task.status === 'failed' ? 'bg-red-500 text-red-100' :
-                        'bg-blue-500 text-blue-100 animate-pulse'
-                      }`}>
-                        {task.status === 'completed' ? 'Thành công' :
-                           task.status === 'failed' ? 'Thất bại' :
-                           task.status === 'running' ? 'Đang chạy' : 'Đang chờ'}
-                      </span>
-                      <span className="text-[10px] font-bold opacity-30 flex items-center gap-1 uppercase">
-                        <Clock className="w-3 h-3" />
-                        {new Date(task.createdAt).toLocaleString()}
-                      </span>
-                    </div>
-                    <p className={`font-black text-xl leading-snug tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{task.prompt}</p>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteTask(task.id)}
-                    className={`p-3 rounded-2xl active:scale-90 ${
-                      theme === 'dark' ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'
-                    }`}
-                  >
-                    <Trash2 className="w-6 h-6" />
-                  </button>
-                </div>
-                
-                {task.status === 'completed' && task.result && (
-                  <div className="mt-8 pt-8 border-t border-dashed border-slate-700/20">
-                    <div className="flex items-center gap-2 mb-4 text-indigo-500">
-                      <CheckCircle className="w-4 h-4" />
-                      <span className="text-xs font-black uppercase tracking-widest">Kết quả thực thi</span>
-                    </div>
-                    {renderFiles(task.result)}
-                  </div>
-                )}
+      <div className="mb-8 flex gap-4 p-2 rounded-2xl bg-slate-500/5">
+        <button
+          onClick={() => setActiveTab('status')}
+          className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
+            activeTab === 'status'
+              ? (theme === 'dark' ? 'bg-indigo-600 text-white' : 'bg-indigo-500 text-white shadow-lg')
+              : 'opacity-50 hover:opacity-100'
+          }`}
+        >
+          Trạng thái & Lịch sử
+        </button>
+        <button
+          onClick={() => setActiveTab('chat')}
+          disabled={!currentTask}
+          className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
+            !currentTask ? 'opacity-20 cursor-not-allowed' :
+            activeTab === 'chat'
+              ? (theme === 'dark' ? 'bg-indigo-600 text-white' : 'bg-indigo-500 text-white shadow-lg')
+              : 'opacity-50 hover:opacity-100'
+          }`}
+        >
+          Phòng chat Manus
+        </button>
+      </div>
 
-                {task.status === 'failed' && (
-                  <div className="mt-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-sm font-bold">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    {task.error || 'Đã có lỗi xảy ra trong quá trình thực thi.'}
-                  </div>
-                )}
+      <div className="space-y-8">
+        {activeTab === 'status' ? (
+          <>
+            <div className="flex items-center justify-between border-b border-dashed border-slate-700/20 pb-4">
+              <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+                <Clock className="w-6 h-6 text-indigo-500" />
+                NHIỆM VỤ GẦN ĐÂY
+              </h2>
+              <div className="px-4 py-1.5 rounded-full bg-slate-500/10 text-[10px] font-black uppercase tracking-widest opacity-50">
+                {tasks.length} THỰC THI
               </div>
-            ))
-          )}
-        </div>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6">
+              {tasks.length === 0 ? (
+                <div className="py-20 text-center opacity-30 font-black uppercase tracking-widest text-sm">
+                  Chưa có nhiệm vụ nào được ghi lại
+                </div>
+              ) : (
+                tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className={`p-8 rounded-[2.5rem] border-b-4 ${
+                      theme === 'dark' 
+                        ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' 
+                        : 'bg-white border-slate-100 shadow-xl hover:shadow-2xl'
+                    } ${currentTask?.id === task.id ? 'ring-4 ring-indigo-500/30' : ''}`}
+                    onClick={() => {
+                      setCurrentTask(task);
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-6 mb-6">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+                            task.status === 'completed' ? 'bg-green-500 text-green-100' :
+                            task.status === 'failed' ? 'bg-red-500 text-red-100' :
+                            'bg-blue-500 text-blue-100 animate-pulse'
+                          }`}>
+                            {task.status === 'completed' ? 'Thành công' :
+                               task.status === 'failed' ? 'Thất bại' :
+                               task.status === 'running' ? 'Đang chạy' : 'Đang chờ'}
+                          </span>
+                          <span className="text-[10px] font-bold opacity-30 flex items-center gap-1 uppercase">
+                            <Clock className="w-3 h-3" />
+                            {new Date(task.createdAt).toLocaleString()}
+                          </span>
+                          {task.id && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentTask(task);
+                                setActiveTab('chat');
+                              }}
+                              className="text-[10px] font-black text-indigo-500 underline uppercase tracking-tighter"
+                            >
+                              Mở Chat
+                            </button>
+                          )}
+                        </div>
+                        <p className={`font-black text-xl leading-snug tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{task.prompt}</p>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTask(task.id);
+                        }}
+                        className={`p-3 rounded-2xl active:scale-90 ${
+                          theme === 'dark' ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'
+                        }`}
+                      >
+                        <Trash2 className="w-6 h-6" />
+                      </button>
+                    </div>
+                    
+                    {task.status === 'completed' && task.result && (
+                      <div className="mt-8 pt-8 border-t border-dashed border-slate-700/20">
+                        <div className="flex items-center gap-2 mb-4 text-indigo-500">
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="text-xs font-black uppercase tracking-widest">Kết quả thực thi</span>
+                        </div>
+                        {renderFiles(task.result)}
+                      </div>
+                    )}
+
+                    {task.status === 'failed' && (
+                      <div className="mt-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-sm font-bold">
+                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                        {task.error || 'Đã có lỗi xảy ra trong quá trình thực thi.'}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </>
+        ) : (
+          <div className={`rounded-[3rem] overflow-hidden border-4 shadow-2xl h-[800px] ${
+            theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'
+          }`}>
+            {currentTask ? (
+              <iframe 
+                src={`https://manus.im/app/${currentTask.id}`}
+                className="w-full h-full border-none"
+                title="Manus Chat"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center p-12 text-center opacity-50">
+                <Brain className="w-20 h-20 mb-6 text-indigo-500" />
+                <p className="font-black uppercase tracking-widest">Vui lòng chọn hoặc tạo nhiệm vụ để bắt đầu trò chuyện</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
