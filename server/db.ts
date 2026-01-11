@@ -131,6 +131,19 @@ export async function initDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Create manus_api_pool table for managing multiple Manus API keys
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS manus_api_pool (
+        id SERIAL PRIMARY KEY,
+        api_key TEXT UNIQUE NOT NULL,
+        is_used BOOLEAN DEFAULT false,
+        is_failed BOOLEAN DEFAULT false,
+        used_by_user_id INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
     
     // Log table structure for debugging
     const columns = await client.query(`

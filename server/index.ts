@@ -94,12 +94,72 @@ const FLAGENT_API_BASE = 'https://api.manus.ai/v1';
 async function getFlagentApiKey(userId?: number): Promise<string> {
   if (userId) {
     const userResult = await pool.query('SELECT flagent_api_key FROM users WHERE id = $1', [userId]);
-    if (userResult.rows.length > 0 && userResult.rows[0].flagent_api_key) {
-      return userResult.rows[0].flagent_api_key.trim();
+    let apiKey = userResult.rows[0]?.flagent_api_key;
+
+    // Nếu người dùng chưa có API key, lấy một cái mới từ pool
+    if (!apiKey || apiKey.trim() === '') {
+      const poolResult = await pool.query(
+        'UPDATE manus_api_pool SET is_used = true, used_by_user_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT id FROM manus_api_pool WHERE is_used = false AND is_failed = false ORDER BY created_at ASC LIMIT 1) RETURNING api_key',
+        [userId]
+      );
+      
+      if (poolResult.rows.length > 0) {
+        apiKey = poolResult.rows[0].api_key;
+        await pool.query('UPDATE users SET flagent_api_key = $1 WHERE id = $2', [apiKey, userId]);
+        console.log(`[Manus Pool] Assigned new API key to user ${userId}`);
+      }
     }
+    
+    if (apiKey) return apiKey.trim();
   }
   return '';
 }
+
+async function handleManusApiError(userId: number, failedKey: string) {
+  console.log(`[Manus Pool] Handling API error for user ${userId}`);
+  // Đánh dấu key cũ bị lỗi
+  await pool.query('UPDATE manus_api_pool SET is_failed = true, updated_at = CURRENT_TIMESTAMP WHERE api_key = $1', [failedKey]);
+  
+  // Lấy key mới từ pool thay thế
+  const poolResult = await pool.query(
+    'UPDATE manus_api_pool SET is_used = true, used_by_user_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT id FROM manus_api_pool WHERE is_used = false AND is_failed = false ORDER BY created_at ASC LIMIT 1) RETURNING api_key',
+    [userId]
+  );
+
+  if (poolResult.rows.length > 0) {
+    const newApiKey = poolResult.rows[0].api_key;
+    await pool.query('UPDATE users SET flagent_api_key = $1 WHERE id = $2', [newApiKey, userId]);
+    console.log(`[Manus Pool] Replaced failed API key for user ${userId} with a new one`);
+    return newApiKey;
+  } else {
+    // Hết key trong pool, xóa key của user để hệ thống dừng lại
+    await pool.query('UPDATE users SET flagent_api_key = NULL WHERE id = $1', [userId]);
+    console.warn(`[Manus Pool] No more API keys available in pool for user ${userId}`);
+    return null;
+  }
+}
+
+// Get Manus API Pool (Admin only)
+app.get('/api/admin/manus-pool', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query('SELECT * FROM manus_api_pool ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add Manus API to Pool (Admin only)
+app.post('/api/admin/manus-pool', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { api_key } = req.body;
+    if (!api_key) return res.status(400).json({ error: 'API key is required' });
+    await pool.query('INSERT INTO manus_api_pool (api_key) VALUES ($1) ON CONFLICT (api_key) DO NOTHING', [api_key]);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Get all users with Flagent API Key info (Admin only)
 app.get('/api/admin/users-all-flagent', authMiddleware, async (req: AuthRequest, res: Response) => {
@@ -284,12 +344,37 @@ Prompt: "${prompt}"`);
       })
     });
 
-    const data: any = await response.json();
+    let data: any = await response.json();
     console.log('[Flagent] Create task response:', data);
     
     if (!response.ok) {
       console.error('[Flagent] API Error:', data);
-      return res.status(response.status).json(data);
+      // Kiểm tra nếu lỗi API (có thể là key hết hạn/sai)
+      if (response.status === 401 || response.status === 403) {
+        const newApiKey = await handleManusApiError(req.userId!, apiKey);
+        if (newApiKey) {
+          // Thử lại với API key mới
+          const retryResponse = await fetch(`${FLAGENT_API_BASE}/tasks`, {
+            method: 'POST',
+            headers: {
+              'API_KEY': newApiKey,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+              prompt: finalPrompt, 
+              taskMode, 
+              agentProfile,
+              webhookUrl: webhookUrl || undefined
+            })
+          });
+          data = await retryResponse.json();
+          if (!retryResponse.ok) return res.status(retryResponse.status).json(data);
+        } else {
+          return res.status(400).json({ error: 'Hệ thống đã hết API Manus dự phòng. Vui lòng liên hệ Admin.' });
+        }
+      } else {
+        return res.status(response.status).json(data);
+      }
     }
 
     // Save task to database
@@ -333,10 +418,23 @@ app.get('/api/flagent/tasks/:taskId', authMiddleware, async (req: AuthRequest, r
       headers: { 'API_KEY': apiKey }
     });
 
-    const data = await response.json();
+    let data = await response.json();
     if (!response.ok) {
       console.error('[Flagent] Poll API Error:', data);
-      return res.status(response.status).json(data);
+      if (response.status === 401 || response.status === 403) {
+        const newApiKey = await handleManusApiError(req.userId!, apiKey);
+        if (newApiKey) {
+           const retryRes = await fetch(`${FLAGENT_API_BASE}/tasks/${taskId}`, {
+             headers: { 'API_KEY': newApiKey }
+           });
+           data = await retryRes.json();
+           if (!retryRes.ok) return res.status(retryRes.status).json(data);
+        } else {
+           return res.status(400).json({ error: 'Hệ thống đã hết API Manus dự phòng.' });
+        }
+      } else {
+        return res.status(response.status).json(data);
+      }
     }
 
     // Try to get full list of files for this task

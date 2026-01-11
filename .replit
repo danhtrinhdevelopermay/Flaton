@@ -49,3 +49,4 @@ externalPort = 3000
 [userenv.shared]
 KIE_AI_API_KEY = "dd61aaf77d9a324b820cf59f1c92a2ed"
 GEMINI_API_KEY = "AIzaSyDfubS05izkER0tGiPo6T1IKkw5D6aMNzA"
+NUTRIENT_API_KEY = "pdf_live_L83ygCF7ApDbs8fwCnut8rxDOHYkV8ccGzvlW3BOHBu"
