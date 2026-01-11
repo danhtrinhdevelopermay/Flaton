@@ -47,7 +47,11 @@ export default function FlagentAdminPage() {
       const res = await fetch('/api/admin/manus-pool', {
         headers: { Authorization: `Bearer ${adminToken}` }
       });
-      if (res.ok) setManusPool(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        // Lọc bỏ những key đã dùng ở phía client để chắc chắn không hiển thị
+        setManusPool(data.filter((item: any) => !item.is_used));
+      }
     } catch (err) {
       console.error('Error loading manus pool:', err);
     }
