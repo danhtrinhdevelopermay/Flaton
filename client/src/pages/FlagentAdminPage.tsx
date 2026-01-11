@@ -73,9 +73,13 @@ export default function FlagentAdminPage() {
       if (res.ok) {
         setNewPoolKey('');
         setSuccess('Đã thêm key vào vùng chứa');
+        setError('');
         loadManusPool();
         loadAllUsersFlagent(); // Tải lại danh sách user để thấy key mới được cấp
         setTimeout(() => setSuccess(''), 3000);
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Không thể thêm API key');
       }
     } catch (err: any) {
       setError(err.message);
@@ -107,9 +111,8 @@ export default function FlagentAdminPage() {
 
   const loadAllUsersFlagent = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/admin/users-all-flagent', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${adminToken}` }
       });
       if (res.ok) {
         const data = await res.json();
@@ -125,9 +128,8 @@ export default function FlagentAdminPage() {
 
   const loadFlagentLogs = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/admin/flagent-logs', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${adminToken}` }
       });
       if (res.ok) {
         const data = await res.json();
@@ -140,9 +142,8 @@ export default function FlagentAdminPage() {
 
   const loadUsersNoFlagent = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/admin/users-no-flagent', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${adminToken}` }
       });
       if (res.ok) setUsersNoFlagent(await res.json());
     } catch (err) {
@@ -153,12 +154,11 @@ export default function FlagentAdminPage() {
   const assignFlagentKey = async (userId: number, key: string) => {
     if (!key) return;
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/admin/update-user-flagent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${adminToken}`
         },
         body: JSON.stringify({ userId, apiKey: key })
       });
