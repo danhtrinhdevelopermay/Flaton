@@ -553,7 +553,7 @@ app.post('/api/flagent/convert-pptx', authMiddleware, async (req: AuthRequest, r
 
           if (textItems.length > 0) {
             slide.addText(textItems.map(t => ({ text: t, options: { bullet: true, breakLine: true } })), {
-              x: 0.5, y: currentY, w: textWidth, h: 4,
+              x: 0.5, y: currentY, w: textWidth as any, h: 4,
               fontSize: 18, color: textColor, align: 'left', valign: 'top'
             });
           }
@@ -1541,10 +1541,23 @@ app.get('/api/auth/me', authMiddleware, async (req: AuthRequest, res: Response) 
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 
+// Static files for production
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// SPA Fallback - must be after all API routes
+app.get(/^(?!\/api).+/, (req, res) => {
+  const indexPath = path.join(__dirname, '../client/dist/index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Frontend build not found. Please run npm run build.');
+  }
+});
+
 async function start() {
   try {
     await initDatabase();
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
   } catch (e) {
     console.error('Failed to start server:', e);
     process.exit(1);
