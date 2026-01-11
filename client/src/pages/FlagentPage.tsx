@@ -361,6 +361,7 @@ export default function FlagentPage() {
                                 e.stopPropagation();
                                 setCurrentTask(task);
                                 setActiveTab('chat');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
                               }}
                               className="text-[10px] font-black text-indigo-500 underline uppercase tracking-tighter"
                             >
@@ -370,17 +371,35 @@ export default function FlagentPage() {
                         </div>
                         <p className={`font-black text-xl leading-snug tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{task.prompt}</p>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteTask(task.id);
-                        }}
-                        className={`p-3 rounded-2xl active:scale-90 ${
-                          theme === 'dark' ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'
-                        }`}
-                      >
-                        <Trash2 className="w-6 h-6" />
-                      </button>
+                      <div className="flex flex-col gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentTask(task);
+                            setActiveTab('chat');
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                            theme === 'dark'
+                              ? 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20'
+                              : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                          }`}
+                        >
+                          <Send className="w-3 h-3" />
+                          Tiếp tục chat
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTask(task.id);
+                          }}
+                          className={`p-3 rounded-2xl active:scale-90 flex items-center justify-center ${
+                            theme === 'dark' ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'
+                          }`}
+                        >
+                          <Trash2 className="w-6 h-6" />
+                        </button>
+                      </div>
                     </div>
                     
                     {task.status === 'completed' && task.result && (
