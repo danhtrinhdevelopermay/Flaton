@@ -1587,6 +1587,22 @@ app.get(/^(?!\/api).+/, (req, res) => {
 async function start() {
   try {
     await initDatabase();
+    
+    // Anti-spindown for Render
+    const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
+    if (RENDER_URL) {
+      console.log(`[Render] Anti-spindown active for: ${RENDER_URL}`);
+      setInterval(() => {
+        fetch(`${RENDER_URL}/api/health`)
+          .then(res => console.log(`[Render] Self-ping status: ${res.status}`))
+          .catch(err => console.error('[Render] Self-ping failed:', err));
+      }, 14 * 60 * 1000); // 14 minutes
+    }
+
+    app.get('/api/health', (req, res) => {
+      res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    });
+
     app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
   } catch (e) {
     console.error('Failed to start server:', e);
