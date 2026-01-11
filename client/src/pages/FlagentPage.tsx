@@ -214,6 +214,8 @@ export default function FlagentPage() {
     );
   };
 
+  const [activeTab, setActiveTab] = useState<'status' | 'chat'>('status')
+
   if (!flagentApiKey) {
     return (
       <div className={`max-w-4xl mx-auto py-24 px-4 text-center ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -230,8 +232,6 @@ export default function FlagentPage() {
       </div>
     )
   }
-
-  const [activeTab, setActiveTab] = useState<'status' | 'chat'>('status')
 
   return (
     <div className={`max-w-5xl mx-auto py-12 px-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
