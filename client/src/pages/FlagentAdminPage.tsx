@@ -12,6 +12,9 @@ export default function FlagentAdminPage() {
   const [allUsersFlagent, setAllUsersFlagent] = useState<any[]>([]);
   const [flagentLogs, setFlagentLogs] = useState<any[]>([]);
   const [usersNoFlagent, setUsersNoFlagent] = useState<any[]>([]);
+  const [manusPool, setManusPool] = useState<any[]>([]);
+  const [newPoolKey, setNewPoolKey] = useState('');
+  const [addingPoolKey, setAddingPoolKey] = useState(false);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('adminToken');
@@ -26,16 +29,55 @@ export default function FlagentAdminPage() {
       loadUsersNoFlagent();
       loadAllUsersFlagent();
       loadFlagentLogs();
+      loadManusPool();
       
       const interval = setInterval(() => {
         loadUsersNoFlagent();
         loadAllUsersFlagent();
         loadFlagentLogs();
+        loadManusPool();
       }, 10000);
       
       return () => clearInterval(interval);
     }
   }, [isLoggedIn, adminToken]);
+
+  const loadManusPool = async () => {
+    try {
+      const res = await fetch('/api/admin/manus-pool', {
+        headers: { Authorization: `Bearer ${adminToken}` }
+      });
+      if (res.ok) setManusPool(await res.json());
+    } catch (err) {
+      console.error('Error loading manus pool:', err);
+    }
+  };
+
+  const addPoolKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPoolKey.trim()) return;
+    setAddingPoolKey(true);
+    try {
+      const res = await fetch('/api/admin/manus-pool', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ api_key: newPoolKey })
+      });
+      if (res.ok) {
+        setNewPoolKey('');
+        setSuccess('Đã thêm key vào vùng chứa');
+        loadManusPool();
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setAddingPoolKey(false);
+    }
+  };
 
   const loadAllUsersFlagent = async () => {
     try {
@@ -151,6 +193,49 @@ export default function FlagentAdminPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="glass rounded-3xl p-8 space-y-6">
           <h2 className="text-xl font-black flex items-center gap-2">
+            <Shield className="w-5 h-5 text-indigo-500" />
+            VÙNG CHỨA API DỰ PHÒNG
+          </h2>
+          <form onSubmit={addPoolKey} className="flex gap-2">
+            <input
+              type="text"
+              value={newPoolKey}
+              onChange={(e) => setNewPoolKey(e.target.value)}
+              placeholder="Nhập API Manus mới..."
+              className="flex-1 px-4 py-2 bg-slate-900 border border-slate-600 rounded-xl text-sm outline-none focus:border-indigo-500"
+            />
+            <button 
+              type="submit"
+              disabled={addingPoolKey}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl text-sm font-bold transition-all"
+            >
+              {addingPoolKey ? <Loader2 className="w-4 h-4 animate-spin" /> : 'THÊM'}
+            </button>
+          </form>
+          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+            {manusPool.length === 0 ? (
+              <p className="text-slate-500">Vùng chứa trống.</p>
+            ) : (
+              manusPool.map(item => (
+                <div key={item.id} className="p-3 bg-slate-800/30 rounded-xl border border-slate-700/50 flex justify-between items-center">
+                  <div className="font-mono text-xs text-slate-400">
+                    {item.api_key.substring(0, 10)}...{item.api_key.substring(item.api_key.length - 4)}
+                  </div>
+                  <div className="flex gap-2">
+                    {item.is_failed ? (
+                      <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[10px] font-black rounded-full uppercase">Lỗi</span>
+                    ) : item.is_used ? (
+                      <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[10px] font-black rounded-full uppercase">Đã dùng</span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[10px] font-black rounded-full uppercase">Sẵn sàng</span>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <h2 className="text-xl font-black flex items-center gap-2 pt-4">
             <Shield className="w-5 h-5 text-indigo-500" />
             DANH SÁCH TÀI KHOẢN
           </h2>
