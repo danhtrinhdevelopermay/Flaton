@@ -39,6 +39,29 @@ export function verifyToken(token: string): any {
   }
 }
 
+export const adminAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
+    
+    if (!token) {
+      console.log('[AdminAuthMiddleware] No token provided');
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    
+    if (decoded.role !== 'admin') {
+      console.log('[AdminAuthMiddleware] Not an admin:', decoded);
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    
+    next();
+  } catch (error) {
+    console.error('[AdminAuthMiddleware] Auth error:', error);
+    res.status(401).json({ error: 'Invalid admin token' });
+  }
+};
+
 export async function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token || (req.query.token as string);

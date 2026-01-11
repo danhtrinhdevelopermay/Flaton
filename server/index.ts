@@ -41,7 +41,7 @@ import os from 'os';
 import { fileURLToPath } from 'url';
 import { initDatabase } from './db';
 import pool from './db';
-import { hashPassword, verifyPassword, generateToken, authMiddleware, optionalAuthMiddleware, AuthRequest } from './auth';
+import { hashPassword, verifyPassword, generateToken, authMiddleware, optionalAuthMiddleware, adminAuthMiddleware, AuthRequest } from './auth';
 import * as apiKeyManager from './apiKeyManager';
 import * as cloudinaryUtil from './cloudinaryUtil';
 import jwt from 'jsonwebtoken';
@@ -93,13 +93,13 @@ const FLAGENT_API_BASE = 'https://api.manus.ai/v1';
 
 async function getFlagentApiKey(userId?: number): Promise<string> {
   if (userId) {
-    const userResult = await pool.query('SELECT flagent_api_key FROM users WHERE id = $1', [userId]);
-    let apiKey = userResult.rows[0]?.flagent_api_key;
+    const result = await pool.query('SELECT flagent_api_key FROM users WHERE id = $1', [userId]);
+    let apiKey = result.rows[0]?.flagent_api_key;
 
     // Nếu người dùng chưa có API key, lấy một cái mới từ pool và xóa nó khỏi pool
     if (!apiKey || apiKey.trim() === '') {
       const poolResult = await pool.query(
-        'DELETE FROM manus_api_pool WHERE id = (SELECT id FROM manus_api_pool WHERE is_failed = false ORDER BY created_at ASC LIMIT 1) RETURNING api_key',
+        'DELETE FROM manus_api_pool WHERE id = (SELECT id FROM manus_api_pool ORDER BY created_at ASC LIMIT 1) RETURNING api_key',
         []
       );
       
@@ -117,12 +117,10 @@ async function getFlagentApiKey(userId?: number): Promise<string> {
 
 async function handleManusApiError(userId: number, failedKey: string) {
   console.log(`[Manus Pool] Handling API error for user ${userId}`);
-  // Xóa key cũ bị lỗi khỏi pool (hoặc đánh dấu nếu muốn giữ lại log, nhưng ở đây ta sẽ xóa theo yêu cầu)
-  await pool.query('DELETE FROM manus_api_pool WHERE api_key = $1', [failedKey]);
   
   // Lấy key mới từ pool thay thế và xóa nó khỏi pool
   const poolResult = await pool.query(
-    'DELETE FROM manus_api_pool WHERE id = (SELECT id FROM manus_api_pool WHERE is_failed = false ORDER BY created_at ASC LIMIT 1) RETURNING api_key',
+    'DELETE FROM manus_api_pool WHERE id = (SELECT id FROM manus_api_pool ORDER BY created_at ASC LIMIT 1) RETURNING api_key',
     []
   );
 
@@ -170,7 +168,7 @@ app.post('/api/admin/manus-pool', adminAuthMiddleware, async (req: Request, res:
 });
 
 // Get all users with Flagent API Key info (Admin only)
-app.get('/api/admin/users-all-flagent', authMiddleware, async (req: AuthRequest, res: Response) => {
+app.get('/api/admin/users-all-flagent', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {
     // Tự động cấp API cho những user chưa có key nếu trong pool còn key
     const usersWithoutKey = await pool.query('SELECT id FROM users WHERE flagent_api_key IS NULL OR flagent_api_key = \'\'');
@@ -206,7 +204,7 @@ app.post('/api/admin/auto-assign-keys', adminAuthMiddleware, async (req: Request
 });
 
 // Get Flagent Error Logs (Admin only)
-app.get('/api/admin/flagent-logs', authMiddleware, async (req: AuthRequest, res: Response) => {
+app.get('/api/admin/flagent-logs', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const logs = await pool.query(`
       SELECT t.*, u.email, u.name 
@@ -225,7 +223,7 @@ app.get('/api/admin/flagent-logs', authMiddleware, async (req: AuthRequest, res:
 });
 
 // Get all users without Flagent API Key (Admin only)
-app.get('/api/admin/users-no-flagent', authMiddleware, async (req: AuthRequest, res: Response) => {
+app.get('/api/admin/users-no-flagent', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const users = await pool.query('SELECT id, email, name FROM users WHERE flagent_api_key IS NULL OR flagent_api_key = \'\' ORDER BY created_at DESC');
     console.log('[Admin] Returning users without flagent:', users.rows.length);
@@ -237,7 +235,7 @@ app.get('/api/admin/users-no-flagent', authMiddleware, async (req: AuthRequest, 
 });
 
 // Update User Flagent API Key (Admin)
-app.post('/api/admin/update-user-flagent', authMiddleware, async (req: AuthRequest, res: Response) => {
+app.post('/api/admin/update-user-flagent', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const { userId, apiKey } = req.body;
     await pool.query('UPDATE users SET flagent_api_key = $1 WHERE id = $2', [apiKey, userId]);
