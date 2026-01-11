@@ -87,14 +87,13 @@ export default function FlagentPage() {
     if (!prompt.trim() || loading) return
     setLoading(true)
     try {
-      const finalPrompt = prompt + " (Lưu ý: Nếu có tạo bài thuyết trình PowerPoint thì Sau khi tạo slide xong thì hãy chuyển đổi kết quả thành file .pptx và gửi cho tôi để tải xuống còn nếu không có tạo bài thuyết trình thì khỏi)";
       const res = await fetch('/api/flagent/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ prompt: finalPrompt })
+        body: JSON.stringify({ prompt: prompt })
       })
       const data = await res.json()
       console.log('[Flagent UI] Create task raw response:', data)

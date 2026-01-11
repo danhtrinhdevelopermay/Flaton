@@ -231,6 +231,23 @@ app.post('/api/flagent/tasks', authMiddleware, async (req: AuthRequest, res: Res
       return res.status(400).json({ error: 'Vui lòng cài đặt Flagent API key trong phần Cài đặt của bạn.' });
     }
 
+    // AI Check for presentation/PowerPoint intent
+    let finalPrompt = prompt;
+    try {
+      const gemini = await getGeminiModel();
+      if (gemini) {
+        const checkResult = await gemini.generateContent(`Analyze the following user prompt and determine if the user wants to create a presentation, slide deck, or PowerPoint. Answer only with "YES" or "NO".\n\nPrompt: "${prompt}"`);
+        const responseText = checkResult.response.text().trim().toUpperCase();
+        console.log('[Flagent] Presentation intent check:', responseText);
+        if (responseText.includes('YES')) {
+          finalPrompt = prompt + " (sau khi tạo xong các slide thì hãy chuyển thành pptx và gửi cho tôi)";
+          console.log('[Flagent] Appended presentation instructions');
+        }
+      }
+    } catch (aiErr) {
+      console.error('[Flagent] AI Intent check error:', aiErr);
+    }
+
     // Attempt to get public URL for webhook
     let webhookUrl = '';
     try {
@@ -247,7 +264,7 @@ app.post('/api/flagent/tasks', authMiddleware, async (req: AuthRequest, res: Res
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ 
-        prompt, 
+        prompt: finalPrompt, 
         taskMode, 
         agentProfile,
         webhookUrl: webhookUrl || undefined
