@@ -89,7 +89,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Flagent AI Integration
-const FLAGENT_API_BASE = 'https://api.flagent.ai/v1';
+const FLAGENT_API_BASE = 'https://api.manus.ai/v1';
 
 async function getFlagentApiKey(userId?: number): Promise<string> {
   if (userId) {
@@ -254,7 +254,7 @@ app.post('/api/flagent/tasks', authMiddleware, async (req: AuthRequest, res: Res
       })
     });
 
-    const data = await response.json();
+    const data: any = await response.json();
     console.log('[Flagent] Create task response:', data);
     
     if (!response.ok) {
@@ -263,12 +263,14 @@ app.post('/api/flagent/tasks', authMiddleware, async (req: AuthRequest, res: Res
     }
 
     // Save task to database
-    const taskId = data.task_id || data.id;
+    const taskId = data.task_id || data.id || (data.data && (data.data.task_id || data.data.id));
     if (taskId) {
       await pool.query(
         'INSERT INTO flagent_tasks (user_id, task_id, status, prompt) VALUES ($1, $2, $3, $4)',
         [req.userId, taskId, 'pending', prompt]
       );
+    } else {
+      console.error('[Flagent] No Task ID found in API response:', data);
     }
     
     res.json(data);

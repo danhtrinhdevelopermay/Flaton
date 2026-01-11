@@ -97,9 +97,12 @@ export default function FlagentPage() {
         body: JSON.stringify({ prompt: finalPrompt })
       })
       const data = await res.json()
-      if (data.task_id || data.id) {
+      console.log('[Flagent UI] Create task raw response:', data)
+      
+      const taskId = data.task_id || data.id || data.data?.task_id || data.data?.id
+      if (taskId) {
         const newTask: FlagentTask = {
-          id: data.task_id || data.id,
+          id: taskId,
           status: 'pending',
           prompt: prompt,
           createdAt: new Date().toISOString()
@@ -107,6 +110,9 @@ export default function FlagentPage() {
         setCurrentTask(newTask)
         setTasks(prev => [newTask, ...prev])
         setPrompt('')
+      } else {
+        console.error('[Flagent UI] Task ID not found in response:', data)
+        alert('Không thể tạo nhiệm vụ. Vui lòng kiểm tra lại API Key hoặc thử lại sau.')
       }
     } catch (err) {
       console.error('[Flagent UI] Connection error:', err)
