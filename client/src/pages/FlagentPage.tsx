@@ -424,15 +424,45 @@ export default function FlagentPage() {
             </div>
           </>
         ) : (
-          <div className={`rounded-[3rem] overflow-hidden border-4 shadow-2xl h-[800px] ${
+          <div className={`rounded-[3rem] overflow-hidden border-4 shadow-2xl h-[800px] flex flex-col ${
             theme === 'dark' ? 'border-slate-800 bg-slate-900' : 'border-slate-100 bg-white'
           }`}>
             {currentTask ? (
-              <iframe 
-                src={`https://manus.im/app/${currentTask.id}`}
-                className="w-full h-full border-none"
-                title="Manus Chat"
-              />
+              <>
+                <div className={`p-4 border-b flex items-center justify-between ${
+                  theme === 'dark' ? 'border-slate-800 bg-slate-800' : 'border-slate-100 bg-slate-50'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <Brain className="w-5 h-5 text-indigo-500" />
+                    <span className="text-xs font-black uppercase tracking-widest opacity-70 truncate max-w-[200px]">
+                      {currentTask.prompt}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => window.open(currentTask.id.startsWith('http') ? currentTask.id : `https://manus.im/app/${currentTask.id}`, '_blank')}
+                    className="px-4 py-1.5 rounded-xl bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all"
+                  >
+                    Mở trong tab mới
+                  </button>
+                </div>
+                <div className="flex-1 relative">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-slate-500/5">
+                    <AlertCircle className="w-12 h-12 text-indigo-500 mb-4 opacity-50" />
+                    <h3 className="text-lg font-black mb-2 uppercase">Kết nối bị chặn</h3>
+                    <p className="text-xs font-bold opacity-60 mb-6 max-w-sm">
+                      Manus.im không cho phép hiển thị trực tiếp trong ứng dụng khác vì lý do bảo mật.
+                    </p>
+                    <a 
+                      href={currentTask.id.startsWith('http') ? currentTask.id : `https://manus.im/app/${currentTask.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-8 py-4 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest hover:bg-indigo-500 shadow-xl shadow-indigo-500/20 transition-all"
+                    >
+                      Mở phòng chat Manus ngay
+                    </a>
+                  </div>
+                </div>
+              </>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center p-12 text-center opacity-50">
                 <Brain className="w-20 h-20 mb-6 text-indigo-500" />
