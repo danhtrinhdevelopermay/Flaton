@@ -21,16 +21,16 @@ async function getGeminiModel() {
     console.error('Error fetching Gemini API key from database:', error);
   }
 
-  // fallback to env
-  const envKey = process.env.GEMINI_API_KEY || process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
-  if (envKey) {
-    const cleanedKey = envKey.trim().replace(/^['"]|['"]$/g, '');
-    console.log('[Gemini] Using API Key from environment variables');
-    const genAI = new GoogleGenerativeAI(cleanedKey);
-    return genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash"
-    }, { apiVersion: 'v1' });
-  }
+    // Fallback to env
+    const envKey = process.env.GEMINI_API_KEY || process.env.AI_INTEGRATIONS_GEMINI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+    if (envKey) {
+      const cleanedKey = envKey.trim().replace(/^['"]|['"]$/g, '');
+      console.log('[Gemini] Using API Key from environment variables');
+      const genAI = new GoogleGenerativeAI(cleanedKey);
+      return genAI.getGenerativeModel({ 
+        model: "gemini-2.0-flash"
+      }, { apiVersion: 'v1' });
+    }
 
   console.error('[Gemini] CRITICAL: No API Key found in env or database!');
   return null;
@@ -233,19 +233,32 @@ app.post('/api/flagent/tasks', authMiddleware, async (req: AuthRequest, res: Res
 
     // AI Check for presentation/PowerPoint intent
     let finalPrompt = prompt;
+    const lowerPrompt = prompt.toLowerCase();
+    const presentationKeywords = ['thuyết trình', 'slide', 'powerpoint', 'pptx', 'bài giảng', 'presentation'];
+    const hasKeywords = presentationKeywords.some(kw => lowerPrompt.includes(hasKeywords));
+
     try {
       const gemini = await getGeminiModel();
       if (gemini) {
-        const checkResult = await gemini.generateContent(`Analyze the following user prompt and determine if the user wants to create a presentation, slide deck, or PowerPoint. Answer only with "YES" or "NO".\n\nPrompt: "${prompt}"`);
+        const checkResult = await gemini.generateContent(`Analyze the following user prompt and determine if the user wants to create a presentation, slide deck, or PowerPoint. This includes requests to "tạo bài thuyết trình", "làm slide", "tạo powerpoint", "làm thuyết trình", or similar phrases in any language. 
+        
+Answer only with "YES" or "NO".
+
+Prompt: "${prompt}"`);
         const responseText = checkResult.response.text().trim().toUpperCase();
-        console.log('[Flagent] Presentation intent check:', responseText);
-        if (responseText.includes('YES')) {
+        console.log('[Flagent] Presentation intent check for prompt "' + prompt + '":', responseText);
+        if (responseText.includes('YES') || hasKeywords) {
           finalPrompt = prompt + " (sau khi tạo xong các slide thì hãy chuyển thành pptx và gửi cho tôi)";
           console.log('[Flagent] Appended presentation instructions');
         }
+      } else if (hasKeywords) {
+        finalPrompt = prompt + " (sau khi tạo xong các slide thì hãy chuyển thành pptx và gửi cho tôi)";
       }
     } catch (aiErr) {
       console.error('[Flagent] AI Intent check error:', aiErr);
+      if (hasKeywords) {
+        finalPrompt = prompt + " (sau khi tạo xong các slide thì hãy chuyển thành pptx và gửi cho tôi)";
+      }
     }
 
     // Attempt to get public URL for webhook
