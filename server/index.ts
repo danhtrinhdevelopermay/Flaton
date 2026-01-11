@@ -152,10 +152,18 @@ app.get('/api/admin/manus-pool', adminAuthMiddleware, async (req: Request, res: 
 // Add Manus API to Pool (Admin only)
 app.post('/api/admin/manus-pool', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {
-    const { api_key } = req.body;
-    if (!api_key) return res.status(400).json({ error: 'API key is required' });
-    await pool.query('INSERT INTO manus_api_pool (api_key) VALUES ($1) ON CONFLICT (api_key) DO NOTHING', [api_key]);
-    res.json({ success: true });
+    const { api_key, api_keys } = req.body;
+    const keysToAdd = api_keys || (api_key ? [api_key] : []);
+    
+    if (keysToAdd.length === 0) return res.status(400).json({ error: 'API key(s) are required' });
+    
+    for (const key of keysToAdd) {
+      if (key && key.trim()) {
+        await pool.query('INSERT INTO manus_api_pool (api_key) VALUES ($1) ON CONFLICT (api_key) DO NOTHING', [key.trim()]);
+      }
+    }
+    
+    res.json({ success: true, count: keysToAdd.length });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
