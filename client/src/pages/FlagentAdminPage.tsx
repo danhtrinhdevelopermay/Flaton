@@ -70,12 +70,34 @@ export default function FlagentAdminPage() {
         setNewPoolKey('');
         setSuccess('Đã thêm key vào vùng chứa');
         loadManusPool();
+        loadAllUsersFlagent(); // Tải lại danh sách user để thấy key mới được cấp
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err: any) {
       setError(err.message);
     } finally {
       setAddingPoolKey(false);
+    }
+  };
+
+  const autoAssignKeys = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/auto-assign-keys', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${adminToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSuccess(`Đã cấp tự động cho ${data.assignedCount} tài khoản`);
+        loadAllUsersFlagent();
+        loadManusPool();
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -235,10 +257,19 @@ export default function FlagentAdminPage() {
             )}
           </div>
 
-          <h2 className="text-xl font-black flex items-center gap-2 pt-4">
-            <Shield className="w-5 h-5 text-indigo-500" />
-            DANH SÁCH TÀI KHOẢN
-          </h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-black flex items-center gap-2">
+              <Shield className="w-5 h-5 text-indigo-500" />
+              DANH SÁCH TÀI KHOẢN
+            </h2>
+            <button 
+              onClick={autoAssignKeys}
+              className="px-3 py-1 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 text-xs font-bold rounded-lg border border-indigo-500/30 transition-all flex items-center gap-1"
+            >
+              <CheckCircle className="w-3 h-3" />
+              CẤP TỰ ĐỘNG
+            </button>
+          </div>
           <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
             {allUsersFlagent.length === 0 ? (
               <p className="text-slate-500">Chưa có dữ liệu người dùng.</p>

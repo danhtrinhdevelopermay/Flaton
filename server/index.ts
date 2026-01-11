@@ -96,17 +96,17 @@ async function getFlagentApiKey(userId?: number): Promise<string> {
     const userResult = await pool.query('SELECT flagent_api_key FROM users WHERE id = $1', [userId]);
     let apiKey = userResult.rows[0]?.flagent_api_key;
 
-    // Nếu người dùng chưa có API key, lấy một cái mới từ pool
+    // Nếu người dùng chưa có API key, lấy một cái mới từ pool và xóa nó khỏi pool
     if (!apiKey || apiKey.trim() === '') {
       const poolResult = await pool.query(
-        'UPDATE manus_api_pool SET is_used = true, used_by_user_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT id FROM manus_api_pool WHERE is_used = false AND is_failed = false ORDER BY created_at ASC LIMIT 1) RETURNING api_key',
-        [userId]
+        'DELETE FROM manus_api_pool WHERE id = (SELECT id FROM manus_api_pool WHERE is_failed = false ORDER BY created_at ASC LIMIT 1) RETURNING api_key',
+        []
       );
       
       if (poolResult.rows.length > 0) {
         apiKey = poolResult.rows[0].api_key;
         await pool.query('UPDATE users SET flagent_api_key = $1 WHERE id = $2', [apiKey, userId]);
-        console.log(`[Manus Pool] Assigned new API key to user ${userId}`);
+        console.log(`[Manus Pool] Assigned and removed new API key for user ${userId}`);
       }
     }
     
@@ -117,19 +117,19 @@ async function getFlagentApiKey(userId?: number): Promise<string> {
 
 async function handleManusApiError(userId: number, failedKey: string) {
   console.log(`[Manus Pool] Handling API error for user ${userId}`);
-  // Đánh dấu key cũ bị lỗi
-  await pool.query('UPDATE manus_api_pool SET is_failed = true, updated_at = CURRENT_TIMESTAMP WHERE api_key = $1', [failedKey]);
+  // Xóa key cũ bị lỗi khỏi pool (hoặc đánh dấu nếu muốn giữ lại log, nhưng ở đây ta sẽ xóa theo yêu cầu)
+  await pool.query('DELETE FROM manus_api_pool WHERE api_key = $1', [failedKey]);
   
-  // Lấy key mới từ pool thay thế
+  // Lấy key mới từ pool thay thế và xóa nó khỏi pool
   const poolResult = await pool.query(
-    'UPDATE manus_api_pool SET is_used = true, used_by_user_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT id FROM manus_api_pool WHERE is_used = false AND is_failed = false ORDER BY created_at ASC LIMIT 1) RETURNING api_key',
-    [userId]
+    'DELETE FROM manus_api_pool WHERE id = (SELECT id FROM manus_api_pool WHERE is_failed = false ORDER BY created_at ASC LIMIT 1) RETURNING api_key',
+    []
   );
 
   if (poolResult.rows.length > 0) {
     const newApiKey = poolResult.rows[0].api_key;
     await pool.query('UPDATE users SET flagent_api_key = $1 WHERE id = $2', [newApiKey, userId]);
-    console.log(`[Manus Pool] Replaced failed API key for user ${userId} with a new one`);
+    console.log(`[Manus Pool] Replaced failed API key for user ${userId} and removed new key from pool`);
     return newApiKey;
   } else {
     // Hết key trong pool, xóa key của user để hệ thống dừng lại
@@ -164,11 +164,35 @@ app.post('/api/admin/manus-pool', adminAuthMiddleware, async (req: Request, res:
 // Get all users with Flagent API Key info (Admin only)
 app.get('/api/admin/users-all-flagent', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    // Tự động cấp API cho những user chưa có key nếu trong pool còn key
+    const usersWithoutKey = await pool.query('SELECT id FROM users WHERE flagent_api_key IS NULL OR flagent_api_key = \'\'');
+    
+    for (const user of usersWithoutKey.rows) {
+      await getFlagentApiKey(user.id);
+    }
+
     const users = await pool.query('SELECT id, email, name, flagent_api_key FROM users ORDER BY created_at DESC');
     console.log('[Admin] Returning all users:', users.rows.length);
     res.json(users.rows);
   } catch (error: any) {
     console.error('[Admin] Error fetching all users:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Auto Assign Keys for all users (Admin only)
+app.post('/api/admin/auto-assign-keys', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const usersWithoutKey = await pool.query('SELECT id FROM users WHERE flagent_api_key IS NULL OR flagent_api_key = \'\'');
+    let assignedCount = 0;
+    
+    for (const user of usersWithoutKey.rows) {
+      const apiKey = await getFlagentApiKey(user.id);
+      if (apiKey) assignedCount++;
+    }
+    
+    res.json({ success: true, assignedCount });
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
