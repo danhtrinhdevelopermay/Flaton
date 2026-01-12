@@ -3,6 +3,10 @@ import { Brain, Send, Loader2, CheckCircle, AlertCircle, Clock, FileText, Trash2
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 
+import excelIcon from '../assets/Thiết_kế_chưa_có_tên_(1)_1768198173292.png'
+import pptxIcon from '../assets/Thiết_kế_chưa_có_tên_(2)_1768198173321.png'
+import agentIcon from '../assets/Thiết_kế_chưa_có_tên_(3)_1768198173367.png'
+
 interface FlagentFile {
   id: string
   name: string
@@ -178,38 +182,49 @@ export default function FlagentPage() {
     if (files.length === 0) return null;
     return (
       <div className="mt-6 md:mt-8 space-y-4">
-        {files.map((file) => (
-          <div 
-            key={file.id} 
-            className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 md:p-6 rounded-2xl md:rounded-[2rem] border transition-all duration-300 group gap-4 ${
-              theme === 'dark' 
-                ? 'bg-slate-900/50 border-slate-700/50 hover:border-indigo-500/50 hover:bg-slate-800 shadow-lg' 
-                : 'bg-white border-slate-100 hover:border-indigo-500/50 shadow-xl'
-            }`}
-          >
-            <div className="flex items-center gap-4 md:gap-5 min-w-0 w-full">
-              <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shrink-0 ${
-                theme === 'dark' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600'
-              }`}>
-                <FileText className="w-6 h-6 md:w-7 md:h-7" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className={`font-black text-sm md:text-base truncate ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>{file.name}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="px-2 py-0.5 rounded-md bg-slate-500/10 text-[8px] md:text-[9px] font-black uppercase tracking-widest opacity-60 shrink-0">
-                    {file.type || 'FILE'}
-                  </span>
+        {files.map((file) => {
+          const isPptx = file.name.toLowerCase().endsWith('.pptx') || file.type?.toLowerCase() === 'pptx';
+          const isExcel = file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls') || file.type?.toLowerCase() === 'xlsx' || file.type?.toLowerCase() === 'xls';
+          
+          return (
+            <div 
+              key={file.id} 
+              className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 md:p-6 rounded-2xl md:rounded-[2rem] border transition-all duration-300 group gap-4 ${
+                theme === 'dark' 
+                  ? 'bg-slate-900/50 border-slate-700/50 hover:border-indigo-500/50 hover:bg-slate-800 shadow-lg' 
+                  : 'bg-white border-slate-100 hover:border-indigo-500/50 shadow-xl'
+              }`}
+            >
+              <div className="flex items-center gap-4 md:gap-5 min-w-0 w-full">
+                <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shrink-0 overflow-hidden ${
+                  !isPptx && !isExcel ? (theme === 'dark' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600') : ''
+                }`}>
+                  {isPptx ? (
+                    <img src={pptxIcon} alt="PPTX" className="w-full h-full object-cover" />
+                  ) : isExcel ? (
+                    <img src={excelIcon} alt="Excel" className="w-full h-full object-cover" />
+                  ) : (
+                    <FileText className="w-6 h-6 md:w-7 md:h-7" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`font-black text-sm md:text-base truncate ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>{file.name}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="px-2 py-0.5 rounded-md bg-slate-500/10 text-[8px] md:text-[9px] font-black uppercase tracking-widest opacity-60 shrink-0">
+                      {file.type || 'FILE'}
+                    </span>
+                  </div>
                 </div>
               </div>
+              <button
+                onClick={() => window.open(`/api/flagent/download?url=${encodeURIComponent(file.url)}&token=${token}`, '_blank')}
+                className="w-full sm:w-auto px-6 md:px-8 py-2.5 md:py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black transition-all shadow-lg shadow-indigo-500/20 active:scale-95 shrink-0"
+              >
+                TẢI XUỐNG
+              </button>
             </div>
-            <button
-              onClick={() => window.open(`/api/flagent/download?url=${encodeURIComponent(file.url)}&token=${token}`, '_blank')}
-              className="w-full sm:w-auto px-6 md:px-8 py-2.5 md:py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black transition-all shadow-lg shadow-indigo-500/20 active:scale-95 shrink-0"
-            >
-              TẢI XUỐNG
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
