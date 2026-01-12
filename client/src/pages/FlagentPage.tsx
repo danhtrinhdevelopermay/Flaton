@@ -177,34 +177,34 @@ export default function FlagentPage() {
     findFiles(result);
     if (files.length === 0) return null;
     return (
-      <div className="mt-4 space-y-4">
+      <div className="mt-8 space-y-4">
         {files.map((file) => (
           <div 
             key={file.id} 
-            className={`flex items-center justify-between p-5 rounded-3xl border-2 transition-all ${
+            className={`flex items-center justify-between p-6 rounded-[2rem] border transition-all duration-300 group ${
               theme === 'dark' 
-                ? 'bg-slate-800 border-slate-700 hover:border-indigo-500 shadow-lg' 
-                : 'bg-white border-slate-100 hover:border-indigo-500 shadow-xl'
+                ? 'bg-slate-900/50 border-slate-700/50 hover:border-indigo-500/50 hover:bg-slate-800 shadow-lg' 
+                : 'bg-white border-slate-100 hover:border-indigo-500/50 shadow-xl'
             }`}
           >
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                theme === 'dark' ? 'bg-indigo-500/20' : 'bg-indigo-50'
+            <div className="flex items-center gap-5">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                theme === 'dark' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600'
               }`}>
-                <FileText className={`w-6 h-6 ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`} />
+                <FileText className="w-7 h-7" />
               </div>
               <div>
-                <p className={`font-black text-sm truncate max-w-[200px] sm:max-w-md ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{file.name}</p>
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">{file.type || 'FILE'}</p>
+                <p className={`font-black text-base truncate max-w-[180px] sm:max-w-md ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>{file.name}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="px-2 py-0.5 rounded-md bg-slate-500/10 text-[9px] font-black uppercase tracking-widest opacity-60">
+                    {file.type || 'FILE'}
+                  </span>
+                </div>
               </div>
             </div>
             <button
               onClick={() => window.open(`/api/flagent/download?url=${encodeURIComponent(file.url)}&token=${token}`, '_blank')}
-              className={`px-6 py-2.5 rounded-2xl text-xs font-black transition-all shadow-lg ${
-                theme === 'dark'
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                  : 'bg-indigo-500 hover:bg-indigo-600 text-white'
-              }`}
+              className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-xs font-black transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
             >
               TẢI XUỐNG
             </button>
@@ -232,124 +232,152 @@ export default function FlagentPage() {
   }
 
   return (
-    <div className={`max-w-5xl mx-auto py-12 px-4 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-      <div className="flex items-center gap-6 mb-12">
-        <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-indigo-600 via-indigo-500 to-blue-600 flex items-center justify-center shadow-2xl shadow-indigo-500/30">
-          <Brain className="w-10 h-10 text-white" />
-        </div>
-        <div>
-          <h1 className="text-4xl font-black tracking-tighter">FLATON FLAGENT</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <p className="text-slate-400 font-black uppercase tracking-[0.3em] text-[10px]">AI AGENT ECOSYSTEM</p>
+    <div className={`max-w-6xl mx-auto py-12 px-6 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
+        <div className="flex items-center gap-6">
+          <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40 relative group overflow-hidden">
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+            <Brain className="w-12 h-12 text-white relative z-10" />
+          </div>
+          <div>
+            <h1 className="text-5xl font-black tracking-tighter bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">FLATON FLAGENT</h1>
+            <div className="flex items-center gap-3 mt-2">
+              <div className="flex gap-1">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" style={{ animationDelay: `${i * 200}ms` }} />
+                ))}
+              </div>
+              <p className="text-slate-500 font-black uppercase tracking-[0.4em] text-[10px]">AI AGENT ECOSYSTEM</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className={`rounded-[3rem] p-10 mb-12 border-b-8 shadow-2xl ${
+      <div className={`rounded-[3.5rem] p-12 mb-16 border border-slate-700/10 shadow-2xl relative overflow-hidden ${
         theme === 'dark' 
-          ? 'bg-slate-800 border-slate-700' 
-          : 'bg-white border-slate-200'
+          ? 'bg-slate-900/40 backdrop-blur-xl' 
+          : 'bg-white/80 backdrop-blur-xl'
       }`}>
-        <form onSubmit={handleCreateTask} className="space-y-6">
-          <div className="flex items-center gap-2 text-indigo-500">
-            <Send className="w-4 h-4" />
-            <label className="text-xs font-black uppercase tracking-widest opacity-70">Mục tiêu của bạn là gì?</label>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -mr-32 -mt-32" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl -ml-32 -mb-32" />
+        
+        <form onSubmit={handleCreateTask} className="space-y-8 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-500/10 rounded-xl">
+              <Zap className="w-5 h-5 text-indigo-500" />
+            </div>
+            <label className="text-sm font-black uppercase tracking-widest text-slate-500">NHIỆM VỤ TIẾP THEO?</label>
           </div>
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Ví dụ: Phân tích báo cáo tài chính, lập kế hoạch marketing, hoặc viết code ứng dụng..."
-            className={`w-full h-40 p-6 rounded-3xl border-4 text-xl font-bold outline-none resize-none shadow-inner ${
-              theme === 'dark'
-                ? 'bg-slate-900 border-slate-800 text-white'
-                : 'bg-slate-50 border-slate-100 text-slate-900'
-            }`}
-          />
+          <div className="relative group">
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Tôi có thể giúp bạn phân tích dữ liệu, viết code, thiết kế kế hoạch hoặc thực hiện bất kỳ nhiệm vụ phức tạp nào..."
+              className={`w-full h-48 p-8 rounded-[2.5rem] border-2 text-2xl font-bold outline-none resize-none transition-all duration-300 ${
+                theme === 'dark'
+                  ? 'bg-slate-950/50 border-slate-800 text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'
+                  : 'bg-slate-50 border-slate-100 text-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5'
+              }`}
+            />
+          </div>
           <button
             type="submit"
             disabled={loading || !prompt.trim()}
-            className={`w-full py-6 rounded-[2rem] text-white font-black text-xl flex items-center justify-center gap-3 active:translate-y-2 active:border-b-0 border-b-8 ${
+            className={`w-full py-7 rounded-[2.5rem] text-white font-black text-2xl flex items-center justify-center gap-4 transition-all duration-300 shadow-2xl active:scale-95 ${
               loading || !prompt.trim()
-                ? 'opacity-50 cursor-not-allowed bg-slate-500 border-slate-600'
-                : 'bg-indigo-600 border-indigo-800 hover:bg-indigo-500 hover:translate-y-1 hover:border-b-4 shadow-xl shadow-indigo-500/20'
+                ? 'bg-slate-800 text-slate-600 border border-slate-700 cursor-not-allowed'
+                : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-indigo-500/30'
             }`}
           >
-            {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : <Zap className="w-8 h-8 fill-current" />}
-            THỰC THI NHIỆM VỤ
+            {loading ? (
+              <Loader2 className="w-10 h-10 animate-spin" />
+            ) : (
+              <>
+                <Zap className="w-8 h-8 fill-current" />
+                <span>KÍCH HOẠT AGENT</span>
+              </>
+            )}
           </button>
         </form>
       </div>
 
-      <div className="space-y-8">
-        <div className="flex items-center justify-between border-b border-dashed border-slate-700/20 pb-4">
-          <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
-            <Clock className="w-6 h-6 text-indigo-500" />
-            NHIỆM VỤ GẦN ĐÂY
+      <div className="space-y-12">
+        <div className="flex items-center justify-between border-b border-slate-700/10 pb-6">
+          <h2 className="text-3xl font-black uppercase tracking-tight flex items-center gap-4">
+            <Clock className="w-8 h-8 text-indigo-500" />
+            LỊCH SỬ NHIỆM VỤ
           </h2>
-          <div className="px-4 py-1.5 rounded-full bg-slate-500/10 text-[10px] font-black uppercase tracking-widest opacity-50">
-            {tasks.length} THỰC THI
+          <div className="px-5 py-2 rounded-2xl bg-indigo-500/10 text-indigo-400 text-xs font-black uppercase tracking-[0.2em] border border-indigo-500/20">
+            {tasks.length} LẦN CHẠY
           </div>
         </div>
         
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-8">
           {tasks.length === 0 ? (
-            <div className="py-20 text-center opacity-30 font-black uppercase tracking-widest text-sm">
-              Chưa có nhiệm vụ nào được ghi lại
+            <div className="py-32 text-center">
+              <div className="w-20 h-20 bg-slate-500/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Brain className="w-10 h-10 text-slate-700" />
+              </div>
+              <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-sm">Chưa có nhiệm vụ nào</p>
             </div>
           ) : (
             tasks.map((task) => (
               <div
                 key={task.id}
-                className={`p-8 rounded-[2.5rem] border-b-4 ${
+                className={`p-10 rounded-[3.5rem] border transition-all duration-300 group hover:scale-[1.01] ${
                   theme === 'dark' 
-                    ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' 
+                    ? 'bg-slate-900/30 border-slate-800 hover:bg-slate-900/50 hover:border-slate-700' 
                     : 'bg-white border-slate-100 shadow-xl hover:shadow-2xl'
                 }`}
               >
-                <div className="flex items-start justify-between gap-6 mb-6">
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
-                        task.status === 'completed' ? 'bg-green-500 text-green-100' :
-                        task.status === 'failed' ? 'bg-red-500 text-red-100' :
-                        'bg-blue-500 text-blue-100 animate-pulse'
+                <div className="flex items-start justify-between gap-8 mb-8">
+                  <div className="flex-1 space-y-4">
+                    <div className="flex flex-wrap items-center gap-4">
+                      <span className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${
+                        task.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                        task.status === 'failed' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                        'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 animate-pulse'
                       }`}>
-                        {task.status === 'completed' ? 'Thành công' :
-                           task.status === 'failed' ? 'Thất bại' :
-                           task.status === 'running' ? 'Đang chạy' : 'Đang chờ'}
+                        {task.status === 'completed' ? '• Hoàn tất' :
+                           task.status === 'failed' ? '• Thất bại' :
+                           task.status === 'running' ? '• Đang thực thi' : '• Đang chờ'}
                       </span>
-                      <span className="text-[10px] font-bold opacity-30 flex items-center gap-1 uppercase">
-                        <Clock className="w-3 h-3" />
-                        {new Date(task.createdAt).toLocaleString()}
+                      <span className="text-[10px] font-bold text-slate-500 flex items-center gap-2 uppercase tracking-widest bg-slate-500/5 px-4 py-2 rounded-2xl">
+                        <Clock className="w-3.5 h-3.5" />
+                        {new Date(task.createdAt).toLocaleString('vi-VN')}
                       </span>
                     </div>
-                    <p className={`font-black text-xl leading-snug tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{task.prompt}</p>
+                    <p className={`font-black text-2xl leading-tight tracking-tight max-w-3xl ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>{task.prompt}</p>
                   </div>
                   <button
                     onClick={() => handleDeleteTask(task.id)}
-                    className={`p-3 rounded-2xl active:scale-90 ${
-                      theme === 'dark' ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 active:scale-90 ${
+                      theme === 'dark' ? 'bg-red-500/5 text-red-500 hover:bg-red-500/10' : 'bg-red-50 text-red-500 hover:bg-red-100'
                     }`}
                   >
-                    <Trash2 className="w-6 h-6" />
+                    <Trash2 className="w-7 h-7" />
                   </button>
                 </div>
                 
                 {task.status === 'completed' && task.result && (
-                  <div className="mt-8 pt-8 border-t border-dashed border-slate-700/20">
-                    <div className="flex items-center gap-2 mb-4 text-indigo-500">
-                      <CheckCircle className="w-4 h-4" />
-                      <span className="text-xs font-black uppercase tracking-widest">Kết quả thực thi</span>
+                  <div className="mt-10 pt-10 border-t border-slate-700/10">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                        <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      </div>
+                      <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">TÀI LIỆU ĐÃ TẠO</span>
                     </div>
                     {renderFiles(task.result)}
                   </div>
                 )}
 
                 {task.status === 'failed' && (
-                  <div className="mt-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-sm font-bold">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    {task.error || 'Đã có lỗi xảy ra trong quá trình thực thi.'}
+                  <div className="mt-8 p-6 rounded-[2rem] bg-red-500/5 border border-red-500/10 flex items-start gap-4 text-red-400">
+                    <AlertCircle className="w-6 h-6 flex-shrink-0 mt-1" />
+                    <div className="space-y-1">
+                      <p className="font-black text-xs uppercase tracking-widest">Lỗi hệ thống</p>
+                      <p className="text-sm font-bold opacity-80">{task.error || 'Nhiệm vụ bị gián đoạn, vui lòng thử lại.'}</p>
+                    </div>
                   </div>
                 )}
               </div>
