@@ -44,16 +44,22 @@ export default function FlagentAdminPage() {
 
   const loadManusPool = async () => {
     try {
+      console.log('[FlagentAdmin] Loading manus pool with token:', adminToken?.substring(0, 10) + '...');
       const res = await fetch('/api/admin/manus-pool', {
         headers: { Authorization: `Bearer ${adminToken}` }
       });
       if (res.ok) {
         const data = await res.json();
-        // Lọc bỏ những key đã dùng ở phía client để chắc chắn không hiển thị
+        console.log('[FlagentAdmin] Loaded manus pool:', data);
         setManusPool(data.filter((item: any) => !item.is_used));
+      } else {
+        const errorText = await res.text();
+        console.error('[FlagentAdmin] Failed to load manus pool:', res.status, errorText);
+        setError(`Lỗi load pool (${res.status}): ${errorText}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading manus pool:', err);
+      setError(`Lỗi kết nối pool: ${err.message}`);
     }
   };
 
@@ -111,6 +117,7 @@ export default function FlagentAdminPage() {
 
   const loadAllUsersFlagent = async () => {
     try {
+      console.log('[FlagentAdmin] Loading all users with token:', adminToken?.substring(0, 10) + '...');
       const res = await fetch('/api/admin/users-all-flagent', {
         headers: { Authorization: `Bearer ${adminToken}` }
       });
@@ -119,10 +126,13 @@ export default function FlagentAdminPage() {
         console.log('[FlagentAdmin] Loaded users:', data);
         setAllUsersFlagent(data);
       } else {
-        console.error('[FlagentAdmin] Failed to load users:', res.status);
+        const errorText = await res.text();
+        console.error('[FlagentAdmin] Failed to load users:', res.status, errorText);
+        setError(`Lỗi load users (${res.status}): ${errorText}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading all flagent users:', err);
+      setError(`Lỗi kết nối users: ${err.message}`);
     }
   };
 
@@ -134,9 +144,14 @@ export default function FlagentAdminPage() {
       if (res.ok) {
         const data = await res.json();
         setFlagentLogs(data);
+      } else {
+        const errorText = await res.text();
+        console.error('[FlagentAdmin] Failed to load logs:', res.status, errorText);
+        setError(`Lỗi load logs (${res.status}): ${errorText}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading flagent logs:', err);
+      setError(`Lỗi kết nối logs: ${err.message}`);
     }
   };
 
