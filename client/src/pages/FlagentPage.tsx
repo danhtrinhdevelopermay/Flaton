@@ -227,23 +227,6 @@ export default function FlagentPage() {
     );
   };
 
-  if (!flagentApiKey) {
-    return (
-      <div className={`max-w-4xl mx-auto py-24 px-4 text-center ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-        <div className={`w-32 h-32 rounded-[3rem] flex items-center justify-center mx-auto mb-10 shadow-2xl relative ${
-          theme === 'dark' ? 'bg-indigo-500/10' : 'bg-indigo-50'
-        }`}>
-          <Brain className="w-16 h-16 text-indigo-500 relative z-10" />
-          <div className="absolute inset-0 rounded-[3rem] bg-indigo-500/20 animate-ping opacity-20" />
-        </div>
-        <h1 className="text-4xl font-black mb-6 tracking-tight">Chúng tôi đang chuẩn bị cho bạn không gian mới</h1>
-        <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-xs max-w-lg mx-auto leading-loose">
-          Tính năng Flagent đang được thiết lập. Tài khoản của bạn sẽ sớm được cấp API Key để trải nghiệm sức mạnh của AI Agent.
-        </p>
-      </div>
-    )
-  }
-
   return (
     <div className={`max-w-6xl mx-auto py-8 md:py-12 px-4 md:px-6 ${theme === 'dark' ? 'text-white' : 'text-slate-900'} overflow-x-hidden`}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 md:mb-16">
