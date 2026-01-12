@@ -196,15 +196,13 @@ export default function FlagentPage() {
               }`}
             >
               <div className="flex items-center gap-4 md:gap-5 min-w-0 w-full">
-                <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shrink-0 overflow-hidden ${
-                  !isPptx && !isExcel ? (theme === 'dark' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600') : ''
-                }`}>
+                <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shrink-0 overflow-hidden`}>
                   {isPptx ? (
                     <img src={pptxIcon} alt="PPTX" className="w-full h-full object-cover" />
                   ) : isExcel ? (
                     <img src={excelIcon} alt="Excel" className="w-full h-full object-cover" />
                   ) : (
-                    <FileText className="w-6 h-6 md:w-7 md:h-7" />
+                    <img src={agentIcon} alt="Agent" className="w-full h-full object-cover" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
