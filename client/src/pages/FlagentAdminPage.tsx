@@ -232,126 +232,167 @@ export default function FlagentAdminPage() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="glass rounded-3xl p-8 space-y-6">
-          <h2 className="text-xl font-black flex items-center gap-2">
-            <Shield className="w-5 h-5 text-indigo-500" />
-            VÙNG CHỨA API DỰ PHÒNG
-          </h2>
-          <form onSubmit={addPoolKey} className="flex gap-2">
-            <input
-              type="text"
-              value={newPoolKey}
-              onChange={(e) => setNewPoolKey(e.target.value)}
-              placeholder="Nhập API Manus mới..."
-              className="flex-1 px-4 py-2 bg-slate-900 border border-slate-600 rounded-xl text-sm outline-none focus:border-indigo-500"
-            />
-            <button 
-              type="submit"
-              disabled={addingPoolKey}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl text-sm font-bold transition-all"
-            >
-              {addingPoolKey ? <Loader2 className="w-4 h-4 animate-spin" /> : 'THÊM'}
-            </button>
-          </form>
-          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-            {manusPool.length === 0 ? (
-              <p className="text-slate-500">Vùng chứa trống.</p>
-            ) : (
-              manusPool.map(item => (
-                <div key={item.id} className="p-3 bg-slate-800/30 rounded-xl border border-slate-700/50 flex justify-between items-center">
-                  <div className="font-mono text-xs text-slate-400">
-                    {item.api_key.substring(0, 10)}...{item.api_key.substring(item.api_key.length - 4)}
-                  </div>
-                  <div className="flex gap-2">
-                    {item.is_failed ? (
-                      <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[10px] font-black rounded-full uppercase">Lỗi</span>
-                    ) : item.is_used ? (
-                      <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[10px] font-black rounded-full uppercase">Đã dùng</span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[10px] font-black rounded-full uppercase">Sẵn sàng</span>
-                    )}
-                  </div>
+        <div className="space-y-8">
+          {/* API Pool Section */}
+          <div className="glass rounded-3xl p-8 border border-slate-700/50 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-5">
+              <Shield className="w-32 h-32" />
+            </div>
+            
+            <h2 className="text-xl font-black flex items-center gap-2 mb-6">
+              <div className="p-2 bg-indigo-500/20 rounded-lg">
+                <Shield className="w-5 h-5 text-indigo-400" />
+              </div>
+              VÙNG CHỨA API DỰ PHÒNG
+            </h2>
+
+            <form onSubmit={addPoolKey} className="flex gap-3 relative z-10">
+              <div className="flex-1 relative group">
+                <input
+                  type="text"
+                  value={newPoolKey}
+                  onChange={(e) => setNewPoolKey(e.target.value)}
+                  placeholder="Nhập API Manus mới..."
+                  className="w-full pl-4 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-2xl text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all placeholder:text-slate-600"
+                />
+              </div>
+              <button 
+                type="submit"
+                disabled={addingPoolKey}
+                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl text-sm font-bold shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 active:scale-95"
+              >
+                {addingPoolKey ? <Loader2 className="w-4 h-4 animate-spin" /> : 'THÊM'}
+              </button>
+            </form>
+
+            <div className="mt-6 space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              {manusPool.length === 0 ? (
+                <div className="text-center py-8 border-2 border-dashed border-slate-800 rounded-2xl">
+                  <p className="text-slate-500 font-medium">Vùng chứa hiện đang trống</p>
                 </div>
-              ))
-            )}
+              ) : (
+                manusPool.map(item => (
+                  <div key={item.id} className="p-4 bg-slate-900/40 rounded-2xl border border-slate-800/50 flex justify-between items-center hover:border-slate-700 transition-all group/item">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+                      <div className="font-mono text-xs text-slate-400 group-hover/item:text-slate-200 transition-colors">
+                        {item.api_key.substring(0, 15)}...{item.api_key.substring(item.api_key.length - 6)}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {item.is_failed ? (
+                        <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[10px] font-bold rounded-full border border-red-500/20 uppercase">Lỗi</span>
+                      ) : (
+                        <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded-full border border-emerald-500/20 uppercase">Sẵn sàng</span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-black flex items-center gap-2">
-              <Shield className="w-5 h-5 text-indigo-500" />
-              DANH SÁCH TÀI KHOẢN
-            </h2>
-            <button 
-              onClick={autoAssignKeys}
-              className="px-3 py-1 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 text-xs font-bold rounded-lg border border-indigo-500/30 transition-all flex items-center gap-1"
-            >
-              <CheckCircle className="w-3 h-3" />
-              CẤP TỰ ĐỘNG
-            </button>
-          </div>
-          <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-            {allUsersFlagent.length === 0 ? (
-              <p className="text-slate-500">Chưa có dữ liệu người dùng.</p>
-            ) : (
-              allUsersFlagent.map(user => (
-                <div key={user.id} className="p-4 bg-slate-800/30 rounded-2xl border border-slate-700/50 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-bold">{user.email.split('@')[0]}</div>
-                      <div className="text-xs text-slate-400">{user.email}</div>
-                    </div>
-                    {(!user.flagent_api_key || user.flagent_api_key === '') && (
-                      <span className="px-2 py-1 bg-yellow-500/10 text-yellow-500 text-[10px] font-black rounded-full uppercase">Chưa có Key</span>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="password"
-                      defaultValue={user.flagent_api_key || ''}
-                      placeholder="Flagent API Key..."
-                      className="flex-1 px-4 py-2 bg-slate-900 border border-slate-600 rounded-xl text-sm focus:border-indigo-500 outline-none"
-                      onBlur={(e) => {
-                        if (e.target.value !== (user.flagent_api_key || '')) {
-                          assignFlagentKey(user.id, e.target.value);
-                        }
-                      }}
-                    />
-                    <button 
-                      onClick={(e) => {
-                        const input = (e.currentTarget.previousSibling as HTMLInputElement);
-                        assignFlagentKey(user.id, input.value);
-                      }}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-sm font-bold transition-all"
-                    >
-                      LƯU
-                    </button>
-                  </div>
+          {/* User List Section */}
+          <div className="glass rounded-3xl p-8 border border-slate-700/50">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-black flex items-center gap-2">
+                <div className="p-2 bg-purple-500/20 rounded-lg">
+                  <Brain className="w-5 h-5 text-purple-400" />
                 </div>
-              ))
-            )}
+                DANH SÁCH TÀI KHOẢN
+              </h2>
+              <button 
+                onClick={autoAssignKeys}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 active:scale-95"
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                CẤP TỰ ĐỘNG
+              </button>
+            </div>
+
+            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+              {allUsersFlagent.length === 0 ? (
+                <div className="text-center py-8 border-2 border-dashed border-slate-800 rounded-2xl">
+                  <p className="text-slate-500 font-medium">Chưa có dữ liệu người dùng</p>
+                </div>
+              ) : (
+                allUsersFlagent.map(user => (
+                  <div key={user.id} className="p-5 bg-slate-900/40 rounded-3xl border border-slate-800/50 space-y-4 hover:border-slate-700 transition-all">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-700 to-slate-600 flex items-center justify-center font-bold text-slate-300">
+                          {user.email[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-200">{user.email.split('@')[0]}</div>
+                          <div className="text-xs text-slate-500">{user.email}</div>
+                        </div>
+                      </div>
+                      {(!user.flagent_api_key || user.flagent_api_key === '') ? (
+                        <span className="px-3 py-1 bg-amber-500/10 text-amber-500 text-[10px] font-bold rounded-full border border-amber-500/20 uppercase">Thiếu Key</span>
+                      ) : (
+                        <span className="px-3 py-1 bg-indigo-500/10 text-indigo-500 text-[10px] font-bold rounded-full border border-indigo-500/20 uppercase">Đã cấp</span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="password"
+                        defaultValue={user.flagent_api_key || ''}
+                        placeholder="Nhập Flagent API Key..."
+                        className="flex-1 px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-2xl text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all"
+                        onBlur={(e) => {
+                          if (e.target.value !== (user.flagent_api_key || '')) {
+                            assignFlagentKey(user.id, e.target.value);
+                          }
+                        }}
+                      />
+                      <button 
+                        onClick={(e) => {
+                          const input = (e.currentTarget.previousSibling as HTMLInputElement);
+                          assignFlagentKey(user.id, input.value);
+                        }}
+                        className="px-5 py-2.5 bg-slate-800 hover:bg-indigo-600 text-white rounded-2xl text-xs font-bold transition-all active:scale-95"
+                      >
+                        LƯU
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="glass rounded-3xl p-8 space-y-6">
-          <h2 className="text-xl font-black flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-500" />
+        {/* Logs Section */}
+        <div className="glass rounded-3xl p-8 border border-slate-700/50 flex flex-col h-full min-h-[600px]">
+          <h2 className="text-xl font-black flex items-center gap-2 mb-6">
+            <div className="p-2 bg-red-500/20 rounded-lg">
+              <AlertTriangle className="w-5 h-5 text-red-400" />
+            </div>
             HỆ THỐNG LOG LỖI
           </h2>
-          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+          
+          <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
             {flagentLogs.length === 0 ? (
-              <p className="text-slate-500">Không có log lỗi nào.</p>
+              <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-40">
+                <CheckCircle className="w-16 h-16 text-emerald-500 mb-4" />
+                <p className="text-slate-400 font-medium">Hệ thống hoạt động ổn định</p>
+                <p className="text-xs text-slate-500">Không có log lỗi nào được ghi nhận</p>
+              </div>
             ) : (
               flagentLogs.map((log, i) => (
-                <div key={i} className="p-4 bg-red-500/5 border border-red-500/10 rounded-2xl text-xs space-y-2">
-                  <div className="flex justify-between font-bold">
-                    <span className="text-red-400">{log.email}</span>
-                    <span className="text-slate-500">{new Date(log.updated_at).toLocaleString()}</span>
+                <div key={i} className="p-5 bg-red-500/5 border border-red-500/10 rounded-3xl space-y-3 hover:bg-red-500/10 transition-all">
+                  <div className="flex justify-between items-center font-bold">
+                    <span className="text-red-400 text-sm">{log.email}</span>
+                    <span className="text-slate-500 text-[10px] font-medium px-2 py-1 bg-slate-800 rounded-lg">
+                      {new Date(log.updated_at).toLocaleString('vi-VN')}
+                    </span>
                   </div>
-                  <div className="bg-slate-900/50 p-2 rounded-lg font-mono text-slate-400 break-all">
-                    Prompt: {log.prompt}
+                  <div className="bg-slate-950/60 p-3 rounded-2xl font-mono text-[11px] text-slate-400 border border-slate-800/50 leading-relaxed break-all">
+                    <span className="text-indigo-400">Prompt:</span> {log.prompt}
                   </div>
-                  <div className="bg-red-900/20 p-2 rounded-lg text-red-300">
-                    Lỗi: {log.error}
+                  <div className="bg-red-900/10 p-3 rounded-2xl text-[11px] text-red-300 border border-red-500/10">
+                    <span className="font-bold">Lỗi:</span> {log.error}
                   </div>
                 </div>
               ))
