@@ -171,13 +171,13 @@ app.post('/api/admin/manus-pool', adminAuthMiddleware, async (req: Request, res:
 app.get('/api/admin/users-all-flagent', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {
     // Tự động cấp API cho những user chưa có key nếu trong pool còn key
-    const usersWithoutKey = await pool.query('SELECT id FROM users WHERE flagent_api_key IS NULL OR flagent_api_key = \'\'');
+    const usersWithoutKey = await pool.query("SELECT id FROM users WHERE flagent_api_key IS NULL OR flagent_api_key = ''");
     
     for (const user of usersWithoutKey.rows) {
       await getFlagentApiKey(user.id);
     }
 
-    const users = await pool.query('SELECT id, email, name, flagent_api_key FROM users ORDER BY created_at DESC');
+    const users = await pool.query('SELECT id, email, name, flagent_api_key FROM users ORDER BY id ASC');
     console.log('[Admin] Returning all users:', users.rows.length);
     res.json(users.rows);
   } catch (error: any) {
@@ -225,7 +225,7 @@ app.get('/api/admin/flagent-logs', adminAuthMiddleware, async (req: Request, res
 // Get all users without Flagent API Key (Admin only)
 app.get('/api/admin/users-no-flagent', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {
-    const users = await pool.query('SELECT id, email, name FROM users WHERE flagent_api_key IS NULL OR flagent_api_key = \'\' ORDER BY created_at DESC');
+    const users = await pool.query('SELECT id, email, name FROM users WHERE flagent_api_key IS NULL OR flagent_api_key = \'\' ORDER BY id ASC');
     console.log('[Admin] Returning users without flagent:', users.rows.length);
     res.json(users.rows);
   } catch (error: any) {
@@ -1511,19 +1511,6 @@ app.get('/api/task/:taskType/:taskId', authMiddleware, async (req: AuthRequest, 
     res.status(500).json({ error: error.message });
   }
 });
-
-// Admin auth middleware
-function adminAuthMiddleware(req: Request, res: Response, next: Function) {
-  const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.admin_token;
-  if (!token) return res.status(401).json({ error: 'Admin access required' });
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
-    next();
-  } catch (e) {
-    res.status(401).json({ error: 'Invalid admin token' });
-  }
-}
 
 function generateAdminToken() {
   return jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '1d' });
