@@ -17,7 +17,7 @@ export default function FlagentAdminPage() {
   const [addingPoolKey, setAddingPoolKey] = useState(false);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('adminToken');
+    const savedToken = localStorage.getItem('adminToken') || localStorage.getItem('token');
     if (savedToken) {
       setAdminToken(savedToken);
       setIsLoggedIn(true);
